@@ -133,12 +133,12 @@ const HistoryTrend = () => {
     // ];
 
     const intervaldata = intervalData?.map((item, i) => {
-        if (i != 0 & i != 1) {
+        // if (i != 0 & i != 1) {
             return {
                 value: item?.value,
                 label: item?.key,
             };
-        }
+        // }
     }).filter((data) => data != undefined).concat([{ label: "All", value: 0 }]);
 
     const groupdata = toolSubCategoryData.map((item) => {
@@ -211,8 +211,7 @@ const HistoryTrend = () => {
             ).then((res) => {
 
                 if (res?.payload?.status == 200) {
-                    const rawData = res?.payload?.data;
-
+                    const rawData = res?.payload?.data;      
                     const groupedData = rawData.reduce((acc, item) => {
                         if (!acc[item.itemId]) {
                             acc[item.itemId] = [];
@@ -223,28 +222,52 @@ const HistoryTrend = () => {
                         });
                         return acc;
                     }, {});
-
+                    
                     const uniqueTimestamps = [
                         ...new Set(rawData.map(item => item.itemTimestamp))
                     ].sort((a, b) => new Date(a) - new Date(b));
 
+                 
+                    // const formattedSeries = Object.keys(groupedData).map((key, index) => {
+                    //     const dataMap = new Map(
+                    //         groupedData[key].map(item => [item.timestamp, item.value])
+                    //     );
+                    //     console.log("dataMap", key, dataMap)
+                    //     // Map timestamps to data values (fill missing values with null)
+                    //     const seriesData = uniqueTimestamps.map(ts => dataMap.get(ts)?.toFixed(2) || null);
 
+                    //     return {
+                    //         name: `${key}`, // Use itemId as the series name
+                    //         data: seriesData,
+                    //         color: colorList[index % colorList.length],
+                    //     };
+                    // });
                     const formattedSeries = Object.keys(groupedData).map((key, index) => {
                         const dataMap = new Map(
                             groupedData[key].map(item => [item.timestamp, item.value])
                         );
 
-                        // Map timestamps to data values (fill missing values with null)
-                        const seriesData = uniqueTimestamps.map(ts => dataMap.get(ts)?.toFixed(2) || 0);
+                        let lastValue = null;
 
-                        return {
-                            name: `${key}`, // Use itemId as the series name
-                            data: seriesData,
-                            color: colorList[index % colorList.length],
-                        };
-                    });
+                        const seriesData = uniqueTimestamps.map(ts => {
+                            const value = dataMap.get(ts);
+                            if (value !== undefined && value !== null) {
+                                lastValue = value.toFixed(2);
+                                return lastValue;
+                            }
+                            // If current timestamp missing, use last available value
+                            return lastValue;
+                        });
+                        
+    return {
+        name: `${key}`,
+        data: seriesData,
+        color: colorList[index % colorList.length],
+    };
+});
 
-                    console.log("formattedSeries",  uniqueTimestamps.map(ts => moment.utc(ts).format("YYYY-MM-DD HH:MM:SS")))
+
+                    console.log("formattedSeries",  formattedSeries)
 
                     setState((prevState) => {
                         const updatedSeries = formattedSeries.map(series => ({
