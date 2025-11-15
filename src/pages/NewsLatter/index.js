@@ -124,7 +124,6 @@ const index = () => {
                   </div>
                 </div>
               </CardHeader>
-              {console.log(newsLatterData)}
               <CardBody className="pt-0">
                 <div>
                   {newsLatterLoader ? (

@@ -285,7 +285,7 @@ const ToolSlice = createSlice({
         state.toolLoader = true;
       })
       .addCase(getTaglist.fulfilled, (state, action) => {
-        console.log("toolslist",action);
+        // console.log("toolslist",action);
         state.toolCategoryData = action?.payload;
         // state.toolCategoryCount = action?.payload?.payload?.TotalCount;
         state.toolLoader = false;

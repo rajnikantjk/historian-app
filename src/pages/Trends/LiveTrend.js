@@ -425,7 +425,7 @@ const LiveTrend = () => {
       clearInterval(intervalId); // Cleanup when frequency changes or component unmounts
     };
   }, [isLive, values?.frequency?.value, values?.grpId?.value, values?.interval?.value]);
-  console.log("values", values)
+  // console.log("values", values)
   const DownloadReport = () => {
     setLoading(true)
     let payload = {
@@ -463,7 +463,7 @@ const LiveTrend = () => {
 
   // Function to initialize the WebSocket
   const initializeSocket = () => {
-    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/trend/tag`);
+    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise-new`);
 
     socketRef.current.onopen = () => {
       console.log('WebSocket connection established');
@@ -471,21 +471,90 @@ const LiveTrend = () => {
     };
 
     socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
 
+      const rawData = JSON.parse(event?.data);
+
+     
+      
+      // Step 1: Collect all unique tag names
+      const allTagNames = Array.from(
+        new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
+      );
+
+      // Step 2: Sort data chronologically
+      const sortedData = rawData.sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+      );
+
+      // Step 3: Fill missing values using previous values or null
+      const filledData = sortedData.reduce((acc, curr, idx) => {
+        const currMap = new Map(curr.tagdata.map(t => [t.name, t.value]));
+        const prevMap =
+          idx > 0 ? new Map(acc[idx - 1].tagdata.map(t => [t.name, t.value])) : new Map();
+
+        // Build complete tagdata ensuring all names exist
+        const filledTags = allTagNames.map(name => {
+          if (currMap.has(name)) {
+            // use current value
+            return { name, value: currMap.get(name) };
+          } else if (prevMap.has(name)) {
+            // fallback to previous timestamp value
+            return { name, value: prevMap.get(name) };
+          } else {
+            // not available anywhere before
+            return { name, value: null };
+          }
+        });
+
+        acc.push({
+          ...curr,
+          tagdata: filledTags,
+        });
+
+        return acc;
+      }, []);
+
+      const convertFilledData = (filledData) => {
+        // Collect all unique tag names
+        const allTagNames = Array.from(
+          new Set(filledData.flatMap(item => item.tagdata.map(t => t.name)))
+        );
+
+        // Create a unique timestamp array (no repeats)
+        const timestamp = filledData.map(item => item.timestamp);
+
+        // Build tag-wise data arrays
+        const tagdata = allTagNames.map(tagName => ({
+          name: tagName,
+          data: filledData.map(item => {
+            const tag = item.tagdata.find(t => t.name === tagName);
+            return tag?.value ?? null;
+          })
+        }));
+
+        return { timestamp, tagdata };
+      };
+
+      // Example usage:
+      const transformed = convertFilledData(filledData);
+
+
+
+
+      
       setState((prevState) => {
 
 
         return {
           ...prevState,
-          series: data?.tagdata || [],
-          seriesLine: data?.tagdata || [],
+          series: transformed?.tagdata || [],
+          seriesLine: transformed?.tagdata || [],
           options: {
             ...prevState.options,
             // colors: formattedSeries.map(series => series.color),
             xaxis: {
               type: "datetime",
-              categories: data?.timestamp || [], // Dynamic x-axis labels
+              categories: transformed?.timestamp || [], // Dynamic x-axis labels
             }
           },
           optionsLine: {
@@ -493,7 +562,7 @@ const LiveTrend = () => {
             // colors: formattedSeries.map(series => series.color),
             xaxis: {
               type: "datetime",
-              categories: data?.timestamp || [] // Dynamic x-axis labels
+              categories: transformed?.timestamp || [] // Dynamic x-axis labels
             }
           }
         };
@@ -530,7 +599,7 @@ const LiveTrend = () => {
         frequency: values?.frequency?.value,
       };
 
-      console.log("params", params)
+      // console.log("params", params)
 
       socketRef.current.send(JSON.stringify(params));
     }

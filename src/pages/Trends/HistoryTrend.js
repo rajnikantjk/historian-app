@@ -33,6 +33,7 @@ import { FaDownload, FaHistory } from "react-icons/fa";
 import { FaFileExcel } from "react-icons/fa";
 import Loader from "../../Components/Common/Loader";
 import { toast } from "react-toastify";
+import ReactApexChart from "react-apexcharts";
 const singleSelectStyle = {
     control: (provided) => ({
         ...provided,
@@ -92,6 +93,53 @@ const HistoryTrend = () => {
                     format: 'dd MMM yyyy HH:mm:ss', // 👈 Tooltip datetime format
                 }
                 },
+                 yaxis: [
+        {
+          seriesName: 'Tag Value',
+          axisTicks: {
+            show: true,
+            color: '#008FFB'
+          },
+          axisBorder: {
+            show: true,
+            color: '#008FFB'
+          },
+          labels: {
+            style: {
+              colors: '#008FFB',
+            }
+          },
+          title: {
+            text: "Tag Value",
+            style: {
+              color: '#008FFB'
+            }
+          },
+        },
+        {
+          seriesName: 'Tag Value',
+          opposite: true,
+          axisTicks: {
+            show: true,
+            color: '#00E396'
+          },
+          axisBorder: {
+            show: true,
+            color: '#00E396'
+          },
+          labels: {
+            style: {
+              colors: '#00E396'
+            }
+          },
+          title: {
+            text: "Tag Value",
+            style: {
+              color: '#00E396'
+            }
+          },
+        }
+      ],
             xaxis: {
                 type: 'datetime',
                 labels: {
@@ -267,7 +315,7 @@ const HistoryTrend = () => {
 });
 
 
-                    console.log("formattedSeries",  formattedSeries)
+                    // console.log("formattedSeries",  formattedSeries)
 
                     setState((prevState) => {
                         const updatedSeries = formattedSeries.map(series => ({
@@ -285,7 +333,7 @@ const HistoryTrend = () => {
                                 colors: formattedSeries.map(series => series.color),
                                 xaxis: {
                                     type: "datetime",
-                                    categories: uniqueTimestamps.map(ts => moment.utc(ts).format("YYYY-MM-DD HH:MM:SS")), // Dynamic x-axis labels
+                                    categories: uniqueTimestamps.map(ts => moment.utc(ts).format("YYYY-MM-DD HH:mm:ss")), // Dynamic x-axis labels
                                 }
                             },
                         };
@@ -449,7 +497,7 @@ const HistoryTrend = () => {
                             </CardHeader>
                             <CardBody>
 
-                                <Chart options={state.options} series={state.series} type="line" height={400} />
+                                <ReactApexChart options={state.options} series={state.series} type="line" height={400} />
                             </CardBody>
                         </Card>
 

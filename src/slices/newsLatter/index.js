@@ -58,7 +58,7 @@ const NewsLatterSlice = createSlice({
         state.newsLatterLoader = true;
       })
       .addCase(getNewsLatter.fulfilled, (state, action) => {
-        console.log(action?.payload?.payload?.data);
+        // console.log(action?.payload?.payload?.data);
         state.newsLatterData = action?.payload?.payload?.data;
         state.newsLatterCount = action?.payload?.payload?.count;
         state.newsLatterLoader = false;

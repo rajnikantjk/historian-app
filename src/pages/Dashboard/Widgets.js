@@ -24,7 +24,7 @@ const Widgets = () => {
   const [secondSocketInitialized, setSecondSocketInitialized] = useState(false);
   const { toolSubCategoryData, intervalData, frequencyData } = useSelector(
     (state) => state.Tool)
-    console.log("speedometerDatas",speedometerDatas)
+    // console.log("speedometerDatas",speedometerDatas)
   const [state, setState] = React.useState({
 
     series: [{
@@ -71,6 +71,11 @@ const Widgets = () => {
       },
       markers: {
         size: 0
+      },
+      tooltip: {
+        x: {
+          format: 'dd MMM yyyy HH:mm:ss', // 👈 Tooltip datetime format
+        }
       },
       yaxis: [
         {
@@ -131,7 +136,9 @@ const Widgets = () => {
           "2024-05-30",
           "2024-06-01",
         ],
-
+ labels: {
+          datetimeUTC: false, // Set to false to show in local time
+        }
       }
     },
 
@@ -188,7 +195,7 @@ const Widgets = () => {
     { label: "Saw-toothed Waves.UInt1", value: 85 },
     { label: "Triangle Waves.Int1", value: 25 },
   ];
-  console.log("secondSocketInitialized",secondSocketInitialized)
+  // console.log("secondSocketInitialized",secondSocketInitialized)
   const connectSecondarySocket = () => {
     secondarySocketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/meter/tag-wise`);
 
@@ -214,7 +221,7 @@ const Widgets = () => {
  
   // Function to initialize the WebSocket
   const initializeSocket = () => {
-    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/trend/tag`);
+    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise-new`);
 
     socketRef.current.onopen = () => {
       console.log('WebSocket connection established');
@@ -222,42 +229,70 @@ const Widgets = () => {
     };
 
     socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      // const rawData = { ...livedata, ...data };
-    
-      // setLiveData(data)
-      // const groupedData = data?.reduce((acc, item) => {
-      //   if (!acc[item.itemId]) {
-      //     acc[item.itemId] = [];
-      //   }
-      //   acc[item.itemId].push({
-      //     value: item.itemValue,
-      //     timestamp: item.itemTimestamp
-      //   });
-      //   return acc;
-      // }, {});
+      // const data = JSON.parse(event.data);
+       const rawData = JSON.parse(event?.data);
+       
+      // Step 1: Collect all unique tag names
+      const allTagNames = Array.from(
+        new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
+      );
 
-      // const uniqueTimestamps = [
-      //   ...new Set(data.map(item => item.itemTimestamp))
-      // ].sort((a, b) => new Date(a) - new Date(b));
+      // Step 2: Sort data chronologically
+      const sortedData = rawData.sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+      );
 
+      // Step 3: Fill missing values using previous values or null
+      const filledData = sortedData.reduce((acc, curr, idx) => {
+        const currMap = new Map(curr.tagdata.map(t => [t.name, t.value]));
+        const prevMap =
+          idx > 0 ? new Map(acc[idx - 1].tagdata.map(t => [t.name, t.value])) : new Map();
 
-      // const formattedSeries = Object.keys(groupedData).map((key, index) => {
-      //   const dataMap = new Map(
-      //     groupedData[key].map(item => [item.timestamp, item.value])
-      //   );
+        // Build complete tagdata ensuring all names exist
+        const filledTags = allTagNames.map(name => {
+          if (currMap.has(name)) {
+            // use current value
+            return { name, value: currMap.get(name) };
+          } else if (prevMap.has(name)) {
+            // fallback to previous timestamp value
+            return { name, value: prevMap.get(name) };
+          } else {
+            // not available anywhere before
+            return { name, value: null };
+          }
+        });
 
-      //   // Map timestamps to data values (fill missing values with null)
-      //   const seriesData = uniqueTimestamps.map(ts => dataMap.get(ts)?.toFixed(2) || 0);
+        acc.push({
+          ...curr,
+          tagdata: filledTags,
+        });
 
-      //   return {
-      //     name: `${key}`, // Use itemId as the series name
-      //     data: seriesData,
-      //     color: colorList[index % colorList.length],
-      //   };
-      // });
+        return acc;
+      }, []);
 
-      // console.log("seriesData",formattedSeries, uniqueTimestamps)
+      const convertFilledData = (filledData) => {
+        // Collect all unique tag names
+        const allTagNames = Array.from(
+          new Set(filledData.flatMap(item => item.tagdata.map(t => t.name)))
+        );
+
+        // Create a unique timestamp array (no repeats)
+        const timestamp = filledData.map(item => item.timestamp);
+
+        // Build tag-wise data arrays
+        const tagdata = allTagNames.map(tagName => ({
+          name: tagName,
+          data: filledData.map(item => {
+            const tag = item.tagdata.find(t => t.name === tagName);
+            return tag?.value ?? null;
+          })
+        }));
+
+        return { timestamp, tagdata };
+      };
+
+      // Example usage:
+      const transformed = convertFilledData(filledData);
 
       setState((prevState) => {
         // const updatedSeries = formattedSeries.map(series => ({
@@ -270,13 +305,13 @@ const Widgets = () => {
 
         return {
           ...prevState,
-          series: data?.tagdata || [],
+          series: transformed?.tagdata || [],
           options: {
             ...prevState.options,
             // colors: formattedSeries.map(series => series.color),
             xaxis: {
               type: "datetime",
-              categories: data?.timestamp  || [], // Dynamic x-axis labels
+              categories: transformed?.timestamp  || [], // Dynamic x-axis labels
             }
           },
 
@@ -345,10 +380,11 @@ const Widgets = () => {
       const params = {
         interval: values?.interval?.value,
         grpId: values?.grpId?.value,
-        frequency: values?.frequency?.value,
+        frequency: 30 // set for delhi client
+        // frequency: values?.frequency?.value, //on request of prakashbhai
       };
 
-      console.log("params", params)
+      // console.log("params", params)
 
       socketRef.current.send(JSON.stringify(params));
     }
@@ -360,7 +396,7 @@ const Widgets = () => {
         frequency: values?.frequency?.value,
       };
 
-      console.log("params2", params)
+      // console.log("params2", params)
 
       secondarySocketRef.current.send(JSON.stringify(params));
     }
