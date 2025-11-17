@@ -88,58 +88,74 @@ const HistoryTrend = () => {
         options: {
             chart: { type: "line", height: 650, toolbar: { show: false } },
             stroke: { width: 3, curve: "smooth" },
+            dataLabels: {
+                enabled: true,
+                // show a colored dot instead of numeric label
+                formatter: function (_val, opts) {
+                    return '●';
+                },
+                offsetY: 2,
+                style: {
+                    // Apex maps these colors to series by index
+                    colors: colorList,
+                    fontSize: '20px',
+                    fontWeight: '700'
+                },
+                background: { enabled: false },
+                dropShadow: { enabled: false }
+            },
             tooltip: {
                 x: {
                     format: 'dd MMM yyyy HH:mm:ss', // 👈 Tooltip datetime format
                 }
+            },
+            yaxis: [
+                {
+                    seriesName: 'Tag Value',
+                    axisTicks: {
+                        show: true,
+                        color: '#008FFB'
+                    },
+                    axisBorder: {
+                        show: true,
+                        color: '#008FFB'
+                    },
+                    labels: {
+                        style: {
+                            colors: '#008FFB',
+                        }
+                    },
+                    title: {
+                        text: "Tag Value",
+                        style: {
+                            color: '#008FFB'
+                        }
+                    },
                 },
-                 yaxis: [
-        {
-          seriesName: 'Tag Value',
-          axisTicks: {
-            show: true,
-            color: '#008FFB'
-          },
-          axisBorder: {
-            show: true,
-            color: '#008FFB'
-          },
-          labels: {
-            style: {
-              colors: '#008FFB',
-            }
-          },
-          title: {
-            text: "Tag Value",
-            style: {
-              color: '#008FFB'
-            }
-          },
-        },
-        {
-          seriesName: 'Tag Value',
-          opposite: true,
-          axisTicks: {
-            show: true,
-            color: '#00E396'
-          },
-          axisBorder: {
-            show: true,
-            color: '#00E396'
-          },
-          labels: {
-            style: {
-              colors: '#00E396'
-            }
-          },
-          title: {
-            text: "Tag Value",
-            style: {
-              color: '#00E396'
-            }
-          },
-        }
-      ],
+                {
+                    seriesName: 'Tag Value',
+                    opposite: true,
+                    axisTicks: {
+                        show: true,
+                        color: '#00E396'
+                    },
+                    axisBorder: {
+                        show: true,
+                        color: '#00E396'
+                    },
+                    labels: {
+                        style: {
+                            colors: '#00E396'
+                        }
+                    },
+                    title: {
+                        text: "Tag Value",
+                        style: {
+                            color: '#00E396'
+                        }
+                    },
+                }
+            ],
             xaxis: {
                 type: 'datetime',
                 labels: {
@@ -160,7 +176,33 @@ const HistoryTrend = () => {
             colors: ["#007bff", "#28a745", "#ffc107", "#dc3545", "#6610f2"],
         },
     });
-
+    const generateDynamicYaxes = (tagNames, colorList) => {
+        return tagNames.map((tagName, index) => ({
+            seriesName: tagName,
+            show: false,
+            axisTicks: {
+                show: true,
+                color: colorList[index % colorList.length]
+            },
+            axisBorder: {
+                show: true,
+                color: colorList[index % colorList.length]
+            },
+            labels: {
+                style: {
+                    colors: colorList[index % colorList.length],
+                }
+            },
+            title: {
+                text: tagName,
+                style: {
+                    color: colorList[index % colorList.length],
+                    fontSize: '12px'
+                }
+            },
+            opposite: index % 2 === 1 // Alternate sides for better visibility
+        }));
+    };
     // const tagOptions = [
     //     "PZ130003.PV",
     //     "PZ130031.PV",
@@ -182,10 +224,10 @@ const HistoryTrend = () => {
 
     const intervaldata = intervalData?.map((item, i) => {
         // if (i != 0 & i != 1) {
-            return {
-                value: item?.value,
-                label: item?.key,
-            };
+        return {
+            value: item?.value,
+            label: item?.key,
+        };
         // }
     }).filter((data) => data != undefined).concat([{ label: "All", value: 0 }]);
 
@@ -259,7 +301,7 @@ const HistoryTrend = () => {
             ).then((res) => {
 
                 if (res?.payload?.status == 200) {
-                    const rawData = res?.payload?.data;      
+                    const rawData = res?.payload?.data;
                     const groupedData = rawData.reduce((acc, item) => {
                         if (!acc[item.itemId]) {
                             acc[item.itemId] = [];
@@ -270,12 +312,12 @@ const HistoryTrend = () => {
                         });
                         return acc;
                     }, {});
-                    
+
                     const uniqueTimestamps = [
                         ...new Set(rawData.map(item => item.itemTimestamp))
                     ].sort((a, b) => new Date(a) - new Date(b));
 
-                 
+
                     // const formattedSeries = Object.keys(groupedData).map((key, index) => {
                     //     const dataMap = new Map(
                     //         groupedData[key].map(item => [item.timestamp, item.value])
@@ -306,13 +348,13 @@ const HistoryTrend = () => {
                             // If current timestamp missing, use last available value
                             return lastValue;
                         });
-                        
-    return {
-        name: `${key}`,
-        data: seriesData,
-        color: colorList[index % colorList.length],
-    };
-});
+
+                        return {
+                            name: `${key}`,
+                            data: seriesData,
+                            color: colorList[index % colorList.length],
+                        };
+                    });
 
 
                     // console.log("formattedSeries",  formattedSeries)
@@ -323,14 +365,17 @@ const HistoryTrend = () => {
                             data: series.data // Ensure this contains the updated data points
                         }));
 
-
+                        const tagNames = updatedSeries?.map(tag => tag.name) || [];
+                        const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
 
                         return {
                             ...prevState,
                             series: updatedSeries,
                             options: {
                                 ...prevState.options,
-                                colors: formattedSeries.map(series => series.color),
+                                colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+                                yaxis: dynamicYaxes,
+                                // colors: formattedSeries.map(series => series.color),
                                 xaxis: {
                                     type: "datetime",
                                     categories: uniqueTimestamps.map(ts => moment.utc(ts).format("YYYY-MM-DD HH:mm:ss")), // Dynamic x-axis labels

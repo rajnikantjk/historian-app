@@ -117,8 +117,44 @@ const LiveTrend = () => {
         width: 3
       },
       dataLabels: {
-        enabled: false
+        enabled: true,
+        // show a colored dot instead of numeric label
+        formatter: function (_val, opts) {
+          return '●';
+        },
+        offsetY: 2,
+        style: {
+          // Apex maps these colors to series by index
+          colors: colorList,
+          fontSize: '20px',
+          fontWeight: '700'
+        },
+        background: { enabled: false },
+        dropShadow: { enabled: false }
       },
+      // ...existing code...
+      markers: {
+        size: 6
+      },
+      // dataLabels: {
+      //   enabled:false
+      //   // enabled: true, // Enable data labels
+      //   // background: {
+      //   //   enabled: true,
+      //   //   borderRadius: 2,
+      //   //   borderWidth: 1,
+      //   //   borderColor: '#999',
+      //   //   opacity: 0.9
+      //   // },
+      //   // formatter: function (val) {
+      //   //   return parseFloat(val).toFixed(2); // Show 2 decimal places
+      //   // },
+      //   // offsetY: -10, // Position above the point
+      //   // style: {
+      //   //   fontSize: '11px',
+      //   //   fontWeight: 'bold'
+      //   // }
+      // },
       stroke: {
         width: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,],
         curve: ['smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth', 'smooth',]
@@ -216,6 +252,7 @@ const LiveTrend = () => {
           target: 'chart2',
           enabled: true
         },
+
         selection: {
           enabled: true,
           //   xaxis: {
@@ -460,6 +497,33 @@ const LiveTrend = () => {
 
 
   const socketRef = useRef(null);
+  const generateDynamicYaxes = (tagNames, colorList) => {
+    return tagNames.map((tagName, index) => ({
+      seriesName: tagName,
+      show: false,
+      axisTicks: {
+        show: true,
+        color: colorList[index % colorList.length]
+      },
+      axisBorder: {
+        show: true,
+        color: colorList[index % colorList.length]
+      },
+      labels: {
+        style: {
+          colors: colorList[index % colorList.length],
+        }
+      },
+      title: {
+        text: tagName,
+        style: {
+          color: colorList[index % colorList.length],
+          fontSize: '12px'
+        }
+      },
+      opposite: index % 2 === 1 // Alternate sides for better visibility
+    }));
+  };
 
   // Function to initialize the WebSocket
   const initializeSocket = () => {
@@ -474,8 +538,8 @@ const LiveTrend = () => {
 
       const rawData = JSON.parse(event?.data);
 
-     
-      
+
+
       // Step 1: Collect all unique tag names
       const allTagNames = Array.from(
         new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
@@ -541,9 +605,10 @@ const LiveTrend = () => {
 
 
 
-      
-      setState((prevState) => {
 
+      setState((prevState) => {
+        const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
+        const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
 
         return {
           ...prevState,
@@ -551,18 +616,23 @@ const LiveTrend = () => {
           seriesLine: transformed?.tagdata || [],
           options: {
             ...prevState.options,
-            // colors: formattedSeries.map(series => series.color),
+            colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+            yaxis: dynamicYaxes, // Dynamic y-axes based on tags
             xaxis: {
               type: "datetime",
-              categories: transformed?.timestamp || [], // Dynamic x-axis labels
+              categories: transformed?.timestamp || [],
             }
           },
           optionsLine: {
             ...prevState.optionsLine,
-            // colors: formattedSeries.map(series => series.color),
+            colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
             xaxis: {
               type: "datetime",
-              categories: transformed?.timestamp || [] // Dynamic x-axis labels
+              categories: transformed?.timestamp || []
+            },
+            yaxis: {
+              max: 100,
+              tickAmount: 2
             }
           }
         };

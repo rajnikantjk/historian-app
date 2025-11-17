@@ -18,13 +18,13 @@ const Widgets = () => {
     "#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0",
     "#546E7A", "#26a69a", "#D10CE8", "#ff6384", "#36a2eb"
   ];
-  const [speedometerDatas,setSpeedometerDatas]=useState([])
+  const [speedometerDatas, setSpeedometerDatas] = useState([])
   const socketRef = useRef(null);
   const secondarySocketRef = useRef(null);
   const [secondSocketInitialized, setSecondSocketInitialized] = useState(false);
   const { toolSubCategoryData, intervalData, frequencyData } = useSelector(
     (state) => state.Tool)
-    // console.log("speedometerDatas",speedometerDatas)
+  // console.log("speedometerDatas",speedometerDatas)
   const [state, setState] = React.useState({
 
     series: [{
@@ -60,7 +60,20 @@ const Widgets = () => {
         width: 3
       },
       dataLabels: {
-        enabled: false
+        enabled: true,
+        // show a colored dot instead of numeric label
+        formatter: function (_val, opts) {
+          return '●';
+        },
+        offsetY: 2,
+        style: {
+          // Apex maps these colors to series by index
+          colors: colorList,
+          fontSize: '20px',
+          fontWeight: '700'
+        },
+        background: { enabled: false },
+        dropShadow: { enabled: false }
       },
       stroke: {
         width: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,],
@@ -136,7 +149,7 @@ const Widgets = () => {
           "2024-05-30",
           "2024-06-01",
         ],
- labels: {
+        labels: {
           datetimeUTC: false, // Set to false to show in local time
         }
       }
@@ -144,7 +157,33 @@ const Widgets = () => {
 
   });
 
-
+  const generateDynamicYaxes = (tagNames, colorList) => {
+    return tagNames.map((tagName, index) => ({
+      seriesName: tagName,
+      show: false,
+      axisTicks: {
+        show: true,
+        color: colorList[index % colorList.length]
+      },
+      axisBorder: {
+        show: true,
+        color: colorList[index % colorList.length]
+      },
+      labels: {
+        style: {
+          colors: colorList[index % colorList.length],
+        }
+      },
+      title: {
+        text: tagName,
+        style: {
+          color: colorList[index % colorList.length],
+          fontSize: '12px'
+        }
+      },
+      opposite: index % 2 === 1 // Alternate sides for better visibility
+    }));
+  };
 
   useEffect(() => {
     if (toolSubCategoryData.length > 0 && !values.grpId) {
@@ -206,7 +245,7 @@ const Widgets = () => {
     secondarySocketRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setSpeedometerDatas(data)
-      
+
     };
 
     secondarySocketRef.current.onclose = () => {
@@ -218,7 +257,7 @@ const Widgets = () => {
     };
   };
 
- 
+
   // Function to initialize the WebSocket
   const initializeSocket = () => {
     socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise-new`);
@@ -230,8 +269,8 @@ const Widgets = () => {
 
     socketRef.current.onmessage = (event) => {
       // const data = JSON.parse(event.data);
-       const rawData = JSON.parse(event?.data);
-       
+      const rawData = JSON.parse(event?.data);
+
       // Step 1: Collect all unique tag names
       const allTagNames = Array.from(
         new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
@@ -300,18 +339,21 @@ const Widgets = () => {
         //   data: series.data // Ensure this contains the updated data points
         // }));
 
-     
 
+        const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
+        const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
 
         return {
           ...prevState,
           series: transformed?.tagdata || [],
           options: {
             ...prevState.options,
+            colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+            yaxis: dynamicYaxes, // Dynamic y-axes based on tags
             // colors: formattedSeries.map(series => series.color),
             xaxis: {
               type: "datetime",
-              categories: transformed?.timestamp  || [], // Dynamic x-axis labels
+              categories: transformed?.timestamp || [], // Dynamic x-axis labels
             }
           },
 
@@ -389,7 +431,7 @@ const Widgets = () => {
       socketRef.current.send(JSON.stringify(params));
     }
   };
-  const sendMeterPrameters=()=>{
+  const sendMeterPrameters = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
         grpId: values?.grpId?.value,
@@ -415,17 +457,17 @@ const Widgets = () => {
                 <CardBody className="text-start">
                   <h5 className="mb-4">{item.itemId}</h5>
                   <div className="d-flex justify-content-center">
-                  <ReactSpeedometer
-                    maxValue={item?.maxValue}
-                    value={item?.itemValue}
-                    minValue={item?.minValue}
-                    needleColor="steelblue"
-                    startColor="green"
-                    // segments={10}
-                    endColor="red"
-                    height={180}
+                    <ReactSpeedometer
+                      maxValue={item?.maxValue}
+                      value={item?.itemValue}
+                      minValue={item?.minValue}
+                      needleColor="steelblue"
+                      startColor="green"
+                      // segments={10}
+                      endColor="red"
+                      height={180}
 
-                  />
+                    />
                   </div>
                 </CardBody>
               </Card>
@@ -441,7 +483,7 @@ const Widgets = () => {
                 </div>
               </CardHeader>
               {/* <CardBody> */}
-                <ReactApexChart options={state.options} series={state.series} type="line" height={430} />
+              <ReactApexChart options={state.options} series={state.series} type="line" height={430} />
               {/* </CardBody> */}
             </Card>
           </Col>
