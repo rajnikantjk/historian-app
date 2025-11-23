@@ -752,11 +752,15 @@ const HistoryTrend = () => {
 
     const DownloadReport = () => {
         setLoading(true)
+          const tagIdValue = selectedTagIds.length > 0
+            ? selectedTagIds.map(tag => tag.value).join(',')
+            : null;
         let payload = {
             grpId: values?.grpId?.value,
             interval: values?.interval?.value,
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
+            tagId:tagIdValue
         }
         dispatch(HistorytrendReportDownloadData(payload)).then((res) => {
 

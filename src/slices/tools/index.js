@@ -167,7 +167,9 @@ export const HistorytrendReportDownloadData = createAsyncThunk(
     };
     return await thunkHandler(
       get(
-        `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}`,
+        data?.tagId != null?
+        `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`:
+        `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`,
         config
       ),
       thunkAPI
