@@ -20,6 +20,7 @@ const initialState = {
   groupMappingCount: 0,
   intervalData: [],
   frequencyData:[],
+  tagDataByGroup: [],
   toolLoader: false,
 };
 
@@ -100,7 +101,8 @@ export const getHistoryDataList = createAsyncThunk(
   "user/get-all-historydatalist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get(`opc/history-trend-tag-wise-details/${data?.grpId}/${data.startDate}/${data.endDate}`, data),
+      get(data?.tagId != null? `opc/history-trend-tag-wise-details/${data?.grpId}/${data.startDate}/${data.endDate}?tagId=${data?.tagId}`:
+        `opc/history-trend-tag-wise-details/${data?.grpId}/${data.startDate}/${data.endDate}`, data),
       thunkAPI
     );
   }
@@ -181,6 +183,8 @@ export const HistorytrendData = createAsyncThunk(
     };
     return await thunkHandler(
       get(
+        data?.tagId? 
+        `opc/history-trend-tag-wise/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`:
         `opc/history-trend-tag-wise/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}`,
         config
       ),
@@ -195,7 +199,7 @@ export const getIntervalList = createAsyncThunk(
   "user/get-all-tagintervallist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("dropdown/interval/"),
+      get("dropdown/time-span/"),
       thunkAPI
     );
   }
@@ -205,7 +209,17 @@ export const getFrequencyList = createAsyncThunk(
   "user/get-all-tagfrequencylist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("dropdown/frequency/"),
+      get("dropdown/update-rate/"),
+      thunkAPI
+    );
+  }
+);
+
+export const getTagsByGroupId = createAsyncThunk(
+  "user/get-tags-by-group-id",
+  async (grpId, thunkAPI) => {
+    https: return await thunkHandler(
+      get(`tag/fetch-by-group-id/${grpId}`),
       thunkAPI
     );
   }
@@ -304,6 +318,17 @@ const ToolSlice = createSlice({
       })
       .addCase(getFrequencyList.rejected, (state, action) => {
         state.frequencyData = [];
+        state.toolLoader = false;
+      })
+      .addCase(getTagsByGroupId.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(getTagsByGroupId.fulfilled, (state, action) => {
+        state.tagDataByGroup = action?.payload?.data || action?.payload || [];
+        state.toolLoader = false;
+      })
+      .addCase(getTagsByGroupId.rejected, (state, action) => {
+        state.tagDataByGroup = [];
         state.toolLoader = false;
       })
       .addCase(getIntervalList.pending, (state, action) => {

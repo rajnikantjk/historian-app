@@ -38,6 +38,7 @@
     "google-maps-react": "^2.0.6",
     "gridjs": "^5.1.0",
     "gridjs-react": "^5.1.0",
+    "html2canvas": "^1.4.1",
     "i18next": "^22.4.9",
     "i18next-browser-languagedetector": "^7.0.1",
     "leaflet": "^1.9.3",

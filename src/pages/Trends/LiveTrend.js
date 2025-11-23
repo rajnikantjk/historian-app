@@ -1,5 +1,6 @@
 import ApexCharts from "apexcharts"
 import React, { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import ReactApexChart from "react-apexcharts";
 import {
   Card,
@@ -9,15 +10,15 @@ import {
   Container,
   Row,
   Col,
-
+  Button,
 } from "reactstrap";
-import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData } from "../../slices/tools";
+import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData, getTagsByGroupId } from "../../slices/tools";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Select from "react-select";
 import moment from "moment";
 import { Tooltip } from "react-tooltip";
-import { FaDownload } from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 import { FaFileExcel } from "react-icons/fa";
 import Loader from "../../Components/Common/Loader";
 import { FaPlay, FaPause } from "react-icons/fa";
@@ -45,20 +46,146 @@ const singleSelectStyle = {
     },
   }),
 };
+
+// Custom Option component with checkbox for multiselect
+const CustomOption = ({ innerProps, label, isSelected, isFocused, data, selectProps }) => {
+  const isSelectAll = data?.value === 'select-all';
+  const isDeselectAll = data?.value === 'deselect-all';
+
+  return (
+      <div
+          {...innerProps}
+          style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              backgroundColor: isFocused ? 'rgba(10, 179, 156, 0.18)' : 'white',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontWeight: (isSelectAll || isDeselectAll) ? 'bold' : 'normal'
+          }}
+      >
+          {!isSelectAll && !isDeselectAll && (
+              <input
+                  type="checkbox"
+                  checked={isSelected}
+                  readOnly
+                  style={{
+                      cursor: 'pointer',
+                      margin: 0
+                  }}
+              />
+          )}
+          <span style={{ color: 'black' }}>{label}</span>
+      </div>
+  );
+};
+// Custom ValueContainer to show count instead of selected items
+const CustomValueContainer = ({ children, ...props }) => {
+    const selectedCount = props.getValue().filter(opt => opt && opt.value !== 'select-all' && opt.value !== 'deselect-all').length;
+    const hasValue = selectedCount > 0;
+
+    // Get the input element from children (it's usually the last child)
+    const childrenArray = React.Children.toArray(children);
+    const inputElement = childrenArray[childrenArray.length - 1]; // Input is typically the last child
+
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', flex: 1, alignItems: 'center', minHeight: '38px' }}>
+            <div style={{ padding: '2px 8px', color: hasValue ? 'black' : '#6c757d', flex: '0 0 auto' }}>
+                {hasValue ? (
+                    `${selectedCount} ${selectedCount === 1 ? 'tag selected' : 'tags selected'}`
+                ) : (
+                    props.selectProps.placeholder
+                )}
+            </div>
+            {inputElement}
+        </div>
+    );
+};
+
+const multiSelectStyle = {
+  control: (provided) => ({
+      ...provided,
+      border: "1px solid #ced4da",
+      boxShadow: "none",
+      "&:hover": {
+          border: "1px solid #ced4da",
+      },
+  }),
+  option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isFocused
+          ? "rgba(10, 179, 156, 0.18)"
+          : "white",
+      color: "black",
+      "&:hover": {
+          backgroundColor: "rgba(10, 179, 156, 0.18)",
+          color: "black",
+      },
+  }),
+  multiValueLabel: (provided) => ({
+      ...provided,
+      color: "black",
+  }),
+  multiValue: () => ({
+      display: 'none', // Hide individual selected items
+  }),
+  input: (provided) => ({
+      ...provided,
+      color: "black",
+  }),
+  placeholder: (provided) => ({
+      ...provided,
+      color: "#6c757d",
+  }),
+};
 const LiveTrend = () => {
   let intervalId = null;
   const dispatch = useDispatch();
   const [isLive, setIsLive] = useState(true);
   const [livedata, setLiveData] = useState([])
   const [values, setValues] = useState({});
+ const historyTrendRef = useRef(null);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { toolSubCategoryData, intervalData, frequencyData } = useSelector(
+  const { toolSubCategoryData, intervalData, frequencyData,tagDataByGroup } = useSelector(
     (state) => state.Tool)
-
+     const [apiCalled, setApiCalled] = useState(false);
+    const [screenshotLoading, setScreenshotLoading] = useState(false);
   const colorList = [
     "#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0",
     "#546E7A", "#26a69a", "#D10CE8", "#ff6384", "#36a2eb"
   ];
+
+  const handleDownloadScreenshot = async () => {
+    if (!historyTrendRef.current) return;
+
+    // Show loader instantly by forcing synchronous update
+    flushSync(() => {
+        setScreenshotLoading(true);
+    });
+
+    // Use setTimeout to ensure React has rendered the loader before starting heavy work
+    setTimeout(async () => {
+        try {
+            const canvas = await html2canvas(historyTrendRef.current, {
+                scale: window.devicePixelRatio || 1,
+                useCORS: true,
+                logging: false,
+            });
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = `history-trend-${moment().format("YYYYMMDD-HHmmss")}.png`;
+            link.click();
+            toast.success("Screenshot downloaded successfully");
+        } catch (error) {
+            console.error("Screenshot capture failed:", error);
+            toast.error("Unable to capture screenshot. Please try again.");
+        } finally {
+            setScreenshotLoading(false);
+        }
+    }, 0);
+};
   const groupdata = toolSubCategoryData.map((item) => {
     return {
       value: item?.id,
@@ -166,10 +293,126 @@ const LiveTrend = () => {
         size: 0
       },
       tooltip: {
+        enabled: true,
+        shared: true,
+        intersect: false,
+        followCursor: true,
         x: {
-          format: 'dd MMM yyyy HH:mm:ss', // 👈 Tooltip datetime format
+            format: 'dd MMM yyyy HH:mm:ss',
+        },
+        custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+            // Get timestamp from category labels or x-axis data
+            let timestamp = w.globals.categoryLabels[dataPointIndex];
+
+            // If timestamp is not available, try to get it from x-axis categories
+            if (!timestamp && w.config.xaxis && w.config.xaxis.categories) {
+                timestamp = w.config.xaxis.categories[dataPointIndex];
+            }
+
+            // If still not available, format the current data point time
+            if (!timestamp && w.globals.seriesX && w.globals.seriesX[0]) {
+                const xValue = w.globals.seriesX[0][dataPointIndex];
+                if (xValue) {
+                    timestamp = moment(xValue).format('dd MMM yyyy HH:mm:ss');
+                }
+            }
+
+            // Fallback to current time formatted
+            if (!timestamp) {
+                timestamp = moment().format('dd MMM yyyy HH:mm:ss');
+            }
+
+            const colors = w.globals.colors;
+            const seriesNames = w.globals.seriesNames;
+
+            // Build tooltip content for all series at this data point
+            let seriesItems = '';
+            let itemCount = 0;
+
+            series.forEach((serie, idx) => {
+                const value = serie[dataPointIndex];
+                const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
+                const color = colors[idx] || '#008FFB';
+
+                if (value !== null && value !== undefined) {
+                    itemCount++;
+                    seriesItems += `
+                        <div style="display: flex; align-items: center; padding: 6px 8px; margin-bottom: 2px; border-radius: 4px; transition: background-color 0.2s;" 
+                             onmouseover="this.style.backgroundColor='#f5f5f5'" 
+                             onmouseout="this.style.backgroundColor='transparent'">
+                            <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 10px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 0 3px ${color}20;"></span>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} :- ${parseFloat(value)}</div>
+                              
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            const hasItems = itemCount > 0;
+            const maxHeight = itemCount > 10 ? '400px' : 'auto';
+
+            return `
+                <style>
+                    .custom-tooltip .tooltip-timestamp {
+                        color: #ffffff !important;
+                    }
+                    .custom-tooltip * {
+                        color: inherit !important;
+                    }
+                </style>
+               <div class="custom-tooltip"
+                        style="
+                            background: #fff;
+                            border: 1px solid #e0e0e0;
+                            border-radius: 8px;
+                            padding: 0;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                            width: ${itemCount > 6 ? '600px' : '320px'};
+                            max-width: ${itemCount > 6 ? '600px' : '320px'};
+                            overflow: hidden;
+                        ">
+
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 14px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span class="tooltip-timestamp" style="color: #ffffff !important; font-weight: 600 !important; opacity: 1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${timestamp}</span>
+                            
+                        </div>
+                    </div>
+               <div style="
+                    max-height: ${maxHeight};
+                    overflow-y: auto;
+                    padding: 8px;
+                    width: 100%;
+                    max-width: none;
+                    ${!hasItems ? 'padding: 10px; text-align: center;' : ''};
+                ">
+                <div style="
+                    display: grid;
+                    grid-template-columns: repeat(${itemCount > 6 ? 2 : 1}, minmax(0, 1fr));
+                    width: 100%;
+                    gap: 0px 10px;
+                    box-sizing: border-box;
+                ">
+                        ${hasItems ? seriesItems : '<div style="color: #999; font-size: 12px; padding: 10px 0;">No data available at this point</div>'}
+                    </div>
+                </div>
+
+
+                  
+                </div>
+            `;
+        },
+        style: {
+            fontSize: '12px',
+            fontFamily: 'inherit'
+        },
+        theme: 'light',
+        marker: {
+            show: true
         }
-      },
+    },
       yaxis: [
         {
           seriesName: 'Tag Value',
@@ -344,6 +587,44 @@ const LiveTrend = () => {
     ]);
   }, [dispatch]);
 
+    // Prepare tag options with Select All/Deselect All (vice versa based on selection)
+      const tagOptions = React.useMemo(() => {
+          const tagList = tagDataByGroup?.map((tag) => ({
+              value: tag.id,
+              label: tag.tagName || tag.displayTagName || tag.name || tag.itemId || `Tag ${tag.id}`
+          })) || [];
+  
+          // Show "Deselect All" only when ALL tags are selected, otherwise show "Select All"
+          const selectedTagValues = selectedTagIds.map(tag => tag.value);
+          const allTagValues = tagList.map(tag => tag.value);
+          const allTagsSelected = tagList.length > 0 &&
+              allTagValues.length === selectedTagValues.length &&
+              allTagValues.every(tagValue => selectedTagValues.includes(tagValue));
+  
+          const toggleOption = allTagsSelected
+              ? { value: 'deselect-all', label: 'Deselect All' }
+              : { value: 'select-all', label: 'Select All' };
+  
+          return [toggleOption, ...tagList];
+      }, [tagDataByGroup, selectedTagIds]);
+
+  useEffect(() => {
+    if (values?.grpId?.value) {
+      dispatch(getTagsByGroupId(values.grpId.value))
+        .then((res) => {
+         
+        })
+        .catch((error) => {
+          console.error('Error fetching tags:', error);
+          toast.error('Failed to load tags');
+        });
+    } 
+  }, [values?.grpId,dispatch]);
+
+   
+
+
+
   const fetchData = () => {
     if (values?.grpId?.value && values?.interval?.value) {
       let payload = {
@@ -449,7 +730,7 @@ const LiveTrend = () => {
     if (values?.frequency?.value && isLive) {
       // fetchData(); // Initial API call
       setTimeout(() => {
-        sendParameters();
+        // sendParameters();
       }, 100)
 
 
@@ -461,7 +742,7 @@ const LiveTrend = () => {
     return () => {
       clearInterval(intervalId); // Cleanup when frequency changes or component unmounts
     };
-  }, [isLive, values?.frequency?.value, values?.grpId?.value, values?.interval?.value]);
+  }, [isLive, values?.frequency?.value, values?.grpId?.value, values?.interval?.value,selectedTagIds]);
   // console.log("values", values)
   const DownloadReport = () => {
     setLoading(true)
@@ -527,7 +808,7 @@ const LiveTrend = () => {
 
   // Function to initialize the WebSocket
   const initializeSocket = () => {
-    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise-new`);
+    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise`);
 
     socketRef.current.onopen = () => {
       console.log('WebSocket connection established');
@@ -663,10 +944,19 @@ const LiveTrend = () => {
   const sendParameters = () => {
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      const params = {
-        interval: values?.interval?.value,
+        // Get comma-separated tag IDs or null if none selected
+        const tagIdValue = selectedTagIds.length > 0
+        ? selectedTagIds.map(tag => tag.value).join(',')
+        : null;
+      const params =  selectedTagIds.length > 0 ?{
+        tagId: tagIdValue,
+        timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
-        frequency: values?.frequency?.value,
+        updateRate: values?.frequency?.value,
+      } : {
+        timeSpan: values?.interval?.value,
+        grpId: values?.grpId?.value,
+        updateRate: values?.frequency?.value,
       };
 
       // console.log("params", params)
@@ -690,15 +980,30 @@ const LiveTrend = () => {
     setIsLive(!isLive)
 
   }
+
+  const handleApplyFilter=()=>{
+    sendParameters();
+  }
+
+  useEffect(() => {
+  
+    if (values?.grpId?.value && values?.interval?.value && values?.frequency?.value && !apiCalled) {
+      setTimeout(()=>{
+        sendParameters()
+          setApiCalled(true);
+      },1000)
+    }
+}, [values, apiCalled,socketRef]);
   return (
     <div className="page-content">
-      {loading && <Loader />}
+      {(loading || screenshotLoading) && <Loader />}
       <Container fluid>
         <Row>
 
           {/* Main Content */}
           <Col md="12">
             {/* Chart Section */}
+            <div ref={historyTrendRef}>
             <Card className="border border-gray shadow-sm mb-4">
               <CardHeader className="bg-primary text-white d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center gap-2 ">
@@ -721,16 +1026,63 @@ const LiveTrend = () => {
 
 
                 </div>
-                <div className="position-relative d-flex align-items-center gap-2 download-icon-align">
-
-                  <label className="text-white mb-1 d-block text-center">Group :</label>
+                <div className="position-relative d-flex align-items-center gap-2 ">
+                <div className="history-controls ms-auto">
+                <div className="history-filter">
+                  <label className="text-white mb-1 d-block ">Group :</label>
                   <Select options={groupdata} className="w-[200px] min-w-[200px]" placeholder="Select Group" styles={singleSelectStyle} value={values?.grpId}
                     onChange={(e) => {
                       setValues({
                         ...values,
                         grpId: e,
                       });
+                       // Reset selected tags when group changes
+                       setSelectedTagIds([]);
                     }} />
+                    </div>
+                    <div className="history-filter-multi-select">
+                     <label className="text-white mb-1 d-block">Tags :</label>
+                    <Select
+                                                                  isMulti
+                                                                  isSearchable
+                                                                  closeMenuOnSelect={false}
+                                                                  hideSelectedOptions={false}
+                                                                  options={tagOptions}
+                                                                  className="history-select-multi"
+                                                                  placeholder="Select Tags"
+                                                                  styles={multiSelectStyle}
+                                                                  value={selectedTagIds}
+                                                                  onChange={(selectedOptions) => {
+                                                                      if (!selectedOptions) {
+                                                                          setSelectedTagIds([]);
+                                                                          return;
+                                                                      }
+                  
+                                                                      // Check if Select All was clicked
+                                                                      const hasSelectAll = selectedOptions.some(opt => opt.value === 'select-all');
+                                                                      const hasDeselectAll = selectedOptions.some(opt => opt.value === 'deselect-all');
+                  
+                                                                      if (hasSelectAll) {
+                                                                          // Select all tags (excluding select-all and deselect-all options)
+                                                                          const allTags = tagOptions.filter(opt => opt.value !== 'select-all' && opt.value !== 'deselect-all');
+                                                                          setSelectedTagIds(allTags);
+                                                                      } else if (hasDeselectAll) {
+                                                                          // Deselect all
+                                                                          setSelectedTagIds([]);
+                                                                      } else {
+                                                                          // Normal selection - filter out select-all and deselect-all
+                                                                          const filteredOptions = selectedOptions.filter(opt => opt.value !== 'select-all' && opt.value !== 'deselect-all');
+                                                                          setSelectedTagIds(filteredOptions);
+                                                                      }
+                                                                  }}
+                                                                  components={{
+                                                                      Option: CustomOption,
+                                                                      ValueContainer: CustomValueContainer,
+                                                                      MultiValue: () => null, // Hide individual selected items
+                                                                  }}
+                                                              />
+                                                              </div>
+                                                              <div className="history-filter">
                   <label className="text-white mb-1 d-block">Interval :</label>
                   <Select options={intervaldata} className="w-[100px]" placeholder="Select Interval" styles={singleSelectStyle} value={values?.interval}
                     onChange={(e) => {
@@ -739,15 +1091,33 @@ const LiveTrend = () => {
                         interval: e,
                       });
                     }} />
-                  <label className="text-white mb-1 d-block">Frequency :</label>
-                  <Select options={frequencydata} className="w-[100px]" placeholder="Select Frequency" styles={singleSelectStyle} value={values?.frequency}
+                    </div>
+                    <div className="history-filter">
+                  <label className="text-white mb-1 d-block">Refresh Rate :</label>
+                  <Select options={frequencydata} className="w-[100px]" placeholder="Select " styles={singleSelectStyle} value={values?.frequency}
                     onChange={(e) => {
                       setValues({
                         ...values,
                         frequency: e,
                       });
                     }} />
-                  <div className=" d-flex align-items-center ">
+                    </div>
+                 
+                 <div className="history-actions position-relative">
+                                          <Button className="togglebutton-design-off" onClick={handleApplyFilter}>Apply</Button>
+                                            <Button
+                                                color="light"
+                                                className="history-action-btn "
+                                                data-tooltip-id="screenshotTooltip"
+                                                data-tooltip-content="Take Screenshot"
+                                                onClick={handleDownloadScreenshot}
+                                            >
+                                                <FaCamera className="" />
+                                            </Button>
+                                            <Tooltip id="downloadTooltip" />
+                                            <Tooltip id="screenshotTooltip" />
+                                        </div>
+                  {/* <div className=" d-flex align-items-center ">
                     <div
                       className="ms-1 border border-white rounded-3 px-2 py-2"
                       data-tooltip-id="downloadTooltip"
@@ -762,7 +1132,8 @@ const LiveTrend = () => {
                       <span className="mx-1">Export</span>
                     </div>
                     <Tooltip id="downloadTooltip" />
-                  </div>
+                  </div> */}
+                    </div>
                 </div>
               </CardHeader>
               <CardBody>
@@ -770,7 +1141,7 @@ const LiveTrend = () => {
                 <ReactApexChart options={state.optionsLine} series={state.seriesLine} type="area" height={170} />
               </CardBody>
             </Card>
-
+                </div>
 
           </Col>
         </Row>

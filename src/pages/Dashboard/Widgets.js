@@ -8,6 +8,10 @@ import LiveStatusDot from "../Trends/LiveStatusDot";
 import moment from "moment";
 import { toast } from "react-toastify";
 import Loader from "../../Components/Common/Loader";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper";
+import "swiper/css";
+import "swiper/css/navigation";
 const Widgets = () => {
   const dispatch = useDispatch();
   const [livedata, setLiveData] = useState([])
@@ -17,6 +21,18 @@ const Widgets = () => {
   const colorList = [
     "#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0",
     "#546E7A", "#26a69a", "#D10CE8", "#ff6384", "#36a2eb"
+  ];
+  const initialSpeedometerData = [
+    { itemId: "Random.Int1", itemValue: 65, minValue: 0, maxValue: 100 },
+    { itemId: "Random.UInt1", itemValue: 40, minValue: 0, maxValue: 100 },
+    { itemId: "Saw-toothed Waves.UInt1", itemValue: 85, minValue: 0, maxValue: 120 },
+    { itemId: "Triangle Waves.Int1", itemValue: 25, minValue: 0, maxValue: 100 },
+    { itemId: "Sine Waves.Int1", itemValue: 55, minValue: 0, maxValue: 90 },
+    { itemId: "Cosine Waves.UInt1", itemValue: 72, minValue: 10, maxValue: 110 },
+    { itemId: "Square Waves.Int1", itemValue: 33, minValue: 0, maxValue: 95 },
+    { itemId: "Ramp Waves.UInt1", itemValue: 95, minValue: 20, maxValue: 130 },
+    { itemId: "Pulse Waves.Int1", itemValue: 15, minValue: 0, maxValue: 80 },
+    { itemId: "Noise Waves.UInt1", itemValue: 48, minValue: 5, maxValue: 105 },
   ];
   const [speedometerDatas, setSpeedometerDatas] = useState([])
   const socketRef = useRef(null);
@@ -86,10 +102,126 @@ const Widgets = () => {
         size: 0
       },
       tooltip: {
+        enabled: true,
+        shared: true,
+        intersect: false,
+        followCursor: true,
         x: {
-          format: 'dd MMM yyyy HH:mm:ss', // 👈 Tooltip datetime format
+            format: 'dd MMM yyyy HH:mm:ss',
+        },
+        custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+            // Get timestamp from category labels or x-axis data
+            let timestamp = w.globals.categoryLabels[dataPointIndex];
+
+            // If timestamp is not available, try to get it from x-axis categories
+            if (!timestamp && w.config.xaxis && w.config.xaxis.categories) {
+                timestamp = w.config.xaxis.categories[dataPointIndex];
+            }
+
+            // If still not available, format the current data point time
+            if (!timestamp && w.globals.seriesX && w.globals.seriesX[0]) {
+                const xValue = w.globals.seriesX[0][dataPointIndex];
+                if (xValue) {
+                    timestamp = moment(xValue).format('dd MMM yyyy HH:mm:ss');
+                }
+            }
+
+            // Fallback to current time formatted
+            if (!timestamp) {
+                timestamp = moment().format('dd MMM yyyy HH:mm:ss');
+            }
+
+            const colors = w.globals.colors;
+            const seriesNames = w.globals.seriesNames;
+
+            // Build tooltip content for all series at this data point
+            let seriesItems = '';
+            let itemCount = 0;
+
+            series.forEach((serie, idx) => {
+                const value = serie[dataPointIndex];
+                const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
+                const color = colors[idx] || '#008FFB';
+
+                if (value !== null && value !== undefined) {
+                    itemCount++;
+                    seriesItems += `
+                        <div style="display: flex; align-items: center; padding: 6px 8px; margin-bottom: 2px; border-radius: 4px; transition: background-color 0.2s;" 
+                             onmouseover="this.style.backgroundColor='#f5f5f5'" 
+                             onmouseout="this.style.backgroundColor='transparent'">
+                            <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 10px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 0 3px ${color}20;"></span>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} :- ${parseFloat(value)}</div>
+                              
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            const hasItems = itemCount > 0;
+            const maxHeight = itemCount > 10 ? '400px' : 'auto';
+
+            return `
+                <style>
+                    .custom-tooltip .tooltip-timestamp {
+                        color: #ffffff !important;
+                    }
+                    .custom-tooltip * {
+                        color: inherit !important;
+                    }
+                </style>
+               <div class="custom-tooltip"
+                        style="
+                            background: #fff;
+                            border: 1px solid #e0e0e0;
+                            border-radius: 8px;
+                            padding: 0;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                            width: ${itemCount > 6 ? '600px' : '320px'};
+                            max-width: ${itemCount > 6 ? '600px' : '320px'};
+                            overflow: hidden;
+                        ">
+
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 14px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span class="tooltip-timestamp" style="color: #ffffff !important; font-weight: 600 !important; opacity: 1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${timestamp}</span>
+                            
+                        </div>
+                    </div>
+               <div style="
+                    max-height: ${maxHeight};
+                    overflow-y: auto;
+                    padding: 8px;
+                    width: 100%;
+                    max-width: none;
+                    ${!hasItems ? 'padding: 10px; text-align: center;' : ''};
+                ">
+                <div style="
+                    display: grid;
+                    grid-template-columns: repeat(${itemCount > 6 ? 2 : 1}, minmax(0, 1fr));
+                    width: 100%;
+                    gap: 0px 10px;
+                    box-sizing: border-box;
+                ">
+                        ${hasItems ? seriesItems : '<div style="color: #999; font-size: 12px; padding: 10px 0;">No data available at this point</div>'}
+                    </div>
+                </div>
+
+
+                  
+                </div>
+            `;
+        },
+        style: {
+            fontSize: '12px',
+            fontFamily: 'inherit'
+        },
+        theme: 'light',
+        marker: {
+            show: true
         }
-      },
+    },
       yaxis: [
         {
           seriesName: 'Tag Value',
@@ -228,12 +360,6 @@ const Widgets = () => {
       dispatch(getFrequencyList())
     ]);
   }, [dispatch]);
-  const speedometerData = [
-    { label: "Random.Int1", value: 65 },
-    { label: "Random.UInt1", value: 40 },
-    { label: "Saw-toothed Waves.UInt1", value: 85 },
-    { label: "Triangle Waves.Int1", value: 25 },
-  ];
   // console.log("secondSocketInitialized",secondSocketInitialized)
   const connectSecondarySocket = () => {
     secondarySocketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/meter/tag-wise`);
@@ -260,7 +386,7 @@ const Widgets = () => {
 
   // Function to initialize the WebSocket
   const initializeSocket = () => {
-    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise-new`);
+    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise`);
 
     socketRef.current.onopen = () => {
       console.log('WebSocket connection established');
@@ -398,8 +524,9 @@ const Widgets = () => {
     setLoading(true)
     let payload = {
       grpId: values?.grpId?.value,
-      startDate: moment(new Date()).format("YYYY-MM-DD"),
-      endDate: moment(new Date()).format("YYYY-MM-DD"),
+      startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
+      endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
+      tagId: null,
     }
     dispatch(
       getHistoryDataList(payload)
@@ -420,9 +547,10 @@ const Widgets = () => {
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-        interval: values?.interval?.value,
-        grpId: values?.grpId?.value,
-        frequency: 30 // set for delhi client
+        // tagId:"5,7",
+        timeSpan: values?.interval?.value,
+        grpId: String(values?.grpId?.value),
+        updateRate: 30 // set for delhi client
         // frequency: values?.frequency?.value, //on request of prakashbhai
       };
 
@@ -434,8 +562,10 @@ const Widgets = () => {
   const sendMeterPrameters = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
+
+        timeSpan:600,
         grpId: values?.grpId?.value,
-        frequency: values?.frequency?.value,
+        updateRate: 30,
       };
 
       // console.log("params2", params)
@@ -447,32 +577,74 @@ const Widgets = () => {
     <React.Fragment>
       {loading && <Loader />}
       <Container fluid>
-        <Row>
-          {speedometerDatas?.map((item, index) => (
-            <Col xs="12"
-              sm="12"
-              md="6"
-              lg="3" key={index} className=" d-flex justify-content-center">
-              <Card className="w-100">
-                <CardBody className="text-start">
-                  <h5 className="mb-4">{item.itemId}</h5>
-                  <div className="d-flex justify-content-center">
-                    <ReactSpeedometer
-                      maxValue={item?.maxValue}
-                      value={item?.itemValue}
-                      minValue={item?.minValue}
-                      needleColor="steelblue"
-                      startColor="green"
-                      // segments={10}
-                      endColor="red"
-                      height={180}
-
-                    />
-                  </div>
-                </CardBody>
-              </Card>
+        <Row className="">
+          {speedometerDatas?.length > 4 ? (
+            <Col xs="12">
+              <Swiper
+                modules={[Navigation]}
+                navigation
+                spaceBetween={16}
+                slidesPerGroup={2}
+                breakpoints={{
+                  0: { slidesPerView: 1 },
+                  576: { slidesPerView: 1 },
+                  768: { slidesPerView: 2 },
+                  992: { slidesPerView: 3 },
+                  1200: { slidesPerView: 4 },
+                }}
+                className="speedometer-slider"
+              >
+                {speedometerDatas.map((item, index) => (
+                  <SwiperSlide key={item?.itemId ?? index}>
+                    <Card className="w-100 h-100">
+                      <CardBody className="text-start">
+                        <h5 className="mb-4">{item.itemId}</h5>
+                        <div className="d-flex justify-content-center">
+                          <ReactSpeedometer
+                            maxValue={item?.maxValue}
+                            value={item?.itemValue}
+                            minValue={item?.minValue}
+                            needleColor="steelblue"
+                            startColor="green"
+                            endColor="red"
+                            height={180}
+                          />
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </Col>
-          ))}
+          ) : (
+            speedometerDatas?.map((item, index) => (
+              <Col
+                xs="12"
+                sm="12"
+                md="6"
+                lg="3"
+                key={item?.itemId ?? index}
+                className="d-flex justify-content-center"
+              >
+                <Card className="w-100">
+                  <CardBody className="text-start">
+                    <h5 className="mb-4">{item.itemId}</h5>
+                    <div className="d-flex justify-content-center">
+                      <ReactSpeedometer
+                        maxValue={item?.maxValue}
+                        value={item?.itemValue}
+                        minValue={item?.minValue}
+                        needleColor="steelblue"
+                        startColor="green"
+                        endColor="red"
+                        height={180}
+                      />
+                    </div>
+                  </CardBody>
+                </Card>
+              </Col>
+            ))
+          )}
         </Row>
         <Row>
           <Col md="12">

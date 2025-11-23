@@ -28,7 +28,7 @@ import { Link } from "feather-icons-react/build/IconComponents";
 import DeleteModal from "../../Components/Common/DeleteModal";
 import Search from "feather-icons-react/build/IconComponents/Search";
 import {
-AddNewTagDetails,
+  AddNewTagDetails,
   EditTagDetails,
   DeleteTagData,
   getTaglist,
@@ -57,9 +57,9 @@ const TagList = () => {
   const [loader, setLoader] = useState(false);
   const [rowId, setRowId] = useState("");
   const [addModal, setAddModal] = useState(false);
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(1500);
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -140,24 +140,41 @@ const TagList = () => {
   const columns = useMemo(() => [
     {
       Header: "Sr.No",
-      accessor: (row,rowIndex) => rowIndex + 1 ?? "-",
+      accessor: (row, rowIndex) => rowIndex + 1 ?? "-",
 
       filterable: false,
     },
-    
     {
-      Header: "Tag Name",
+      Header: "OPC Server Name",
+      accessor: (row) => row?.serverName ?? "-",
+      filterable: false,
+    },
+    {
+      Header: "OPC Tag Name",
       accessor: (row) => row?.tagName ?? "-",
 
       filterable: false,
     },
-    {
-      Header: "Server Name",
-      accessor: (row) => row?.serverName ?? "-",
+     {
+      Header: "Display TagName",
+      accessor: (row) => row?.displayTagName ?? "-",
       filterable: false,
     },
+    {
+      Header: "Eng. Unit",
+      accessor: (row) => row?.unitName ?? "-",
+      filterable: false,
+    },
+   
 
-    
+    {
+      Header: "Description",
+      accessor: (row) => row?.description ?? "-",
+      filterable: false,
+    },
+   
+  
+
     {
       Header: "Action",
       Cell: (cellProps) => {
@@ -201,10 +218,10 @@ const TagList = () => {
     dispatch(DeleteTagData({ id: userStatus.id }))
       .then((res) => {
         if (res?.payload?.status == 200) {
-        
-            toast.success("Tag Deleted Successfully");
-        
-            setDeleteModal(false);
+
+          toast.success("Tag Deleted Successfully");
+
+          setDeleteModal(false);
           setLoader(false);
 
           dispatch(
@@ -225,7 +242,7 @@ const TagList = () => {
   const formValidation = () => {
     let isFormValid = true;
     let newErrors = {};
-    const requiredFields = ["serverName", "tagName"];
+    const requiredFields = ["serverName", "tagName", "displayTagName", "unitName", "description"];
 
     requiredFields.forEach((field) => {
       if (!values?.tagName || values?.tagName.trim() === "") {
@@ -236,7 +253,19 @@ const TagList = () => {
         isFormValid = false;
         newErrors["serverName"] = " Please enter a server name";
       }
-   
+      if (!values?.displayTagName || values?.displayTagName.trim() === "") {
+        isFormValid = false;
+        newErrors["displayTagName"] = " Please enter a display tag name";
+      }
+      if (!values?.unitName || values?.unitName.trim() === "") {
+        isFormValid = false;
+        newErrors["unitName"] = " Please enter a unit name";
+      }
+      if (!values?.description || values?.description.trim() === "") {
+        isFormValid = false;
+        newErrors["description"] = " Please enter a description";
+      }
+
     });
 
     setErrors(newErrors);
@@ -249,6 +278,9 @@ const TagList = () => {
       ...values,
       tagName: item?.tagName,
       serverName: item?.serverName,
+      displayTagName: item?.displayTagName,
+      unitName: item?.unitName,
+      description: item?.description,
     });
     setAddModal(true);
   };
@@ -257,11 +289,10 @@ const TagList = () => {
       setLoader(true);
 
       dispatch(
-      AddNewTagDetails({
-          id:"0",
-          tagName: values?.tagName,
-          serverName: values?.serverName,
-          isActive:"Y"
+        AddNewTagDetails({
+          ...values,
+          id: "0",
+          isActive: "Y"
         })
       )
         .then((res) => {
@@ -289,8 +320,7 @@ const TagList = () => {
 
       dispatch(
         EditTagDetails({
-          tagName: values?.tagName,
-          serverName: values?.serverName,
+          ...values,
           isActive: "Y",
           id: rowId,
         })
@@ -316,7 +346,7 @@ const TagList = () => {
   };
   return (
     <>
-      <Modal isOpen={addModal}  id="exampleModal">
+      <Modal isOpen={addModal} id="exampleModal">
         <ModalHeader
           toggle={() => {
             setAddModal(false);
@@ -328,11 +358,28 @@ const TagList = () => {
         </ModalHeader>
         <ModalBody>
           <form>
-            <div className="mb-3">
-           
-       
+           <div className="mb-3">
               <label htmlFor="customer-name" className="col-form-label">
-                Tag Name: <span className="text-danger">*</span>
+                OPC Server Name: <span className="text-danger">*</span>
+                {errors.serverName && (
+                  <span className="text-danger">{errors.serverName}</span>
+                )}
+              </label>
+              <Input
+                type="text"
+                className="form-control"
+                id="customer-name"
+                name="serverName"
+                placeholder="Enter Server Name"
+                value={values.serverName}
+                onChange={handleOnChange}
+              />
+            </div>
+            <div className="mb-3">
+
+
+              <label htmlFor="customer-name" className="col-form-label">
+               OPC Tag Name: <span className="text-danger">*</span>
                 {errors.tagName && (
                   <span className="text-danger">{errors.tagName}</span>
                 )}
@@ -347,26 +394,64 @@ const TagList = () => {
                 onChange={handleOnChange}
               />
             </div>
+            
             <div className="mb-3">
-           
-       
-           <label htmlFor="customer-name" className="col-form-label">
-             Server Name: <span className="text-danger">*</span>
-             {errors.serverName && (
-               <span className="text-danger">{errors.serverName}</span>
-             )}
-           </label>
-           <Input
-             type="text"
-             className="form-control"
-             id="customer-name"
-             name="serverName"
-             placeholder="Enter Server Name"
-             value={values.serverName}
-             onChange={handleOnChange}
-           />
-         </div>
-           
+
+              <label htmlFor="customer-name" className="col-form-label">
+                Display TagName: <span className="text-danger">*</span>
+                {errors.displayTagName && (
+                  <span className="text-danger">{errors.displayTagName}</span>
+                )}
+              </label>
+              <Input
+                type="text"
+                className="form-control"
+                id="customer-name"
+                name="displayTagName"
+                placeholder="Enter Display Tag Name"
+                value={values.displayTagName}
+                onChange={handleOnChange}
+              />
+            </div>
+            <div className="mb-3">
+
+
+              <label htmlFor="customer-name" className="col-form-label">
+                Eng. Unit: <span className="text-danger">*</span>
+                {errors.unitName && (
+                  <span className="text-danger">{errors.unitName}</span>
+                )}
+              </label>
+              <Input
+                type="text"
+                className="form-control"
+                id="customer-name"
+                name="unitName"
+                placeholder="Enter Tag Name"
+                value={values.unitName}
+                onChange={handleOnChange}
+              />
+            </div>
+            <div className="mb-3">
+
+              <label htmlFor="customer-name" className="col-form-label">
+                Tag Description: <span className="text-danger">*</span>
+                {errors.description && (
+                  <span className="text-danger">{errors.description}</span>
+                )}
+              </label>
+              <Input
+                type="textarea"
+                className="form-control"
+                id="customer-name"
+                name="description"
+                placeholder="Enter Description"
+                value={values.description}
+                onChange={handleOnChange}
+              />
+
+            </div>
+
           </form>
         </ModalBody>
         <div className="modal-footer">
@@ -412,10 +497,10 @@ const TagList = () => {
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">Tag List</h5>
-            {   toolCategoryCount > 10 &&   <div className="flex-shrink-0">
+                  {toolCategoryCount > 10 && <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
-                      <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
+                      <select name="pagination" style={{ width: "70px" }} value={limit} onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
                       >
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -484,7 +569,7 @@ const TagList = () => {
                             addbuttontext={"Add New Tag"}
                             onClickOpenAddModal={onClickOpenAddModal}
                           />
-                     
+
                         </>
                       )}
                     </>

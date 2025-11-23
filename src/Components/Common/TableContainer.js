@@ -226,7 +226,7 @@ const TableContainer = ({
 
   return (
     <Fragment>
-      <Row className="mb-3">
+      <Row className="">
         {isGlobalSearch && (
           <Col md={1}>
             <select
@@ -322,7 +322,7 @@ const TableContainer = ({
       </Row>
 
       {page?.length > 0 ? (
-        <div className={divClass} style={{ height: "calc(100vh - 300px)" }}>
+        <div className={divClass} style={{ height: "calc(100vh - 280px)" }}>
           <Table hover {...getTableProps()} className={tableClass}>
             <thead className={theadClass}>
               {headerGroups.map((headerGroup) => (
@@ -374,7 +374,7 @@ const TableContainer = ({
         </div>
       )}
       {isPagination && (
-        <Row className="justify-content-md-between justify-content-center align-items-center p-2">
+        <Row className="justify-content-md-between justify-content-center align-items-center ">
           <Col className="col-12 col-sm-6">
             <span className="me-3">
               Page <b>{currentPage}</b> of{" "}

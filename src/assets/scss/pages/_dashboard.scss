@@ -163,6 +163,110 @@
   }
 }
 
+.speedometer-slider {
+  position: relative;
+  overflow: visible;
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 32px;
+    height: 32px;
+    background-color: rgba($primary, 0.1);
+    color: $primary;
+    border-radius: 50%;
+  }
+
+  .swiper-button-next {
+    right: 0px;
+  }
+
+  .swiper-button-prev {
+    left: 0px;
+  }
+}
+
+.history-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0rem;
+
+  
+  align-items: center;
+
+  .history-filter {
+    min-width: 140px;
+    max-width: 175px;
+    display: flex;
+    flex-direction: column;
+  }
+  .history-filter-main {
+    min-width: 100px;
+    
+    display: flex;
+    flex-direction: column;
+  }
+  .history-filter-multi-select {
+    min-width: 200px;
+    
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba($white, 0.85);
+    margin-bottom: 0.35rem;
+  }
+
+  .history-select {
+    min-width: 100px;
+  }
+  .history-select-multi {
+    min-width: 200px;
+  }
+
+  .history-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 22px;
+  }
+
+  .history-action-btn {
+    background-color: rgba($white, 0.15);
+    border-color: rgba($white, 0.2);
+    color: $white;
+
+    &:hover {
+      background-color: rgba($white, 0.25);
+      color: $white;
+    }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .history-controls {
+    flex-direction: column;
+
+    .history-filter {
+      width: 100%;
+    }
+
+    .history-select {
+      width: 100%;
+    }
+
+    .history-actions {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+}
+
 .dash-collection {
   .content {
     background-color: rgba($white, 0.25);
