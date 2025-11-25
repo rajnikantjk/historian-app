@@ -523,10 +523,11 @@ const Widgets = () => {
   const getHistoryData = () => {
     setLoading(true)
     let payload = {
-      grpId: values?.grpId?.value,
+      grpId: "",
       startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
       endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
       tagId: null,
+       defaultLoad:"Y"
     }
     dispatch(
       getHistoryDataList(payload)
@@ -548,8 +549,11 @@ const Widgets = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
         tagId:"",
-        timeSpan: values?.interval?.value,
-        grpId: String(values?.grpId?.value),
+        grpId:"",
+        defaultLoad:"Y",
+        timeSpan:600,
+        // timeSpan: values?.interval?.value,
+        // grpId: String(values?.grpId?.value),
         updateRate: 30 // set for delhi client
         // frequency: values?.frequency?.value, //on request of prakashbhai
       };
@@ -562,9 +566,10 @@ const Widgets = () => {
   const sendMeterPrameters = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-        timeSpan:600,
-        grpId: values?.grpId?.value,
-        updateRate: 30,
+        defaultLoad:"Y",
+        grpId:"",
+        tagId:"",
+        updateRate: 60,
       };
 
       // console.log("params2", params)

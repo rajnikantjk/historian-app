@@ -101,8 +101,8 @@ export const getHistoryDataList = createAsyncThunk(
   "user/get-all-historydatalist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get(data?.tagId != null? `opc/history-trend-tag-wise-details/${data?.grpId}/${data.startDate}/${data.endDate}?tagId=${data?.tagId}`:
-        `opc/history-trend-tag-wise-details/${data?.grpId}/${data.startDate}/${data.endDate}`, data),
+      get(data?.defaultLoad == "Y"? `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?defaultLoad=${data?.defaultLoad}`:
+        `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?grpId=${data?.grpId}&tagId=${data?.tagId}&defaultLoad=${data?.defaultLoad}`, data),
       thunkAPI
     );
   }

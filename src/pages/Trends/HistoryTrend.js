@@ -792,13 +792,14 @@ const HistoryTrend = () => {
         // Get comma-separated tag IDs or null if none selected
         const tagIdValue = selectedTagIds.length > 0
             ? selectedTagIds.map(tag => tag.value).join(',')
-            : null;
+            : "";
 
         let payload = {
             grpId: values?.grpId?.value,
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
+            defaultLoad:""
         }
         dispatch(
             getHistoryDataList(payload)

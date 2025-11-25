@@ -955,11 +955,13 @@ const LiveTrend = () => {
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
+        defaultLoad:""
       } : {
           tagId: tagIdValue,
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
+        defaultLoad:""
       };
 
       // console.log("params", params)
@@ -992,13 +994,14 @@ const LiveTrend = () => {
     const getHistoryData = () => {
         const tagIdValue = selectedTagIds.length > 0
         ? selectedTagIds.map(tag => tag.value).join(',')
-        : null;
+        : "";
       setLoading(true)
       let payload = {
         grpId: values?.grpId?.value,
         startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
         endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
         tagId: tagIdValue,
+        defaultLoad:""
       }
       dispatch(
         getHistoryDataList(payload)
