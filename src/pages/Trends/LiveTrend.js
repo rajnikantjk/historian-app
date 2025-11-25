@@ -24,29 +24,7 @@ import Loader from "../../Components/Common/Loader";
 import { FaPlay, FaPause } from "react-icons/fa";
 import LiveStatusDot from "./LiveStatusDot";
 import html2canvas from "html2canvas";
-const singleSelectStyle = {
-  control: (provided) => ({
-    ...provided,
-    border: "1px solid #ced4da",
-    boxShadow: "none",
-    "&:hover": {
-      border: "1px solid #ced4da",
-    },
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "rgba(10, 179, 156)"
-      : state.isFocused
-        ? "rgba(10, 179, 156, 0.18)"
-        : "white",
-    color: state.isSelected ? "white" : "black",
-    "&:hover": {
-      backgroundColor: "rgba(10, 179, 156, 0.18)",
-      color: "black",
-    },
-  }),
-};
+
 
 // Custom Option component with checkbox for multiselect
 const CustomOption = ({ innerProps, label, isSelected, isFocused, data, selectProps }) => {
@@ -104,44 +82,108 @@ const CustomValueContainer = ({ children, ...props }) => {
     );
 };
 
-const multiSelectStyle = {
-  control: (provided) => ({
-      ...provided,
-      border: "1px solid #ced4da",
-      boxShadow: "none",
-      "&:hover": {
-          border: "1px solid #ced4da",
-      },
-  }),
-  option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isFocused
-          ? "rgba(10, 179, 156, 0.18)"
-          : "white",
-      color: "black",
-      "&:hover": {
-          backgroundColor: "rgba(10, 179, 156, 0.18)",
-          color: "black",
-      },
-  }),
-  multiValueLabel: (provided) => ({
-      ...provided,
-      color: "black",
-  }),
-  multiValue: () => ({
-      display: 'none', // Hide individual selected items
-  }),
-  input: (provided) => ({
-      ...provided,
-      color: "black",
-  }),
-  placeholder: (provided) => ({
-      ...provided,
-      color: "#6c757d",
-  }),
+const getSelectStyles = (theme = 'light') => {
+    const isDark = theme === 'dark';
+    const backgroundColor = isDark ? '#303841' : 'white';
+    const textColor = isDark ? '#f8f9fa' : '#212529';
+    const borderColor = isDark ? '#495057' : '#ced4da';
+    const hoverBg = isDark ? '#495057' : '#f8f9fa';
+    const placeholderColor = isDark ? '#adb5bd' : '#6c757d';
+    const selectedBg = isDark ? '#405189' : '#0ab39c';
+
+    return {
+        control: (provided) => ({
+            ...provided,
+            minHeight: '34px',
+            height: '34px',
+            backgroundColor,
+            borderColor,
+            boxShadow: 'none',
+            '&:hover': {
+                borderColor: '#86b7fe',
+            },
+        }),
+        menu: (provided) => ({
+            ...provided,
+            backgroundColor,
+            border: `1px solid ${borderColor}`,
+        }),
+        option: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isSelected 
+                ? selectedBg 
+                : state.isFocused 
+                    ? isDark ? '#495057' : 'rgba(10, 179, 156, 0.1)'
+                    : backgroundColor,
+            color: state.isSelected 
+                ? 'white' 
+                : textColor,
+            '&:hover': {
+                backgroundColor: hoverBg,
+                color: textColor,
+            },
+        }),
+        singleValue: (provided) => ({
+            ...provided,
+            color: textColor,
+        }),
+        input: (provided) => ({
+            ...provided,
+            color: textColor,
+        }),
+        placeholder: (provided) => ({
+            ...provided,
+            color: placeholderColor,
+        }),
+        indicatorSeparator: (provided) => ({
+            ...provided,
+            backgroundColor: borderColor,
+        }),
+        dropdownIndicator: (provided) => ({
+            ...provided,
+            color: placeholderColor,
+            '&:hover': {
+                color: textColor,
+            },
+        }),
+    };
 };
+
+const getMultiSelectStyles = (theme = 'light') => {
+    const baseStyles = getSelectStyles(theme);
+    const isDark = theme === 'dark';
+    
+    return {
+        ...baseStyles,
+        multiValue: () => ({
+            display: 'none', // Hide individual selected items
+        }),
+        valueContainer: (provided) => ({
+            ...provided,
+            padding: '2px 8px',
+        }),
+        placeholder: (provided) => ({
+            ...provided,
+            color: isDark ? '#adb5bd' : '#6c757d',
+            marginLeft: '4px',
+        }),
+        input: (provided) => ({
+            ...provided,
+            color: isDark ? '#f8f9fa' : '#212529',
+            margin: 0,
+            padding: 0,
+        }),
+    };
+};
+
 const LiveTrend = () => {
   let intervalId = null;
+   // Get the current theme (you might need to adjust this based on your theme implementation)
+      const [theme, setTheme] = useState('light');
+      
+      // Get the appropriate styles based on the current theme
+      const singleSelectStyle = getSelectStyles(theme);
+      const multiSelectStyle = getMultiSelectStyles(theme);
   const dispatch = useDispatch();
   const [isLive, setIsLive] = useState(true);
   const [livedata, setLiveData] = useState([])
