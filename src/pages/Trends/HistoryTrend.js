@@ -508,7 +508,7 @@ const HistoryTrend = () => {
     const tagOptions = React.useMemo(() => {
         const tagList = tagDataByGroup?.map((tag) => ({
             value: tag.id,
-            label: tag.tagName || tag.displayTagName || tag.name || tag.itemId || `Tag ${tag.id}`
+            label:tag.displayTagName ?? tag?.tagName
         })) || [];
 
         // Show "Deselect All" only when ALL tags are selected, otherwise show "Select All"
