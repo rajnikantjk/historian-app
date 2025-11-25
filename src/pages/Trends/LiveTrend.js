@@ -6,13 +6,13 @@ import {
   Card,
   CardBody,
   CardHeader,
-
+  Table,
   Container,
   Row,
   Col,
   Button,
 } from "reactstrap";
-import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData, getTagsByGroupId } from "../../slices/tools";
+import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData, getTagsByGroupId, getHistoryDataList } from "../../slices/tools";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Select from "react-select";
@@ -23,6 +23,7 @@ import { FaFileExcel } from "react-icons/fa";
 import Loader from "../../Components/Common/Loader";
 import { FaPlay, FaPause } from "react-icons/fa";
 import LiveStatusDot from "./LiveStatusDot";
+import html2canvas from "html2canvas";
 const singleSelectStyle = {
   control: (provided) => ({
     ...provided,
@@ -148,6 +149,7 @@ const LiveTrend = () => {
  const historyTrendRef = useRef(null);
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tableData, setTableData] = useState([]);
   const { toolSubCategoryData, intervalData, frequencyData,tagDataByGroup } = useSelector(
     (state) => state.Tool)
      const [apiCalled, setApiCalled] = useState(false);
@@ -983,13 +985,40 @@ const LiveTrend = () => {
 
   const handleApplyFilter=()=>{
     sendParameters();
+    getHistoryData()
   }
+
+    const getHistoryData = () => {
+        const tagIdValue = selectedTagIds.length > 0
+        ? selectedTagIds.map(tag => tag.value).join(',')
+        : null;
+      setLoading(true)
+      let payload = {
+        grpId: values?.grpId?.value,
+        startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
+        endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
+        tagId: tagIdValue,
+      }
+      dispatch(
+        getHistoryDataList(payload)
+      ).then((res) => {
+  
+        if (res.payload?.status == 200) {
+          let data = res?.payload?.data
+          setTableData(data)
+          setLoading(false)
+        }
+      }).catch((err) => {
+        toast.error(err);
+        setLoading(false)
+      })
+    }
 
   useEffect(() => {
   
     if (values?.grpId?.value && values?.interval?.value && values?.frequency?.value && !apiCalled) {
       setTimeout(()=>{
-        sendParameters()
+        // sendParameters()
           setApiCalled(true);
       },1000)
     }
@@ -1029,7 +1058,7 @@ const LiveTrend = () => {
                 <div className="position-relative d-flex align-items-center gap-2 ">
                 <div className="history-controls ms-auto">
                 <div className="history-filter">
-                  <label className="text-white mb-1 d-block ">Group :</label>
+                  <label className="text-white mb-1 d-block ">Group <span className="text-danger">*</span> </label>
                   <Select options={groupdata} className="w-[200px] min-w-[200px]" placeholder="Select Group" styles={singleSelectStyle} value={values?.grpId}
                     onChange={(e) => {
                       setValues({
@@ -1041,7 +1070,7 @@ const LiveTrend = () => {
                     }} />
                     </div>
                     <div className="history-filter-multi-select">
-                     <label className="text-white mb-1 d-block">Tags :</label>
+                     <label className="text-white mb-1 d-block">Tags  </label>
                     <Select
                                                                   isMulti
                                                                   isSearchable
@@ -1083,7 +1112,7 @@ const LiveTrend = () => {
                                                               />
                                                               </div>
                                                               <div className="history-filter">
-                  <label className="text-white mb-1 d-block">Interval :</label>
+                  <label className="text-white mb-1 d-block">Interval <span className="text-danger">*</span></label>
                   <Select options={intervaldata} className="w-[100px]" placeholder="Select Interval" styles={singleSelectStyle} value={values?.interval}
                     onChange={(e) => {
                       setValues({
@@ -1093,7 +1122,7 @@ const LiveTrend = () => {
                     }} />
                     </div>
                     <div className="history-filter">
-                  <label className="text-white mb-1 d-block">Refresh Rate :</label>
+                  <label className="text-white mb-1 d-block">Refresh Rate <span className="text-danger">*</span></label>
                   <Select options={frequencydata} className="w-[100px]" placeholder="Select " styles={singleSelectStyle} value={values?.frequency}
                     onChange={(e) => {
                       setValues({
@@ -1143,6 +1172,41 @@ const LiveTrend = () => {
             </Card>
                 </div>
 
+          </Col>
+        </Row>
+          <Row>
+          <Col>
+            <Card className="border border-gray shadow-sm">
+              <CardHeader className="bg-primary text-white  fs-5 ">Tag Details</CardHeader>
+              <CardBody>
+
+                <div >
+                  <Table striped responsive>
+                    <thead >
+                      <tr>
+                        <th>Tag Name</th>
+
+                        <th>Current Value</th>
+                        <th>Minimum</th>
+                        <th>Maximum</th>
+                        <th>Average</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.map((row, index) => (
+                        <tr key={index}>
+                          <td>{row.itemId}</td>
+                          <td>{row?.itemValue}</td>
+                          <td>{row.minValue}</td>
+                          <td>{row.maxValue}</td>
+                          <td>{row.avgValue}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </CardBody>
+            </Card>
           </Col>
         </Row>
 

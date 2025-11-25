@@ -817,8 +817,8 @@ const HistoryTrend = () => {
 
     useEffect(() => {
         if (startDate && endDate && values?.grpId?.value && values?.interval?.value && !apiCalled) {
-            fetchData();
-            getHistoryData();
+            // fetchData();
+            // getHistoryData();
             setApiCalled(true);
         }
     }, [values, apiCalled]);
@@ -854,7 +854,7 @@ const HistoryTrend = () => {
                                     </div>
                                     <div className="history-controls ms-auto">
                                         <div className="history-filter">
-                                            <label className="filter-label">Start Date &amp; Time</label>
+                                            <label className="filter-label">Start Date &amp; Time <span className="text-danger">*</span></label>
                                             <DatePicker
                                                 selected={startDate}
                                                 onChange={handleStartDateChange}
@@ -870,7 +870,7 @@ const HistoryTrend = () => {
                                             />
                                         </div>
                                         <div className="history-filter">
-                                            <label className="filter-label">End Date &amp; Time</label>
+                                            <label className="filter-label">End Date &amp; Time <span className="text-danger">*</span></label>
                                             <DatePicker
                                                 selected={endDate}
                                                 onChange={handleEndDateChange}
@@ -887,7 +887,7 @@ const HistoryTrend = () => {
                                             />
                                         </div>
                                         <div className="history-filter">
-                                            <label className="filter-label">Select Group</label>
+                                            <label className="filter-label">Select Group<span className="text-danger">*</span></label>
                                             <Select options={groupdata} className="history-select" placeholder="Select Group" styles={singleSelectStyle} value={values?.grpId}
                                                 onChange={(e) => {
                                                     setValues({
@@ -941,7 +941,7 @@ const HistoryTrend = () => {
                                             />
                                         </div>
                                         <div className="history-filter-main">
-                                            <label className="filter-label">Sampling Interval</label>
+                                            <label className="filter-label">Sampling Interval <span className="text-danger">*</span></label>
                                             <Select options={intervaldata} className="history-select" placeholder="Select Interval" styles={singleSelectStyle} value={values?.interval}
                                                 onChange={(e) => {
                                                     setValues({
