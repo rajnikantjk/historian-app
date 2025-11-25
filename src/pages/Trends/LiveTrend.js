@@ -949,13 +949,14 @@ const LiveTrend = () => {
         // Get comma-separated tag IDs or null if none selected
         const tagIdValue = selectedTagIds.length > 0
         ? selectedTagIds.map(tag => tag.value).join(',')
-        : null;
+        : "";
       const params =  selectedTagIds.length > 0 ?{
         tagId: tagIdValue,
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
       } : {
+          tagId: tagIdValue,
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,

@@ -547,7 +547,7 @@ const Widgets = () => {
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-        // tagId:"5,7",
+        tagId:"",
         timeSpan: values?.interval?.value,
         grpId: String(values?.grpId?.value),
         updateRate: 30 // set for delhi client
@@ -562,7 +562,6 @@ const Widgets = () => {
   const sendMeterPrameters = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-
         timeSpan:600,
         grpId: values?.grpId?.value,
         updateRate: 30,
