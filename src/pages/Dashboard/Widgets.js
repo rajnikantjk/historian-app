@@ -551,7 +551,7 @@ const Widgets = () => {
         tagId:"",
         grpId:"",
         defaultLoad:"Y",
-        timeSpan:600,
+        timeSpan:60,
         // timeSpan: values?.interval?.value,
         // grpId: String(values?.grpId?.value),
         updateRate: 30 // set for delhi client
@@ -569,7 +569,7 @@ const Widgets = () => {
         defaultLoad:"Y",
         grpId:"",
         tagId:"",
-        updateRate: 60,
+        updateRate: 30,
       };
 
       // console.log("params2", params)

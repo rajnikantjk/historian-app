@@ -80,7 +80,7 @@ const GroupMappingModal = ({
   const tagdata = toolCategoryData.map((item) => {
     return {
       value: item?.id,
-      label: item?.tagName,
+      label: item?.displayTagName,
     };
   });
   useEffect(() => {
