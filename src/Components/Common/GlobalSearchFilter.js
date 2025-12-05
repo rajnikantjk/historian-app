@@ -36,6 +36,7 @@ const CustomersGlobalFilter = ({
   AdditionalOption,
   isAdditionalStatus,
   onClickOpenAddModal,
+  customButtons
 }) => {
   function handlecustomerStatus(customerStatus) {
     setcustomerStatus(customerStatus);
@@ -43,12 +44,13 @@ const CustomersGlobalFilter = ({
   function handleAdditionalStatus(customerStatus) {
     setAdditionalstatus(customerStatus);
   }
+  console.log(":iscreated",iscreated)
   return (
     <React.Fragment>
-      <Col xl={7}>
-        <Row className="g-3">
+      <Col sm={8}>
+        <Row className="g-3 d-flex justify-content-end ">
          
-          <Col sm={4}>
+          <Col sm={1}>
           {customerstatus && 
             <div>
               <Select
@@ -73,9 +75,25 @@ const CustomersGlobalFilter = ({
               </div>
             </Col>
           )}
+           {customButtons.length > 0 && (
+                          <Col sm={5} className="d-flex gap-2 justify-content-end">
+                            {customButtons.map((button, index) => (
+                              <Button
+                                key={index}
+                                color={button.color || 'primary'}
+                                className={`btn-rounded ${button.className || ''}  mb-2 me-2`}
+                                onClick={button.onClick}
+                              >
+                                
+                                <i className={`bx ri-${button.icon} me-1`}></i>
+                                {button.text}
+                              </Button>
+                            ))}
+                          </Col>
+                        )}
           {iscreated && addbuttontext && (
-            <Col sm={isAdditionalStatus ? 4 : 8}>
-              <div className="text-sm-end ">
+            <Col sm={customButtons?.length > 0 ? 2:5} className="p-0" >
+              <div className="text-sm-end p-0">
                 <Button
                   type="button"
                   color="success"
@@ -85,9 +103,11 @@ const CustomersGlobalFilter = ({
                   <i className="mdi mdi-plus me-1" />
                   {addbuttontext || "Add"}
                 </Button>
-              </div>
+                </div>
+             
             </Col>
           )}
+           
         </Row>
       </Col>
     </React.Fragment>

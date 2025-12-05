@@ -65,7 +65,7 @@ const TagGroupList = () => {
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
   const [errors, setErrors] = useState({});
-
+ const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
   const handleOnChange = (e) => {
     const { name, value, type, checked } = e.target;
     setValues({
@@ -114,7 +114,9 @@ const TagGroupList = () => {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getTagGroupList()
+          getTagGroupList({ page: page,
+        limit: limit,
+        search: searchValue})
         );
       };
       clearTimeout(timer);
@@ -122,7 +124,9 @@ const TagGroupList = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getTagGroupList()
+        getTagGroupList({ page: page,
+        limit: limit,
+        search: searchValue})
       );
     }
   }, [customerStatus, searchValue, page , additionalstatus.value , limit]);
@@ -198,11 +202,16 @@ const TagGroupList = () => {
     setAddModal(true);
   };
   const columns = useMemo(() => [
-    {
+     {
       Header: "Sr.No",
-      accessor: (row,rowIndex) => rowIndex + 1 ?? "-",
-
       filterable: false,
+      Cell: (cellProps) => {
+        const rowIndex = cellProps.row.index;
+        const currentPage = page; // Current page (1-based)
+        const pageSize = limit;   // Items per page
+        const serialNumber = (currentPage - 1) * pageSize + rowIndex + 1;
+        return serialNumber;
+      },
     },
     
     {
@@ -218,7 +227,7 @@ const TagGroupList = () => {
       filterable: false,
     },
    
-       {
+      ...(userRole == "ROLE_ADMIN" ? [ {
       Header: "Action",
       Cell: (cellProps) => {
         return (
@@ -253,7 +262,12 @@ const TagGroupList = () => {
         );
       },
       
-    },
+    }]:[{
+      Header: "",
+      accessor: 'emptyAction',
+      Cell: () => null
+    }]
+  ),
     
   ]);
   const handleDeleteGroup = () => {
@@ -410,7 +424,7 @@ const TagGroupList = () => {
                   <h5 className="card-title mb-0 flex-grow-1">
                     Tag Group List
                   </h5>
-              {   toolSubCategoryCount > 10 &&  <div className="flex-shrink-0">
+              {/* {   toolSubCategoryCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
                       <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
@@ -422,7 +436,7 @@ const TagGroupList = () => {
                       </select>
                       entries
                     </div>
-                  </div>}
+                  </div>} */}
                 </div>
               </CardHeader>
               <CardBody className="pt-0">
@@ -455,9 +469,10 @@ const TagGroupList = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           isPagination={
-                           ( toolSubCategoryCount > 10 ) ? true : false
+                           ( toolSubCategoryCount > 100 ) ? true : false
                           }
-                          iscreated={true}
+                         
+                          iscreated={userRole == "ROLE_ADMIN" }
                           addbuttontext={"Add New Group"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           // isAdditionalStatus={true}
@@ -465,7 +480,7 @@ const TagGroupList = () => {
                           setAdditionalstatus={setAdditionalstatus}
                           AdditionalOption={categoriesData}
                           totalDataCount={toolSubCategoryCount}
-                          ispaginationshow={toolSubCategoryCount > 10 && limit <toolSubCategoryCount ? true : false }
+                          ispaginationshow={toolSubCategoryCount > 100 && limit <toolSubCategoryCount ? true : false }
 
                         />
                       ) : (
@@ -485,7 +500,7 @@ const TagGroupList = () => {
                             setSearchValue={setSearchValue}
                             searchValue={searchValue}
                             isPagination={false}
-                            iscreated={true}
+                            iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Group"}
                             onClickOpenAddModal={onClickOpenAddModal}
                             // isAdditionalStatus={true}

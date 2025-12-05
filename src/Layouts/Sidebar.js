@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 //import logo
 import logoSm from "../assets/images/iconlogo.svg";
-import logoDark from "../assets/images/lightfulllogo.svg";
-import logoLight from "../assets/images/lightfulllogo.svg";
+import logoDark from "../assets/images/lightfullogo.png";
+import logoLight from "../assets/images/lightfullogo.png";
 
 //Import Components
 import VerticalLayout from "./VerticalLayouts";
@@ -41,7 +41,7 @@ const Sidebar = ({ layoutType }) => {
               <img src={logoSm} alt="" height="62" />
             </span>
             <span className="logo-lg">
-              <img src={logoDark} alt="" height="62" />
+              <img src={logoDark} alt="" height="100" />
             </span>
           </Link>
 
@@ -50,7 +50,7 @@ const Sidebar = ({ layoutType }) => {
               <img src={logoSm} alt="" height="62" />
             </span>
             <span className="logo-lg">
-              <img src={logoLight} alt="" height="62" />
+              <img src={logoLight} alt="" height="100" />
             </span>
           </Link>
           <button

@@ -290,9 +290,10 @@ const Widgets = () => {
   });
 
   const generateDynamicYaxes = (tagNames, colorList) => {
+        const shouldShowYAxis = tagNames.length === 1 
     return tagNames.map((tagName, index) => ({
       seriesName: tagName,
-      show: false,
+      show: shouldShowYAxis,
       axisTicks: {
         show: true,
         color: colorList[index % colorList.length]
@@ -675,21 +676,26 @@ const Widgets = () => {
                     <thead >
                       <tr>
                         <th>Tag Name</th>
-
+                       <th>Eng Unit</th>
+                       <th>Description</th>
                         <th>Current Value</th>
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
+                        
                       </tr>
                     </thead>
                     <tbody>
                       {tableData.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
+                          <td>{row.unitName}</td>
+                           <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>
+                         
                         </tr>
                       ))}
                     </tbody>

@@ -27,7 +27,7 @@ import { useFormik } from "formik";
 // actions
 import { loginUser, socialLogin, resetLoginFlag } from "../../slices/thunks";
 
-import logoLight from "../../assets/images/lightfulllogo.svg";
+import logoLight from "../../assets/images/lightfullogo.png";
 //import images
 
 const Login = (props) => {
@@ -82,7 +82,7 @@ const Login = (props) => {
                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                   <div>
                     <Link to="/" className="d-inline-block auth-logo">
-                      <img src={logoLight} alt="" height="100" />
+                      <img src={logoLight} alt="" height="150" />
                     </Link>
                   </div>
                 </div>

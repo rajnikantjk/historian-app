@@ -218,7 +218,7 @@ body {
   border-color: var(--#{$prefix}border-color) !important;
 }
 .useravatar {
-  background-color: #7e8ab0;
+  background-color: #09a792;
   color: white;
   border-radius: 50%;
   font-size: 18px;
@@ -245,10 +245,10 @@ body {
   justify-content: center;
   align-items: center;
   font-size: 1rem;
-  color: #405189;
+  color: #09a792;
   width: 40px;
   border-radius: 5px;
-  border: 1px solid #405189;
+  border: 1px solid #09a792;
   height: 100%;
   text-align: center;
   margin: 0 2px;
@@ -278,7 +278,7 @@ body {
   margin-bottom: 20px;
 }
 .active-page {
-  background-color: #405189; /* Your active color */
+  background-color: #09a792; /* Your active color */
   color: #fff; /* Text color for active page */
   /* Add any other styles for active page */
 }

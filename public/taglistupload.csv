@@ -1,0 +1,6 @@
+serverName,tagName,displayTagName,unitName,description,isActive
+Matrikon.OPC.Simulation.1,Random.Int1,int1,NA,test,Y
+Matrikon.OPC.Simulation.1,Random.Int2,int2,sfc,test,Y
+Matrikon.OPC.Simulation.1,Write.Only.Int3,int4,test,test,Y
+Matrikon.OPC.Simulation.1,Random.Int10,int10,test,N/A,Y
+Matrikon.OPC.Simulation.1,Random.UInt11,int 11,sample,N/A,Y

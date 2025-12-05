@@ -32,9 +32,12 @@ export const getTools = createAsyncThunk(
 );
 export const getTaglist = createAsyncThunk(
   "user/tag-list",
-  async (data, thunkAPI) => {
-    https: return await thunkHandler(
-      get("/tag", data),
+  async (params = {}, thunkAPI) => {
+    const { page = 1, limit = 10, search = '' } = params;
+    const queryString = `?page=${page - 1}&size=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+    
+    return await thunkHandler(
+      get(`/tag${queryString}`, {}),
       thunkAPI
     );
   }
@@ -78,9 +81,16 @@ export const EditGroupDetails = createAsyncThunk(
 );
 export const getTagGroupList = createAsyncThunk(
   "user/get-all-taggrouplist",
-  async (data, thunkAPI) => {
-    https: return await thunkHandler(
-      get("grp"),
+  async (params = {}, thunkAPI) => {
+    const { page = 1, limit = 10, search = '' } = params;
+    const queryParams = new URLSearchParams({
+      page:page-1,
+      size:limit,
+      ...(search && { search })
+    });
+    
+    return await thunkHandler(
+      get(`grp?${queryParams.toString()}`),
       thunkAPI
     );
   }
@@ -88,9 +98,16 @@ export const getTagGroupList = createAsyncThunk(
 
 export const getMappedGroupList = createAsyncThunk(
   "user/get-all-mappedgrouplist",
-  async (data, thunkAPI) => {
-    https: return await thunkHandler(
-      get("tag-grp-mapping"),
+  async (params = {}, thunkAPI) => {
+    const { page = 1, limit = 10, search = '' } = params;
+    const queryParams = new URLSearchParams({
+      page:page-1,
+      size:limit,
+      ...(search && { search })
+    });
+    
+    return await thunkHandler(
+      get(`tag-grp-mapping?${queryParams.toString()}`),
       thunkAPI
     );
   }
@@ -100,9 +117,13 @@ export const getMappedGroupList = createAsyncThunk(
 export const getHistoryDataList = createAsyncThunk(
   "user/get-all-historydatalist",
   async (data, thunkAPI) => {
-    https: return await thunkHandler(
-      get(data?.defaultLoad == "Y"? `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?defaultLoad=${data?.defaultLoad}`:
-        `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?grpId=${data?.grpId}&tagId=${data?.tagId}&defaultLoad=${data?.defaultLoad}`, data),
+    return await thunkHandler(
+      get(
+        data?.defaultLoad == "Y" 
+          ? `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?defaultLoad=${data?.defaultLoad}`
+          : `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?grpId=${data?.grpId}&tagId=${data?.tagId}&defaultLoad=${data?.defaultLoad}`, 
+        { ...data, noLoader: true }
+      ),
       thunkAPI
     );
   }
@@ -279,6 +300,41 @@ export const updateOPCalarm = createAsyncThunk(
     );
   }
 );
+
+export const tagDataDownload = createAsyncThunk(
+  "user/get-tagDataDownload",
+  async (data, thunkAPI) => {
+    const config = {
+      responseType: 'blob'             // Set the response type to 'blob' to handle binary data
+    };
+    return await thunkHandler(
+      get(
+        `tag/export`,
+        config
+      ),
+      thunkAPI
+    );
+  }
+);
+
+export const tagBulkImport = createAsyncThunk(
+  "user/tag-bulk-import",
+  async (formData, thunkAPI) => {
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    };
+    return await thunkHandler(
+      postFormData(
+        `tag/bulk-import`,
+        formData,
+        config
+      ),
+      thunkAPI
+    );
+  }
+);
 const ToolSlice = createSlice({
   name: "ToolSlice",
   initialState,
@@ -302,8 +358,8 @@ const ToolSlice = createSlice({
       })
       .addCase(getTaglist.fulfilled, (state, action) => {
         // console.log("toolslist",action);
-        state.toolCategoryData = action?.payload;
-        // state.toolCategoryCount = action?.payload?.payload?.TotalCount;
+        state.toolCategoryData = action?.payload?.content;
+        state.toolCategoryCount = action?.payload?.totalElements;
         state.toolLoader = false;
       })
       .addCase(getTaglist.rejected, (state, action) => {
@@ -349,8 +405,8 @@ const ToolSlice = createSlice({
         state.toolLoader = true;
       })
       .addCase(getTagGroupList.fulfilled, (state, action) => {
-        state.toolSubCategoryData = action?.payload;
-        // state.toolSubCategoryCount = action?.payload?.payload?.count;
+        state.toolSubCategoryData = action?.payload?.content;
+        state.toolSubCategoryCount = action?.payload?.totalElements;
         state.toolLoader = false;
       })
       .addCase(getTagGroupList.rejected, (state, action) => {
@@ -361,8 +417,8 @@ const ToolSlice = createSlice({
         state.toolLoader = true;
       })
       .addCase(getMappedGroupList.fulfilled, (state, action) => {
-        state.groupMappingData = action?.payload?.data;
-        // state.groupMappingount = action?.payload?.payload?.count;
+        state.groupMappingData = action?.payload?.content;
+        state.groupMappingCount = action?.payload?.totalElements;
         state.toolLoader = false;
       })
       .addCase(getMappedGroupList.rejected, (state, action) => {

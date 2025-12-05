@@ -31,7 +31,7 @@ const GroupMapping = () => {
   document.title = "Group Mapping | Augmation Tech";
 
   const dispatch = useDispatch();
-  const { toolSubCategoryCount, groupMappingData, toolLoader,toolCategoryData } = useSelector(
+  const { groupMappingCount, groupMappingData, toolLoader,toolCategoryData } = useSelector(
     (state) => state.Tool
   );  const categoriesData = [
     {
@@ -58,12 +58,13 @@ const GroupMapping = () => {
   const [additionalstatus, setAdditionalstatus] = useState(categoriesData[0]);
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
+   const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
 
   const handleOnChangeLimit =(value)=>{
     setPage(1);
     setLimit(value);
   }
-  const nPages = Math.ceil(toolSubCategoryCount / limit);
+  const nPages = Math.ceil(groupMappingCount / limit);
 
   const onClickOpenAddModal = () => {
     setAddModal(true);
@@ -98,7 +99,9 @@ const GroupMapping = () => {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getMappedGroupList()
+          getMappedGroupList({ page: page,
+        limit: limit,
+        search: searchValue})
         );
       };
       clearTimeout(timer);
@@ -106,7 +109,9 @@ const GroupMapping = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getMappedGroupList()
+        getMappedGroupList({ page: page,
+        limit: limit,
+        search: searchValue})
       );
     }
   }, [customerStatus, searchValue, page , additionalstatus.value , limit]);
@@ -133,7 +138,17 @@ const GroupMapping = () => {
     setAddModal(true);
   };
   const columns = useMemo(() => [
-  
+    {
+      Header: "Sr.No",
+      filterable: false,
+      Cell: (cellProps) => {
+        const rowIndex = cellProps.row.index;
+        const currentPage = page; // Current page (1-based)
+        const pageSize = limit;   // Items per page
+        const serialNumber = (currentPage - 1) * pageSize + rowIndex + 1;
+        return serialNumber;
+      },
+    },
     {
       Header: "Group Id",
       accessor: (row,rowIndex) => row?.grpId ?? "-",
@@ -153,7 +168,7 @@ const GroupMapping = () => {
     },
 
    
-    {
+    ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
       Cell: (cellProps) => {
         return (
@@ -187,7 +202,11 @@ const GroupMapping = () => {
           </UncontrolledDropdown>
         );
       },
-    },
+    }]:[{
+      Header: "",
+      accessor: 'emptyAction',
+      Cell: () => null
+    }]),
   ]);
   const handleDeleteMappingData = () => {
     setLoader(true)
@@ -246,7 +265,7 @@ const GroupMapping = () => {
                   <h5 className="card-title mb-0 flex-grow-1">
                     Tag Group Mapping
                   </h5>
-              {   toolSubCategoryCount > 10 &&  <div className="flex-shrink-0">
+              {/* {   groupMappingCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
                       <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
@@ -258,7 +277,7 @@ const GroupMapping = () => {
                       </select>
                       entries
                     </div>
-                  </div>}
+                  </div>} */}
                 </div>
               </CardHeader>
               <CardBody className="pt-0">
@@ -291,17 +310,18 @@ const GroupMapping = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           isPagination={
-                           ( toolSubCategoryCount > 10 ) ? true : false
+                           ( groupMappingCount > 100 ) ? true : false
                           }
-                          iscreated={true}
+                        
+                          iscreated={userRole == "ROLE_ADMIN" }
                           addbuttontext={"Add New Group Mapping"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           // isAdditionalStatus={true}
                           additionalstatus={additionalstatus}
                           setAdditionalstatus={setAdditionalstatus}
                           AdditionalOption={categoriesData}
-                          totalDataCount={toolSubCategoryCount}
-                          ispaginationshow={toolSubCategoryCount > 10 && limit <toolSubCategoryCount ? true : false }
+                          totalDataCount={groupMappingCount}
+                          ispaginationshow={groupMappingCount > 100 && limit <groupMappingCount ? true : false }
 
                         />
                       ) : (
@@ -321,7 +341,7 @@ const GroupMapping = () => {
                             setSearchValue={setSearchValue}
                             searchValue={searchValue}
                             isPagination={false}
-                            iscreated={true}
+                            iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Group Mapping"}
                             onClickOpenAddModal={onClickOpenAddModal}
                             // isAdditionalStatus={true}

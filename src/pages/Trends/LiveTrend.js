@@ -209,27 +209,104 @@ const LiveTrend = () => {
         setScreenshotLoading(true);
     });
 
+    // Get the chart instance
+    const chart = ApexCharts.getChartByID('chart2');
+    let tooltip = null;
+    
+    if (chart) {
+      // Get current tooltip data
+      const tooltipEl = document.querySelector('.apexcharts-tooltip');
+      if (tooltipEl && window.getComputedStyle(tooltipEl).display !== 'none') {
+        // Store tooltip state
+        tooltip = {
+          x: parseFloat(tooltipEl.style.left),
+          y: parseFloat(tooltipEl.style.top),
+          innerHTML: tooltipEl.innerHTML,
+          display: 'block'
+        };
+      }
+      
+      // Force tooltip to stay visible during screenshot
+      chart.updateOptions({
+        tooltip: {
+          fixed: {
+            enabled: true,
+            position: 'topLeft',
+            offsetY: 30,
+            offsetX: 0
+          }
+        }
+      }, false, false, true);
+    }
+
     // Use setTimeout to ensure React has rendered the loader before starting heavy work
     setTimeout(async () => {
         try {
+            // Take the screenshot
             const canvas = await html2canvas(historyTrendRef.current, {
                 scale: window.devicePixelRatio || 1,
                 useCORS: true,
                 logging: false,
+                onclone: (clonedDoc) => {
+                  // If we have tooltip data, ensure it's visible in the cloned document
+                  if (tooltip) {
+                    const clonedTooltip = clonedDoc.querySelector('.apexcharts-tooltip');
+                    if (clonedTooltip) {
+                      clonedTooltip.style.opacity = '1';
+                      clonedTooltip.style.visibility = 'visible';
+                      clonedTooltip.style.display = 'block';
+                      clonedTooltip.style.left = `${tooltip.x}px`;
+                      clonedTooltip.style.top = `${tooltip.y}px`;
+                      clonedTooltip.innerHTML = tooltip.innerHTML;
+                    }
+                  }
+                }
             });
+            
+            // Create and trigger download
             const link = document.createElement("a");
             link.href = canvas.toDataURL("image/png");
             link.download = `history-trend-${moment().format("YYYYMMDD-HHmmss")}.png`;
             link.click();
+            
             toast.success("Screenshot downloaded successfully");
         } catch (error) {
             console.error("Screenshot capture failed:", error);
             toast.error("Unable to capture screenshot. Please try again.");
         } finally {
+            // Restore original tooltip behavior
+            if (chart) {
+              chart.updateOptions({
+                tooltip: {
+                  fixed: false
+                }
+              }, false, false, true);
+            }
+            
             setScreenshotLoading(false);
         }
-    }, 0);
-};
+    }, 100); // Slightly longer delay to ensure chart updates
+  };
+
+  // Add keyboard event listener for Ctrl+D
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if Ctrl (or Cmd on Mac) and D are pressed
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault(); // Prevent default browser behavior (bookmarking)
+        handleDownloadScreenshot();
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [window]);
+
   const groupdata = toolSubCategoryData.map((item) => {
     return {
       value: item?.id,
@@ -342,7 +419,8 @@ const LiveTrend = () => {
         intersect: false,
         followCursor: true,
         x: {
-            format: 'dd MMM yyyy HH:mm:ss',
+          show: true,
+          format: 'dd MMM yyyy HH:mm:ss',
         },
         custom: function ({ series, seriesIndex, dataPointIndex, w }) {
             // Get timestamp from category labels or x-axis data
@@ -387,10 +465,8 @@ const LiveTrend = () => {
                             <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 10px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 0 3px ${color}20;"></span>
                             <div style="flex: 1; min-width: 0;">
                                 <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} :- ${parseFloat(value)}</div>
-                              
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }
             });
 
@@ -408,15 +484,15 @@ const LiveTrend = () => {
                 </style>
                <div class="custom-tooltip"
                         style="
-                            background: #fff;
-                            border: 1px solid #e0e0e0;
-                            border-radius: 8px;
-                            padding: 0;
-                            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                            width: ${itemCount > 6 ? '600px' : '320px'};
-                            max-width: ${itemCount > 6 ? '600px' : '320px'};
-                            overflow: hidden;
-                        ">
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    padding: 0;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                    width: ${itemCount > 6 ? '600px' : '320px'};
+                    max-width: ${itemCount > 6 ? '600px' : '320px'};
+                    overflow: hidden;
+                ">
 
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 14px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid rgba(255,255,255,0.2);">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -424,29 +500,15 @@ const LiveTrend = () => {
                             
                         </div>
                     </div>
-               <div style="
-                    max-height: ${maxHeight};
-                    overflow-y: auto;
-                    padding: 8px;
-                    width: 100%;
-                    max-width: none;
-                    ${!hasItems ? 'padding: 10px; text-align: center;' : ''};
-                ">
-                <div style="
-                    display: grid;
-                    grid-template-columns: repeat(${itemCount > 6 ? 2 : 1}, minmax(0, 1fr));
-                    width: 100%;
-                    gap: 0px 10px;
-                    box-sizing: border-box;
-                ">
-                        ${hasItems ? seriesItems : '<div style="color: #999; font-size: 12px; padding: 10px 0;">No data available at this point</div>'}
+                    <div style="
+                        max-height: ${maxHeight};
+                        overflow-y: auto;
+                        padding: 8px;
+                        ${!hasItems ? 'text-align: center; padding: 10px;' : ''}
+                    ">
+                        ${hasItems ? seriesItems : '<div style="color: #999; font-size: 12px;">No data available at this point</div>'}
                     </div>
-                </div>
-
-
-                  
-                </div>
-            `;
+                </div>`;
         },
         style: {
             fontSize: '12px',
@@ -823,9 +885,10 @@ const LiveTrend = () => {
 
   const socketRef = useRef(null);
   const generateDynamicYaxes = (tagNames, colorList) => {
+        const shouldShowYAxis = tagNames.length === 1 
     return tagNames.map((tagName, index) => ({
       seriesName: tagName,
-      show: false,
+      show: shouldShowYAxis,
       axisTicks: {
         show: true,
         color: colorList[index % colorList.length]
@@ -1184,8 +1247,8 @@ const LiveTrend = () => {
                                                 color="light"
                                                 className="history-action-btn "
                                                 data-tooltip-id="screenshotTooltip"
-                                                data-tooltip-content="Take Screenshot"
-                                                onClick={handleDownloadScreenshot}
+                                                data-tooltip-content="Press Control + B to Take Screenshot"
+                                               
                                             >
                                                 <FaCamera className="" />
                                             </Button>
@@ -1228,24 +1291,29 @@ const LiveTrend = () => {
 
                 <div >
                   <Table striped responsive>
-                    <thead >
+                <thead >
                       <tr>
                         <th>Tag Name</th>
-
+                       <th>Eng Unit</th>
+                       <th>Description</th>
                         <th>Current Value</th>
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
+                        
                       </tr>
                     </thead>
                     <tbody>
                       {tableData.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
+                          <td>{row.unitName}</td>
+                           <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>
+                         
                         </tr>
                       ))}
                     </tbody>

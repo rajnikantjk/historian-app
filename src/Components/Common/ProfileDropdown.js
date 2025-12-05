@@ -25,17 +25,8 @@ const ProfileDropdown = () => {
   useEffect(() => {
     if (sessionStorage.getItem("authUser")) {
       const obj = JSON.parse(sessionStorage.getItem("authUser"));
-      setUserName(
-        process.env.REACT_APP_DEFAULTAUTH === "fake"
-          ? obj.fname === undefined
-            ? user?.fname
-              ? user?.fname
-              : obj?.fname
-            : "Admin" || "Admin"
-          : process.env.REACT_APP_DEFAULTAUTH === "firebase"
-          ? obj.email && obj.email
-          : "Admin"
-      );
+      const name = obj?.fname || "";
+      setUserName(name.charAt(0).toUpperCase() + name.slice(1).toLowerCase());
     }
   }, [userName, user]);
 
@@ -83,7 +74,7 @@ const ProfileDropdown = () => {
         </DropdownToggle>
         <DropdownMenu className="dropdown-menu-end">
           <h6 className="dropdown-header">Welcome {userName}!</h6>
-          <DropdownItem className="p-0">
+          {/* <DropdownItem className="p-0">
             <Link
               to={process.env.PUBLIC_URL + "/profile"}
               className="dropdown-item"
@@ -91,7 +82,7 @@ const ProfileDropdown = () => {
               <i className="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>
               <span className="align-middle">Profile</span>
             </Link>
-          </DropdownItem>
+          </DropdownItem> */}
           <DropdownItem className="p-0" onClick={() => logoutUser()}>
             <Link to={"#"} className="dropdown-item">
               <i className="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>{" "}

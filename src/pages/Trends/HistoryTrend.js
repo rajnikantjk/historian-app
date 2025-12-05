@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useRef, useState } from "react";
+import ApexCharts from "apexcharts"
 import { flushSync } from "react-dom";
 import {
     Card,
@@ -483,9 +484,12 @@ const HistoryTrend = () => {
 
     });
     const generateDynamicYaxes = (tagNames, colorList) => {
+        // Show Y-axis if there's only one tag or only one visible series
+        const shouldShowYAxis = tagNames.length === 1 
+        
         return tagNames.map((tagName, index) => ({
             seriesName: tagName,
-            show: false,
+            show: shouldShowYAxis,
             axisTicks: {
                 show: true,
                 color: colorList[index % colorList.length]
@@ -570,7 +574,6 @@ const HistoryTrend = () => {
         );
     };
 
-
     useEffect(() => {
         if (toolSubCategoryData.length > 0 && !values.grpId) {
             setValues(prevValues => ({
@@ -641,27 +644,105 @@ const HistoryTrend = () => {
             setScreenshotLoading(true);
         });
 
+        // Get the chart instance
+        const chart = ApexCharts.getChartByID('chart2');
+        let tooltip = null;
+        
+        if (chart) {
+            // Get current tooltip data
+            const tooltipEl = document.querySelector('.apexcharts-tooltip');
+            if (tooltipEl && window.getComputedStyle(tooltipEl).display !== 'none') {
+                // Store tooltip state
+                tooltip = {
+                    x: parseFloat(tooltipEl.style.left),
+                    y: parseFloat(tooltipEl.style.top),
+                    innerHTML: tooltipEl.innerHTML,
+                    display: 'block'
+                };
+            }
+            
+            // Force tooltip to stay visible during screenshot
+            chart.updateOptions({
+                tooltip: {
+                    fixed: {
+                        enabled: true,
+                        position: 'topLeft',
+                        offsetY: 30,
+                        offsetX: 0
+                    }
+                }
+            }, false, false, true);
+        }
+
         // Use setTimeout to ensure React has rendered the loader before starting heavy work
         setTimeout(async () => {
             try {
+                // Take the screenshot
                 const canvas = await html2canvas(historyTrendRef.current, {
                     scale: window.devicePixelRatio || 1,
                     useCORS: true,
                     logging: false,
+                    onclone: (clonedDoc) => {
+                        // If we have tooltip data, ensure it's visible in the cloned document
+                        if (tooltip) {
+                            const clonedTooltip = clonedDoc.querySelector('.apexcharts-tooltip');
+                            if (clonedTooltip) {
+                                clonedTooltip.style.opacity = '1';
+                                clonedTooltip.style.visibility = 'visible';
+                                clonedTooltip.style.display = 'block';
+                                clonedTooltip.style.left = `${tooltip.x}px`;
+                                clonedTooltip.style.top = `${tooltip.y}px`;
+                                clonedTooltip.innerHTML = tooltip.innerHTML;
+                            }
+                        }
+                    }
                 });
+                
+                // Create and trigger download
                 const link = document.createElement("a");
                 link.href = canvas.toDataURL("image/png");
                 link.download = `history-trend-${moment().format("YYYYMMDD-HHmmss")}.png`;
                 link.click();
+                
                 toast.success("Screenshot downloaded successfully");
             } catch (error) {
                 console.error("Screenshot capture failed:", error);
                 toast.error("Unable to capture screenshot. Please try again.");
             } finally {
+                // Restore original tooltip behavior
+                if (chart) {
+                    chart.updateOptions({
+                        tooltip: {
+                            fixed: false
+                        }
+                    }, false, false, true);
+                }
+                
                 setScreenshotLoading(false);
             }
-        }, 0);
+        }, 100); // Slightly longer delay to ensure chart updates
     };
+
+
+      // Add keyboard event listener for Ctrl+D
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          // Check if Ctrl (or Cmd on Mac) and D are pressed
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+            e.preventDefault(); // Prevent default browser behavior (bookmarking)
+            handleDownloadScreenshot();
+          }
+        };
+    
+        // Add event listener
+        window.addEventListener('keydown', handleKeyDown);
+    
+        // Clean up event listener on component unmount
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+        };
+      }, [window]);
+    
 
     const fetchData = () => {
         if (values?.grpId?.value && values?.interval?.value) {
@@ -1010,8 +1091,8 @@ const HistoryTrend = () => {
                                                 color="light"
                                                 className="history-action-btn "
                                                 data-tooltip-id="screenshotTooltip"
-                                                data-tooltip-content="Take Screenshot"
-                                                onClick={handleDownloadScreenshot}
+                                                data-tooltip-content="Press Conrol + B to Take Screenshot"
+                                                // onClick={handleDownloadScreenshot}
                                             >
                                                 <FaCamera className="" />
                                             </Button>
@@ -1035,28 +1116,32 @@ const HistoryTrend = () => {
 
                                 <div >
                                     <Table striped responsive>
-                                        <thead >
-                                            <tr>
-                                                <th>Tag Name</th>
-
-                                                <th>Current Value</th>
-                                                <th>Minimum</th>
-                                                <th>Maximum</th>
-                                                <th>Average</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {tableData.map((row, index) => (
-                                                <tr key={index}>
-                                                    <td>{row.itemId}</td>
-
-                                                    <td>{row?.itemValue}</td>
-                                                    <td>{row.minValue}</td>
-                                                    <td>{row.maxValue}</td>
-                                                    <td>{row.avgValue}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
+                                         <thead >
+                                    <tr>
+                                        <th>Tag Name</th>
+                                    <th>Eng Unit</th>
+                                    <th>Description</th>
+                                        <th>Current Value</th>
+                                        <th>Minimum</th>
+                                        <th>Maximum</th>
+                                        <th>Average</th>
+                                        
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {tableData.map((row, index) => (
+                                        <tr key={index}>
+                                        <td>{row.itemId}</td>
+                                        <td>{row.unitName}</td>
+                                        <td>{row.description}</td>
+                                        <td>{row?.itemValue}</td>
+                                        <td>{row.minValue}</td>
+                                        <td>{row.maxValue}</td>
+                                        <td>{row.avgValue}</td>
+                                        
+                                        </tr>
+                                    ))}
+                                    </tbody>
                                     </Table>
                                 </div>
                             </CardBody>

@@ -11,6 +11,21 @@ import {
   reset_login_flag,
 } from "./reducer";
 import { toast } from "react-toastify";
+const decodeJWT = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
 
 export const loginUser = (user, history) => async (dispatch) => {
   try {
@@ -19,20 +34,21 @@ export const loginUser = (user, history) => async (dispatch) => {
     response = adminLogin({
       userName: user?.userName,
       password: user?.password,
-      role: "2",
+      // role: "2",
     });
 
     var data = await response;
     
     if (data) {
+      const userdata = decodeJWT(data?.data?.data);
       sessionStorage.setItem(
         "authUser",
-        JSON.stringify({fname:"Admin"})
+        JSON.stringify({fname:userdata?.sub,...userdata})
       );
       sessionStorage.setItem("UserToken", data?.data?.data);
       localStorage.setItem(
         "authUser",
-        JSON.stringify({fname:"Admin"})
+      JSON.stringify({fname:userdata?.sub,...userdata})
       );
       localStorage.setItem("UserToken", data?.data?.data);
       dispatch(loginSuccess({fname:"Admin"}));

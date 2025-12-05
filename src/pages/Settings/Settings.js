@@ -1,11 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Row, Col, Label, Button } from "reactstrap";
 import { updateOPCalarm } from "../../slices/tools";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Setting = () => {
      const dispatch = useDispatch();
+     const navigate = useNavigate();
+     
+     const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+     
+     useEffect(() => {
+        if(userRole != "ROLE_ADMIN"){
+            toast.error("You are not authorized to access this page");
+            navigate("/dashboard");
+        }
+
+    },[userRole])
 
     const handleToggle = (type) => {
 
@@ -33,9 +45,9 @@ const Setting = () => {
                         <div className="d-flex align-items-center gap-3">
                         <Button
                             color="success"
-                            onClick={() => handleToggle('start')}
+                            onClick={() => handleToggle('restart')}
                         >
-                            Start
+                            Restart
                         </Button>
 
                         <Button

@@ -97,8 +97,8 @@ const GroupMappingModal = ({
   }, [values]);
 
   useEffect(() => {
-    dispatch(getTagGroupList())
-    dispatch(getTaglist())
+    dispatch(getTagGroupList({limit:1000}))
+    dispatch(getTaglist({limit:1000}))
   }, [])
 
   const customComponents = {

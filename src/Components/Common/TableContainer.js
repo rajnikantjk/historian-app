@@ -9,7 +9,7 @@ import {
   usePagination,
   useRowSelect,
 } from "react-table";
-import { Table, Row, Col, Button, CardBody } from "reactstrap";
+import { Table, Row, Col, Button, CardBody, Tooltip } from "reactstrap";
 import { DefaultColumnFilter } from "./filters";
 import {
   ProductsGlobalFilter,
@@ -53,6 +53,7 @@ function GlobalFilter({
   AdditionalOption,
   isAdditionalStatus,
   onClickOpenAddModal,
+  customButtons
 }) {
   const onChange = (value) => {
     setSearchValue(value);
@@ -63,7 +64,7 @@ function GlobalFilter({
       <CardBody className="border border-dashed border-end-0 border-start-0">
         <form>
           <Row>
-            <Col sm={5}>
+            <Col sm={4}>
               <div
                 className={
                   isProductsFilter ||
@@ -94,10 +95,12 @@ function GlobalFilter({
                 <i className="bx bx-search-alt search-icon"></i>
               </div>
             </Col>
+           
 
             {isProductsFilter && <ProductsGlobalFilter />}
             {isCustomerFilter && (
               <CustomersGlobalFilter
+              customButtons={customButtons}
                 customerstatus={customerstatus}
                 setcustomerStatus={setcustomerStatus}
                 customerStatus={customerStatus}
@@ -173,6 +176,7 @@ const TableContainer = ({
   onClickOpenAddModal,
   totalDataCount,
   ispaginationshow,
+  customButtons = [],
 }) => {
   const {
     getTableProps,
@@ -227,6 +231,7 @@ const TableContainer = ({
   return (
     <Fragment>
       <Row className="">
+       
         {isGlobalSearch && (
           <Col md={1}>
             <select
@@ -244,6 +249,7 @@ const TableContainer = ({
         )}
         {isGlobalFilter && (
           <GlobalFilter
+          customButtons={customButtons}
             preGlobalFilteredRows={preGlobalFilteredRows}
             globalFilter={state.globalFilter}
             setGlobalFilter={setGlobalFilter}

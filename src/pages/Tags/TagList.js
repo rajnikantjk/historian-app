@@ -32,7 +32,10 @@ import {
   EditTagDetails,
   DeleteTagData,
   getTaglist,
+  tagDataDownload,
+  tagBulkImport,
 } from "../../slices/tools";
+import FileUploadModal from "../../Components/Common/FileUploadModal";
 import { EditGptsCategory } from "../../slices/gpts";
 
 const customerstatus = [
@@ -57,12 +60,68 @@ const TagList = () => {
   const [loader, setLoader] = useState(false);
   const [rowId, setRowId] = useState("");
   const [addModal, setAddModal] = useState(false);
-  const [limit, setLimit] = useState(1500);
+  const [importModal, setImportModal] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [limit, setLimit] = useState(100);
+  const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
 
   const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
+
+  const handleImportTags = () => {
+    setImportModal(true);
+  };
+
+  const handleFileUpload = (formData) => {
+    setImportLoading(true);
+    dispatch(tagBulkImport(formData))
+      .then((res) => {
+ 
+        if (res?.payload?.status == 200) {
+          toast.success(res?.payload?.message || 'Tags imported successfully');
+          setImportModal(false);
+          dispatch(getTaglist());
+        } else {
+          toast.error(res?.payload?.message || 'Failed to import tags');
+        }
+      })
+      .catch((err) => {
+        console.error('Import error:', err);
+        toast.error(err.response?.data?.message || 'Error importing tags');
+      })
+      .finally(() => {
+        setImportLoading(false);
+      });
+  };
+
+  const handleExportTags = () => {
+    dispatch(tagDataDownload()).then((res) => {
+    
+          if (res?.payload) {
+            const blob = new Blob([res.payload], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+    
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `taglist.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            
+          }
+    
+        }
+        ).catch((err) => {
+          console.log(":err", err)
+          toast.error(err);
+          setLoading(false)
+        })
+  };
   const nPages = Math.ceil(toolCategoryCount / limit);
 
   const handleOnChange = (e) => {
@@ -95,7 +154,11 @@ const TagList = () => {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getTaglist()
+          getTaglist(
+            { page: page,
+        limit: limit,
+        search: searchValue}
+          )
         );
       };
       clearTimeout(timer);
@@ -103,7 +166,9 @@ const TagList = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getTaglist()
+        getTaglist({ page: page,
+        limit: limit,
+        search: searchValue})
       );
     }
   }, [customerStatus, searchValue, page, limit]);
@@ -140,9 +205,14 @@ const TagList = () => {
   const columns = useMemo(() => [
     {
       Header: "Sr.No",
-      accessor: (row, rowIndex) => rowIndex + 1 ?? "-",
-
       filterable: false,
+      Cell: (cellProps) => {
+        const rowIndex = cellProps.row.index;
+        const currentPage = page; // Current page (1-based)
+        const pageSize = limit;   // Items per page
+        const serialNumber = (currentPage - 1) * pageSize + rowIndex + 1;
+        return serialNumber;
+      },
     },
     {
       Header: "OPC Server Name",
@@ -175,8 +245,9 @@ const TagList = () => {
    
   
 
-    {
+    ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
+      accessor: 'actions',
       Cell: (cellProps) => {
         return (
           <UncontrolledDropdown>
@@ -209,7 +280,11 @@ const TagList = () => {
           </UncontrolledDropdown>
         );
       },
-    },
+    }] : [{
+      Header: "",
+      accessor: 'emptyAction',
+      Cell: () => null
+    }]),
   ]);
 
   const handleDeleteCategory = () => {
@@ -344,6 +419,7 @@ const TagList = () => {
         });
     }
   };
+  console.log("iscreated",userRole == "ROLE_ADMIN")
   return (
     <>
       <Modal isOpen={addModal} id="exampleModal">
@@ -494,22 +570,30 @@ const TagList = () => {
         <Row>
           <Col lg={12}>
             <Card id="invoiceList">
+              
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">Tag List</h5>
-                  {toolCategoryCount > 10 && <div className="flex-shrink-0">
-                    <div className="d-flex gap-2 flex-wrap">
-                      Show
-                      <select name="pagination" style={{ width: "70px" }} value={limit} onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
-                      >
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                      </select>
-                      entries
+                  {/* {toolCategoryCount > 10 && (
+                    <div className="flex-shrink-0">
+                      <div className="d-flex gap-2 flex-wrap align-items-center">
+                        Show
+                        <select 
+                          name="pagination" 
+                          className="form-select form-select-sm" 
+                          style={{ width: "80px" }} 
+                          value={limit} 
+                          onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
+                        >
+                          <option value="10">10</option>
+                          <option value="25">25</option>
+                          <option value="50">50</option>
+                          <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                      </div>
                     </div>
-                  </div>}
+                  )} */}
                 </div>
               </CardHeader>
               <CardBody className="pt-0">
@@ -531,21 +615,37 @@ const TagList = () => {
                           // customerstatus={customerstatus}
                           setcustomerStatus={setcustomerStatus}
                           customerStatus={customerStatus}
+                          customButtons={userRole == "ROLE_ADMIN" ?[
+                            {
+                              color: 'soft-primary',
+                              icon: 'upload-2-line',
+                              text: 'Bulk Upload Tags',
+                              onClick: handleImportTags,
+                              className: 'me-2'
+                            },
+                            {
+                              color: 'soft-success',
+                              icon: 'download-2-line',
+                              text: 'Export Tags',
+                              onClick: handleExportTags,
+                              className: 'me-2'
+                            }
+                          ]:[]}
                           divClass="table-responsive mb-1"
                           tableClass="mb-0 align-middle table-borderless"
                           theadClass="table-light text-muted"
                           SearchPlaceholder="Search Tag..."
                           setSearchValue={setSearchValue}
                           searchValue={searchValue}
-                          isPagination={toolCategoryCount > 10 ? true : false}
+                          isPagination={toolCategoryCount > 100 ? true : false}
                           nPages={nPages}
                           currentPage={page}
                           setCurrentPage={setPage}
-                          iscreated={true}
+                          iscreated={userRole == "ROLE_ADMIN"}
                           addbuttontext={"Add New Tag"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           totalDataCount={toolCategoryCount}
-                          ispaginationshow={toolCategoryCount > 10 && limit <toolCategoryCount ? true : false }
+                          ispaginationshow={toolCategoryCount > 100 && limit < toolCategoryCount ? true : false}
 
                         />
                       ) : (
@@ -565,8 +665,24 @@ const TagList = () => {
                             setSearchValue={setSearchValue}
                             searchValue={searchValue}
                             isPagination={false}
-                            iscreated={true}
+                            iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Tag"}
+                             customButtons={userRole == "ROLE_ADMIN" ?[
+                            {
+                              color: 'soft-primary',
+                              icon: 'upload-2-line',
+                              text: 'Bulk Upload Tags',
+                              onClick: handleImportTags,
+                              className: 'me-2'
+                            },
+                            {
+                              color: 'soft-success',
+                              icon: 'download-2-line',
+                              text: 'Export Tags',
+                              onClick: handleExportTags,
+                              className: 'me-2'
+                            }
+                          ]:[]}
                             onClickOpenAddModal={onClickOpenAddModal}
                           />
 
@@ -580,6 +696,13 @@ const TagList = () => {
           </Col>
         </Row>
       </div>
+      
+      <FileUploadModal 
+        isOpen={importModal}
+        toggle={() => setImportModal(false)}
+        onFileUpload={handleFileUpload}
+        loading={importLoading}
+      />
     </>
   );
 };
