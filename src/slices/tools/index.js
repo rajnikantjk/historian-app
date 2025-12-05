@@ -52,7 +52,7 @@ export const EditTagDetails = createAsyncThunk(
   "user/update-tag",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      put(`tag/`, data),
+      put(`tag`, data),
       thunkAPI
     );
   }
