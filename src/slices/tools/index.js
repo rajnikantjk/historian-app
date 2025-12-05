@@ -34,7 +34,7 @@ export const getTaglist = createAsyncThunk(
   "user/tag-list",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("/tag/", data),
+      get("/tag", data),
       thunkAPI
     );
   }
@@ -43,7 +43,7 @@ export const  AddNewTagDetails = createAsyncThunk(
   "user/add-tag",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      post("tag/", data),
+      post("tag", data),
       thunkAPI
     );
   }
@@ -62,7 +62,7 @@ export const  AddNewGroupDetails = createAsyncThunk(
   "user/add-group",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      post("grp/", data),
+      post("grp", data),
       thunkAPI
     );
   }
@@ -71,7 +71,7 @@ export const EditGroupDetails = createAsyncThunk(
   "user/update-group",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      put(`grp/`, data),
+      put(`grp`, data),
       thunkAPI
     );
   }
@@ -80,7 +80,7 @@ export const getTagGroupList = createAsyncThunk(
   "user/get-all-taggrouplist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("grp/"),
+      get("grp"),
       thunkAPI
     );
   }
@@ -90,7 +90,7 @@ export const getMappedGroupList = createAsyncThunk(
   "user/get-all-mappedgrouplist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("tag-grp-mapping/"),
+      get("tag-grp-mapping"),
       thunkAPI
     );
   }
@@ -112,7 +112,7 @@ export const AddGroupMapping = createAsyncThunk(
   "user/add-groupmapping",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      post("tag-grp-mapping/", data),
+      post("tag-grp-mapping", data),
       thunkAPI
     );
   }
@@ -122,7 +122,7 @@ export const UpdateGroupMapping = createAsyncThunk(
   "user/update-groupmapping",
   async (data, thunkAPI) => {
     return await thunkHandler(
-      put("tag-grp-mapping/", data),
+      put("tag-grp-mapping", data),
       thunkAPI
     );
   }
@@ -201,7 +201,7 @@ export const getIntervalList = createAsyncThunk(
   "user/get-all-tagintervallist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("dropdown/time-span/"),
+      get("dropdown/time-span"),
       thunkAPI
     );
   }
@@ -211,7 +211,7 @@ export const getFrequencyList = createAsyncThunk(
   "user/get-all-tagfrequencylist",
   async (data, thunkAPI) => {
     https: return await thunkHandler(
-      get("dropdown/update-rate/"),
+      get("dropdown/update-rate"),
       thunkAPI
     );
   }
