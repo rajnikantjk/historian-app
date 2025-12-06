@@ -33,7 +33,7 @@ export const getTools = createAsyncThunk(
 export const getTaglist = createAsyncThunk(
   "user/tag-list",
   async (params = {}, thunkAPI) => {
-    const { page = 1, limit = 10, search = '' } = params;
+    const { page = 1, limit = 1000, search = '' } = params;
     const queryString = `?page=${page - 1}&size=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
     
     return await thunkHandler(
@@ -82,7 +82,7 @@ export const EditGroupDetails = createAsyncThunk(
 export const getTagGroupList = createAsyncThunk(
   "user/get-all-taggrouplist",
   async (params = {}, thunkAPI) => {
-    const { page = 1, limit = 10, search = '' } = params;
+    const { page = 1, limit = 1000, search = '' } = params;
     const queryParams = new URLSearchParams({
       page:page-1,
       size:limit,
@@ -99,7 +99,7 @@ export const getTagGroupList = createAsyncThunk(
 export const getMappedGroupList = createAsyncThunk(
   "user/get-all-mappedgrouplist",
   async (params = {}, thunkAPI) => {
-    const { page = 1, limit = 10, search = '' } = params;
+    const { page = 1, limit = 1000, search = '' } = params;
     const queryParams = new URLSearchParams({
       page:page-1,
       size:limit,
