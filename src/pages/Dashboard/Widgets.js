@@ -549,14 +549,9 @@ const Widgets = () => {
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-        tagId:"",
-        grpId:"",
+
         defaultLoad:"Y",
-        timeSpan:60,
-        // timeSpan: values?.interval?.value,
-        // grpId: String(values?.grpId?.value),
-        updateRate: 30 // set for delhi client
-        // frequency: values?.frequency?.value, //on request of prakashbhai
+       
       };
 
       // console.log("params", params)
@@ -568,9 +563,6 @@ const Widgets = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
         defaultLoad:"Y",
-        grpId:"",
-        tagId:"",
-        updateRate: 30,
       };
 
       // console.log("params2", params)
@@ -679,6 +671,7 @@ const Widgets = () => {
                        <th>Eng Unit</th>
                        <th>Description</th>
                         <th>Current Value</th>
+                        <th>Standard Division Value</th>
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
@@ -692,6 +685,7 @@ const Widgets = () => {
                           <td>{row.unitName}</td>
                            <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
+                          <td>{row?.stdDevValue}</td>
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>

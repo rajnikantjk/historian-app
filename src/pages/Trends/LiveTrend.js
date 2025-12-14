@@ -1297,6 +1297,7 @@ const LiveTrend = () => {
                        <th>Eng Unit</th>
                        <th>Description</th>
                         <th>Current Value</th>
+                        <th>Standard Division Value</th>
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
@@ -1310,6 +1311,7 @@ const LiveTrend = () => {
                           <td>{row.unitName}</td>
                            <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
+                          <td>{row?.stdDevValue}</td>
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>

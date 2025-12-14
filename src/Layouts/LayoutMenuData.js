@@ -141,12 +141,27 @@ const Navdata = () => {
       icon: "ri-history-line",
       link: "/history-trend",
     },
-    
+     userRole == "ROLE_ADMIN" ?{
+      label: "Configuration Management",
+      isHeader: true,
+    }:[],
+     userRole == "ROLE_ADMIN" ? {
+      id: "scheduler-configuration",
+      label: "Scheduler Configuration",
+      icon: "ri-time-line",
+      link: "/scheduler-configuration",
+    } : [],
   userRole == "ROLE_ADMIN" ? {
       id: "settings",
       label: "General Settings",
       icon: "ri-settings-3-line",
       link: "/settings",
+    } : [],
+     userRole == "ROLE_ADMIN" ? {
+      id: "reports",
+      label: "Reports",
+      icon: "ri-file-list-3-line",
+      link: "/reports",
     } : [],
     
  

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { Link } from "react-router-dom";
 import SimpleBar from "simplebar-react";
 //import logo
@@ -9,8 +9,20 @@ import logoLight from "../assets/images/lightfullogo.png";
 //Import Components
 import VerticalLayout from "./VerticalLayouts";
 import { Container } from "reactstrap";
+import { useDispatch } from "react-redux";
+import { getCompanyLogo } from "../slices/tools";
 
 const Sidebar = ({ layoutType }) => {
+  const [companyLogo,setCompanyLogo] = useState("")
+  const dispatch=useDispatch()
+
+  useEffect(()=>{
+    dispatch(getCompanyLogo()).then((res)=>{
+      console.log("response",res?.payload)
+      setCompanyLogo(res?.payload?.[0]?.companyLogo)
+    })
+
+  },[])
 
   useEffect(() => {
     var verticalOverlay = document.getElementsByClassName("vertical-overlay");
@@ -38,19 +50,37 @@ const Sidebar = ({ layoutType }) => {
         <div className="navbar-brand-box">
           <Link to="/" className="logo logo-dark">
             <span className="logo-sm">
-              <img src={logoSm} alt="" height="62" />
+              <img 
+                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoSm} 
+                alt="Company Logo" 
+                height="62" 
+              />
             </span>
             <span className="logo-lg">
-              <img src={logoDark} alt="" height="100" />
+              <img 
+                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoDark} 
+                alt="Company Logo" 
+                height="100" 
+                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+              />
             </span>
           </Link>
 
           <Link to="/" className="logo logo-light">
             <span className="logo-sm">
-              <img src={logoSm} alt="" height="62" />
+              <img 
+                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoSm} 
+                alt="Company Logo" 
+                height="62" 
+              />
             </span>
             <span className="logo-lg">
-              <img src={logoLight} alt="" height="100" />
+              <img 
+                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoLight} 
+                alt="Company Logo" 
+                height="100" 
+                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+              />
             </span>
           </Link>
           <button

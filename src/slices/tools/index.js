@@ -247,6 +247,16 @@ export const getTagsByGroupId = createAsyncThunk(
     );
   }
 );
+export const getCompanyLogo= createAsyncThunk(
+  "user/get-getCompanyLogo",
+  async (grpId, thunkAPI) => {
+    https: return await thunkHandler(
+      get(`company`),
+      thunkAPI
+    );
+  }
+);
+
 
 export const DeleteGroupData = createAsyncThunk(
   "tag/delete-group",
@@ -310,6 +320,22 @@ export const tagDataDownload = createAsyncThunk(
     return await thunkHandler(
       get(
         `tag/export`,
+        config
+      ),
+      thunkAPI
+    );
+  }
+);  
+
+export const groupDataDownload = createAsyncThunk(
+  "user/get-groupDataDownload",
+  async (data, thunkAPI) => {
+    const config = {
+      responseType: 'blob'             // Set the response type to 'blob' to handle binary data
+    };
+    return await thunkHandler(
+      get(
+        `report/tag-master-report`,
         config
       ),
       thunkAPI
@@ -441,6 +467,24 @@ const ToolSlice = createSlice({
         state.toolLoader = false;
       })
       .addCase(updateOPCalarm.rejected, (state, action) => {
+        state.toolLoader = false;
+      })
+      .addCase(tagDataDownload.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(tagDataDownload.fulfilled, (state, action) => {
+        state.toolLoader = false;
+      })
+      .addCase(tagDataDownload.rejected, (state, action) => {
+        state.toolLoader = false;
+      })
+      .addCase(groupDataDownload.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(groupDataDownload.fulfilled, (state, action) => {
+        state.toolLoader = false;
+      })
+      .addCase(groupDataDownload.rejected, (state, action) => {
         state.toolLoader = false;
       });
   },

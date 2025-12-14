@@ -31,6 +31,7 @@ import Dashboard from "../pages/Dashboard";
 import HistoryTrend from "../pages/Trends/HistoryTrend";
 import LiveTrend from "../pages/Trends/LiveTrend";
 import Setting from "../pages/Settings/Settings";
+import Reports from "../pages/Reports/Reports";
 
 const authProtectedRoutes = [
   { path: "/dashboard", component: <Dashboard /> },
@@ -48,6 +49,8 @@ const authProtectedRoutes = [
   { path: "/history-trend", component: <HistoryTrend /> },
   { path: "/live-trend", component: <LiveTrend /> },
   { path: "/settings", component: <Setting /> },
+  { path: "/scheduler-configuration", component: <Setting /> },
+   { path: "/reports", component: <Reports /> },
   { path: "/tools", component: <Tools /> },
   { path: "/tag-list", component: <TagList /> },
   { path: "/tag-group-list", component: <TagGroupList /> },

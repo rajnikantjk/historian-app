@@ -92,7 +92,7 @@ const CustomersGlobalFilter = ({
                           </Col>
                         )}
           {iscreated && addbuttontext && (
-            <Col sm={customButtons?.length > 0 ? 2:5} className="p-0" >
+            <Col sm={3} className="p-0" >
               <div className="text-sm-end p-0">
                 <Button
                   type="button"

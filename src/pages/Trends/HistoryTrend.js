@@ -1074,7 +1074,7 @@ const HistoryTrend = () => {
                                         </div>
                                         <div className="history-actions position-relative">
                                             <Button className="togglebutton-design-off" onClick={handleApplyFilter}>Apply</Button>
-                                            <div
+                                            {/* <div
                                                 className=" border border-white rounded-3 px-2 py-2 d-inline-flex align-items-center"
                                                 data-tooltip-id="downloadTooltip"
                                                 data-tooltip-content="Download Report"
@@ -1086,7 +1086,7 @@ const HistoryTrend = () => {
                                                     <path d="M13.5 5.5h3v1h-3zM18.5 5.5h3v1h-3zM13.5 8.5h3v1h-3zM18.5 8.5h3v1h-3zM13.5 11.5h3v1h-3zM18.5 11.5h3v1h-3zM13.5 14.5h3v1h-3zM18.5 14.5h3v1h-3zM13.5 17.5h3v1h-3zM18.5 17.5h3v1h-3zM4.5 8.5l4 8M4.5 16.5l4-8" />
                                                 </svg>
                                                 <span className="mx-1 text-white">Export</span>
-                                            </div>
+                                            </div> */}
                                             <Button
                                                 color="light"
                                                 className="history-action-btn "
@@ -1122,6 +1122,7 @@ const HistoryTrend = () => {
                                     <th>Eng Unit</th>
                                     <th>Description</th>
                                         <th>Current Value</th>
+                                         <th>Standard Division Value</th>
                                         <th>Minimum</th>
                                         <th>Maximum</th>
                                         <th>Average</th>
@@ -1135,6 +1136,7 @@ const HistoryTrend = () => {
                                         <td>{row.unitName}</td>
                                         <td>{row.description}</td>
                                         <td>{row?.itemValue}</td>
+                                        <td>{row?.stdDevValue}</td>
                                         <td>{row.minValue}</td>
                                         <td>{row.maxValue}</td>
                                         <td>{row.avgValue}</td>

@@ -19,7 +19,7 @@ import {
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
 import DeleteModal from "../../Components/Common/DeleteModal";
-import { DeleteMappingData, getTaglist, getMappedGroupList } from "../../slices/tools";
+import { DeleteMappingData, getTaglist, getMappedGroupList, groupDataDownload } from "../../slices/tools";
 import GroupMappingModal from "./GroupMappingModal";
 
 const customerstatus = [
@@ -235,6 +235,32 @@ const GroupMapping = () => {
         toast.error(err?.data?.message);
       });
   };
+    const handleExportGroups = () => {
+      dispatch(groupDataDownload()).then((res) => {
+      
+            if (res?.payload) {
+              const blob = new Blob([res.payload], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              });
+      
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `tag-master-report.csv`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              
+            }
+      
+          }
+          ).catch((err) => {
+            console.log(":err", err)
+            toast.error(err);
+            setLoading(false)
+          })
+    };
 
   return (
     <>
@@ -312,7 +338,15 @@ const GroupMapping = () => {
                           isPagination={
                            ( groupMappingCount > 100 ) ? true : false
                           }
-                        
+                         customButtons={userRole == "ROLE_ADMIN" ?[
+                            {
+                              color: 'soft-success',
+                              icon: 'download-2-line',
+                              text: 'Export Tag Master',
+                              onClick: handleExportGroups,
+                              className: 'me-2'
+                            }
+                          ]:[]}
                           iscreated={userRole == "ROLE_ADMIN" }
                           addbuttontext={"Add New Group Mapping"}
                           onClickOpenAddModal={onClickOpenAddModal}
@@ -344,6 +378,15 @@ const GroupMapping = () => {
                             iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Group Mapping"}
                             onClickOpenAddModal={onClickOpenAddModal}
+                             customButtons={userRole == "ROLE_ADMIN" ?[
+                            {
+                              color: 'soft-success',
+                              icon: 'download-2-line',
+                              text: 'Export Tag Master',
+                              onClick: handleExportGroups,
+                              className: 'me-2'
+                            }
+                          ]:[]}
                             // isAdditionalStatus={true}
                             additionalstatus={additionalstatus}
                             setAdditionalstatus={setAdditionalstatus}
