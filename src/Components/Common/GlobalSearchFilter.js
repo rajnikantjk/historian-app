@@ -44,7 +44,7 @@ const CustomersGlobalFilter = ({
   function handleAdditionalStatus(customerStatus) {
     setAdditionalstatus(customerStatus);
   }
-  console.log(":iscreated",iscreated)
+ 
   return (
     <React.Fragment>
       <Col sm={8}>

@@ -12,6 +12,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
+import { isArray } from "lodash";
 const Widgets = () => {
   const dispatch = useDispatch();
   const [livedata, setLiveData] = useState([])
@@ -107,45 +108,45 @@ const Widgets = () => {
         intersect: false,
         followCursor: true,
         x: {
-            format: 'dd MMM yyyy HH:mm:ss',
+          format: 'dd MMM yyyy HH:mm:ss',
         },
         custom: function ({ series, seriesIndex, dataPointIndex, w }) {
-            // Get timestamp from category labels or x-axis data
-            let timestamp = w.globals.categoryLabels[dataPointIndex];
+          // Get timestamp from category labels or x-axis data
+          let timestamp = w.globals.categoryLabels[dataPointIndex];
 
-            // If timestamp is not available, try to get it from x-axis categories
-            if (!timestamp && w.config.xaxis && w.config.xaxis.categories) {
-                timestamp = w.config.xaxis.categories[dataPointIndex];
+          // If timestamp is not available, try to get it from x-axis categories
+          if (!timestamp && w.config.xaxis && w.config.xaxis.categories) {
+            timestamp = w.config.xaxis.categories[dataPointIndex];
+          }
+
+          // If still not available, format the current data point time
+          if (!timestamp && w.globals.seriesX && w.globals.seriesX[0]) {
+            const xValue = w.globals.seriesX[0][dataPointIndex];
+            if (xValue) {
+              timestamp = moment(xValue).format('dd MMM yyyy HH:mm:ss');
             }
+          }
 
-            // If still not available, format the current data point time
-            if (!timestamp && w.globals.seriesX && w.globals.seriesX[0]) {
-                const xValue = w.globals.seriesX[0][dataPointIndex];
-                if (xValue) {
-                    timestamp = moment(xValue).format('dd MMM yyyy HH:mm:ss');
-                }
-            }
+          // Fallback to current time formatted
+          if (!timestamp) {
+            timestamp = moment().format('dd MMM yyyy HH:mm:ss');
+          }
 
-            // Fallback to current time formatted
-            if (!timestamp) {
-                timestamp = moment().format('dd MMM yyyy HH:mm:ss');
-            }
+          const colors = w.globals.colors;
+          const seriesNames = w.globals.seriesNames;
 
-            const colors = w.globals.colors;
-            const seriesNames = w.globals.seriesNames;
+          // Build tooltip content for all series at this data point
+          let seriesItems = '';
+          let itemCount = 0;
 
-            // Build tooltip content for all series at this data point
-            let seriesItems = '';
-            let itemCount = 0;
+          series.forEach((serie, idx) => {
+            const value = serie[dataPointIndex];
+            const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
+            const color = colors[idx] || '#008FFB';
 
-            series.forEach((serie, idx) => {
-                const value = serie[dataPointIndex];
-                const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
-                const color = colors[idx] || '#008FFB';
-
-                if (value !== null && value !== undefined) {
-                    itemCount++;
-                    seriesItems += `
+            if (value !== null && value !== undefined) {
+              itemCount++;
+              seriesItems += `
                         <div style="display: flex; align-items: center; padding: 6px 8px; margin-bottom: 2px; border-radius: 4px; transition: background-color 0.2s;" 
                              onmouseover="this.style.backgroundColor='#f5f5f5'" 
                              onmouseout="this.style.backgroundColor='transparent'">
@@ -156,13 +157,13 @@ const Widgets = () => {
                             </div>
                         </div>
                     `;
-                }
-            });
+            }
+          });
 
-            const hasItems = itemCount > 0;
-            const maxHeight = itemCount > 10 ? '400px' : 'auto';
+          const hasItems = itemCount > 0;
+          const maxHeight = itemCount > 10 ? '400px' : 'auto';
 
-            return `
+          return `
                 <style>
                     .custom-tooltip .tooltip-timestamp {
                         color: #ffffff !important;
@@ -214,14 +215,14 @@ const Widgets = () => {
             `;
         },
         style: {
-            fontSize: '12px',
-            fontFamily: 'inherit'
+          fontSize: '12px',
+          fontFamily: 'inherit'
         },
         theme: 'light',
         marker: {
-            show: true
+          show: true
         }
-    },
+      },
       yaxis: [
         {
           seriesName: 'Tag Value',
@@ -290,7 +291,7 @@ const Widgets = () => {
   });
 
   const generateDynamicYaxes = (tagNames, colorList) => {
-        const shouldShowYAxis = tagNames.length === 1 
+    const shouldShowYAxis = tagNames.length === 1
     return tagNames.map((tagName, index) => ({
       seriesName: tagName,
       show: shouldShowYAxis,
@@ -371,7 +372,9 @@ const Widgets = () => {
 
     secondarySocketRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setSpeedometerDatas(data)
+      if (isArray(data)) {
+        setSpeedometerDatas(data)
+      }
 
     };
 
@@ -394,99 +397,116 @@ const Widgets = () => {
 
     };
 
-    socketRef.current.onmessage = (event) => {
-      // const data = JSON.parse(event.data);
-      const rawData = JSON.parse(event?.data);
+    socketRef.current.onmessage = async (event) => {
+      try {
+        let rawData;
 
-      // Step 1: Collect all unique tag names
-      const allTagNames = Array.from(
-        new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
-      );
+        // Handle binary data
+        if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+          const data = event.data instanceof Blob ?
+            await event.data.arrayBuffer() :
+            event.data;
 
-      // Step 2: Sort data chronologically
-      const sortedData = rawData.sort(
-        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-      );
+          // Check for compression marker (first byte)
+          const compressionType = new Uint8Array(data, 0, 1)[0];
+          const compressedData = new Uint8Array(data, 1);
 
-      // Step 3: Fill missing values using previous values or null
-      const filledData = sortedData.reduce((acc, curr, idx) => {
-        const currMap = new Map(curr.tagdata.map(t => [t.name, t.value]));
-        const prevMap =
-          idx > 0 ? new Map(acc[idx - 1].tagdata.map(t => [t.name, t.value])) : new Map();
-
-        // Build complete tagdata ensuring all names exist
-        const filledTags = allTagNames.map(name => {
-          if (currMap.has(name)) {
-            // use current value
-            return { name, value: currMap.get(name) };
-          } else if (prevMap.has(name)) {
-            // fallback to previous timestamp value
-            return { name, value: prevMap.get(name) };
-          } else {
-            // not available anywhere before
-            return { name, value: null };
-          }
-        });
-
-        acc.push({
-          ...curr,
-          tagdata: filledTags,
-        });
-
-        return acc;
-      }, []);
-
-      const convertFilledData = (filledData) => {
-        // Collect all unique tag names
-        const allTagNames = Array.from(
-          new Set(filledData.flatMap(item => item.tagdata.map(t => t.name)))
-        );
-
-        // Create a unique timestamp array (no repeats)
-        const timestamp = filledData.map(item => item.timestamp);
-
-        // Build tag-wise data arrays
-        const tagdata = allTagNames.map(tagName => ({
-          name: tagName,
-          data: filledData.map(item => {
-            const tag = item.tagdata.find(t => t.name === tagName);
-            return tag?.value ?? null;
-          })
-        }));
-
-        return { timestamp, tagdata };
-      };
-
-      // Example usage:
-      const transformed = convertFilledData(filledData);
-
-      setState((prevState) => {
-        // const updatedSeries = formattedSeries.map(series => ({
-        //   name: series.name,
-        //   data: series.data // Ensure this contains the updated data points
-        // }));
-
-
-        const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
-        const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
-
-        return {
-          ...prevState,
-          series: transformed?.tagdata || [],
-          options: {
-            ...prevState.options,
-            colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
-            yaxis: dynamicYaxes, // Dynamic y-axes based on tags
-            // colors: formattedSeries.map(series => series.color),
-            xaxis: {
-              type: "datetime",
-              categories: transformed?.timestamp || [], // Dynamic x-axis labels
+          if (compressionType === 0x01 || compressionType === 0x02) {
+            // Use the Compression Streams API if available (modern browsers)
+            if (window.CompressionStream) {
+              const ds = new DecompressionStream(compressionType === 0x01 ? 'gzip' : 'deflate');
+              const decompressedStream = new Blob([compressedData]).stream().pipeThrough(ds);
+              const decompressedBlob = await new Response(decompressedStream).blob();
+              const text = await decompressedBlob.text();
+              rawData = JSON.parse(text);
             }
-          },
+            // Fallback to pako if available
+            else if (window.pako) {
+              const decompressed = compressionType === 0x01 ?
+                pako.ungzip(compressedData, { to: 'string' }) :
+                pako.inflate(compressedData, { to: 'string' });
+              rawData = JSON.parse(decompressed);
+            }
+            // Fallback to plain text (may be corrupted if actually compressed)
+            else {
+              const decoder = new TextDecoder();
+              rawData = JSON.parse(decoder.decode(compressedData));
+              console.warn('No decompression available, using raw data (may be corrupted)');
+            }
+          } else {
+            // No compression, just decode as text
+            const decoder = new TextDecoder();
+            rawData = JSON.parse(decoder.decode(compressedData));
+          }
+        }
+        // Handle text data
+        else {
+          rawData = JSON.parse(event.data);
+        }
 
-        };
-      });
+        // Process the data
+        if (isArray(rawData)) {
+          // Step 1: Collect all unique tag names
+          const allTagNames = Array.from(
+            new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
+          );
 
+          // Step 2: Sort data chronologically
+          const sortedData = rawData.sort(
+            (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+          );
+          
+         
+
+          const convertFilledData = (filledData) => {
+            // Collect all unique tag names
+            const allTagNames = Array.from(
+              new Set(filledData.flatMap(item => item.tagdata.map(t => t.name)))
+            );
+
+            // Create a unique timestamp array (no repeats)
+            const timestamp = filledData.map(item => item.timestamp);
+
+            // Build tag-wise data arrays
+            const tagdata = allTagNames.map(tagName => ({
+              name: tagName,
+              data: filledData.map(item => {
+                const tag = item.tagdata.find(t => t.name === tagName);
+                return tag?.value ?? null;
+              })
+            }));
+
+            return { timestamp, tagdata };
+          };
+       
+          // Example usage:
+          const transformed = convertFilledData(sortedData);
+
+          setState((prevState) => {
+            const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
+            const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
+
+            return {
+              ...prevState,
+              series: transformed?.tagdata || [],
+              options: {
+                ...prevState.options,
+                colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+                yaxis: dynamicYaxes, // Dynamic y-axes based on tags
+                // colors: formattedSeries.map(series => series.color),
+                xaxis: {
+                  type: "datetime",
+                  categories: transformed?.timestamp || [], // Dynamic x-axis labels
+                }
+              },
+
+            };
+          });
+        }
+
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
+      }
     };
 
     socketRef.current.onclose = () => {
@@ -522,13 +542,13 @@ const Widgets = () => {
 
   }, [values?.frequency?.value, values?.grpId?.value, values?.interval?.value]);
   const getHistoryData = () => {
-    setLoading(true)
+   
     let payload = {
       grpId: "",
       startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
       endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
       tagId: null,
-       defaultLoad:"Y"
+      defaultLoad: "Y"
     }
     dispatch(
       getHistoryDataList(payload)
@@ -537,11 +557,11 @@ const Widgets = () => {
       if (res.payload?.status == 200) {
         let data = res?.payload?.data
         setTableData(data)
-        setLoading(false)
+       
       }
     }).catch((err) => {
       toast.error(err);
-      setLoading(false)
+    
     })
   }
 
@@ -550,8 +570,8 @@ const Widgets = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
 
-        defaultLoad:"Y",
-       
+        defaultLoad: "Y",
+
       };
 
       // console.log("params", params)
@@ -562,7 +582,7 @@ const Widgets = () => {
   const sendMeterPrameters = () => {
     if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
       const params = {
-        defaultLoad:"Y",
+        defaultLoad: "Y",
       };
 
       // console.log("params2", params)
@@ -668,14 +688,14 @@ const Widgets = () => {
                     <thead >
                       <tr>
                         <th>Tag Name</th>
-                       <th>Eng Unit</th>
-                       <th>Description</th>
+                        <th>Eng Unit</th>
+                        <th>Description</th>
                         <th>Current Value</th>
                         <th>Standard Division Value</th>
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
-                        
+
                       </tr>
                     </thead>
                     <tbody>
@@ -683,13 +703,13 @@ const Widgets = () => {
                         <tr key={index}>
                           <td>{row.itemId}</td>
                           <td>{row.unitName}</td>
-                           <td>{row.description}</td>
+                          <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
                           <td>{row?.stdDevValue}</td>
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>
-                         
+
                         </tr>
                       ))}
                     </tbody>

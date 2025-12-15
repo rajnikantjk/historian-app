@@ -14,12 +14,13 @@ import { getCompanyLogo } from "../slices/tools";
 
 const Sidebar = ({ layoutType }) => {
   const [companyLogo,setCompanyLogo] = useState("")
+  const [smallLogo,setSmallLogo] = useState("")
   const dispatch=useDispatch()
 
   useEffect(()=>{
     dispatch(getCompanyLogo()).then((res)=>{
-      console.log("response",res?.payload)
-      setCompanyLogo(res?.payload?.[0]?.companyLogo)
+      setCompanyLogo(res?.payload?.[0]?.siderbarLogo)
+      setSmallLogo(res?.payload?.[0]?.smallIconLogo)
     })
 
   },[])
@@ -51,7 +52,7 @@ const Sidebar = ({ layoutType }) => {
           <Link to="/" className="logo logo-dark">
             <span className="logo-sm">
               <img 
-                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoSm} 
+                src={smallLogo ? `data:image/png;base64,${smallLogo}` : logoSm} 
                 alt="Company Logo" 
                 height="62" 
               />
@@ -69,7 +70,7 @@ const Sidebar = ({ layoutType }) => {
           <Link to="/" className="logo logo-light">
             <span className="logo-sm">
               <img 
-                src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoSm} 
+                src={smallLogo ? `data:image/png;base64,${smallLogo}` : logoSm} 
                 alt="Company Logo" 
                 height="62" 
               />

@@ -28,6 +28,7 @@ import { useFormik } from "formik";
 import { loginUser, socialLogin, resetLoginFlag } from "../../slices/thunks";
 
 import logoLight from "../../assets/images/lightfullogo.png";
+import { getCompanyLogo } from "../../slices/tools";
 //import images
 
 const Login = (props) => {
@@ -38,6 +39,7 @@ const Login = (props) => {
     loading: state.Login.loading,
     errorMsg: state.Login.errorMsg,
   }));
+  const [companyLogo,setCompanyLogo] = useState("")
 
   const [userLogin, setUserLogin] = useState([]);
   const [passwordShow, setPasswordShow] = useState(false);
@@ -63,6 +65,14 @@ const Login = (props) => {
     },
   });
 
+  useEffect(()=>{
+      dispatch(getCompanyLogo()).then((res)=>{
+  
+        setCompanyLogo(res?.payload?.[0]?.siderbarLogo)
+      })
+  
+    },[])
+
   useEffect(() => {
     if (errorMsg) {
       setTimeout(() => {
@@ -82,7 +92,7 @@ const Login = (props) => {
                 <div className="text-center mt-sm-5 mb-4 text-white-50">
                   <div>
                     <Link to="/" className="d-inline-block auth-logo">
-                      <img src={logoLight} alt="" height="150" />
+                      <img src={companyLogo ? `data:image/png;base64,${companyLogo}` : logoLight} alt="" height="150" />
                     </Link>
                   </div>
                 </div>

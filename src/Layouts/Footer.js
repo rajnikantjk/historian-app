@@ -8,11 +8,11 @@ const Footer = () => {
                 <Container fluid>
                     <Row>
                         <Col sm={6}>
-                            {new Date().getFullYear()} © Augmation Tech
+                            {new Date().getFullYear()} © Augmation Technologies Pvt.Ltd
                         </Col>
                         <Col sm={6}>
                             <div className="text-sm-end d-none d-sm-block">
-                                Design & Develop by Find My AI Tool
+                                 Develop by <a href="https://augmation.co/" target='_blank'>www.augmation.co</a>
                             </div>
                         </Col>
                     </Row>

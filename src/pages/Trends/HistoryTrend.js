@@ -123,13 +123,13 @@ const getSelectStyles = (theme = 'light') => {
         }),
         option: (provided, state) => ({
             ...provided,
-            backgroundColor: state.isSelected 
-                ? selectedBg 
-                : state.isFocused 
+            backgroundColor: state.isSelected
+                ? selectedBg
+                : state.isFocused
                     ? isDark ? '#495057' : 'rgba(10, 179, 156, 0.1)'
                     : backgroundColor,
-            color: state.isSelected 
-                ? 'white' 
+            color: state.isSelected
+                ? 'white'
                 : textColor,
             '&:hover': {
                 backgroundColor: hoverBg,
@@ -165,7 +165,7 @@ const getSelectStyles = (theme = 'light') => {
 const getMultiSelectStyles = (theme = 'light') => {
     const baseStyles = getSelectStyles(theme);
     const isDark = theme === 'dark';
-    
+
     return {
         ...baseStyles,
         multiValue: () => ({
@@ -192,7 +192,7 @@ const getMultiSelectStyles = (theme = 'light') => {
 const HistoryTrend = () => {
     // Get the current theme (you might need to adjust this based on your theme implementation)
     const [theme, setTheme] = useState('light');
-    
+
     // Get the appropriate styles based on the current theme
     const singleSelectStyle = getSelectStyles(theme);
     const multiSelectStyle = getMultiSelectStyles(theme);
@@ -485,8 +485,8 @@ const HistoryTrend = () => {
     });
     const generateDynamicYaxes = (tagNames, colorList) => {
         // Show Y-axis if there's only one tag or only one visible series
-        const shouldShowYAxis = tagNames.length === 1 
-        
+        const shouldShowYAxis = tagNames.length === 1
+
         return tagNames.map((tagName, index) => ({
             seriesName: tagName,
             show: shouldShowYAxis,
@@ -647,7 +647,7 @@ const HistoryTrend = () => {
         // Get the chart instance
         const chart = ApexCharts.getChartByID('chart2');
         let tooltip = null;
-        
+
         if (chart) {
             // Get current tooltip data
             const tooltipEl = document.querySelector('.apexcharts-tooltip');
@@ -660,7 +660,7 @@ const HistoryTrend = () => {
                     display: 'block'
                 };
             }
-            
+
             // Force tooltip to stay visible during screenshot
             chart.updateOptions({
                 tooltip: {
@@ -697,13 +697,13 @@ const HistoryTrend = () => {
                         }
                     }
                 });
-                
+
                 // Create and trigger download
                 const link = document.createElement("a");
                 link.href = canvas.toDataURL("image/png");
                 link.download = `history-trend-${moment().format("YYYYMMDD-HHmmss")}.png`;
                 link.click();
-                
+
                 toast.success("Screenshot downloaded successfully");
             } catch (error) {
                 console.error("Screenshot capture failed:", error);
@@ -717,35 +717,36 @@ const HistoryTrend = () => {
                         }
                     }, false, false, true);
                 }
-                
+
                 setScreenshotLoading(false);
             }
         }, 100); // Slightly longer delay to ensure chart updates
     };
 
 
-      // Add keyboard event listener for Ctrl+D
-      useEffect(() => {
+    // Add keyboard event listener for Ctrl+D
+    useEffect(() => {
         const handleKeyDown = (e) => {
-          // Check if Ctrl (or Cmd on Mac) and D are pressed
-          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-            e.preventDefault(); // Prevent default browser behavior (bookmarking)
-            handleDownloadScreenshot();
-          }
+            // Check if Ctrl (or Cmd on Mac) and D are pressed
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault(); // Prevent default browser behavior (bookmarking)
+                handleDownloadScreenshot();
+            }
         };
-    
+
         // Add event listener
         window.addEventListener('keydown', handleKeyDown);
-    
+
         // Clean up event listener on component unmount
         return () => {
-          window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keydown', handleKeyDown);
         };
-      }, [window]);
-    
+    }, [window]);
+
 
     const fetchData = () => {
         if (values?.grpId?.value && values?.interval?.value) {
+            setLoading(true)
             // Get comma-separated tag IDs or null if none selected
             const tagIdValue = selectedTagIds.length > 0
                 ? selectedTagIds.map(tag => tag.value).join(',')
@@ -781,20 +782,6 @@ const HistoryTrend = () => {
                     ].sort((a, b) => new Date(a) - new Date(b));
 
 
-                    // const formattedSeries = Object.keys(groupedData).map((key, index) => {
-                    //     const dataMap = new Map(
-                    //         groupedData[key].map(item => [item.timestamp, item.value])
-                    //     );
-                    //     console.log("dataMap", key, dataMap)
-                    //     // Map timestamps to data values (fill missing values with null)
-                    //     const seriesData = uniqueTimestamps.map(ts => dataMap.get(ts)?.toFixed(2) || null);
-
-                    //     return {
-                    //         name: `${key}`, // Use itemId as the series name
-                    //         data: seriesData,
-                    //         color: colorList[index % colorList.length],
-                    //     };
-                    // });
                     const formattedSeries = Object.keys(groupedData).map((key, index) => {
                         const dataMap = new Map(
                             groupedData[key].map(item => [item.timestamp, item.value])
@@ -860,12 +847,13 @@ const HistoryTrend = () => {
                     });
 
 
-
+                    setLoading(false)
                 }
             })
                 .catch((err) => {
                     console.log(":err", err)
                     toast.error(err);
+                    setLoading(false)
                 });
         }
     };
@@ -873,7 +861,7 @@ const HistoryTrend = () => {
 
     const DownloadReport = () => {
         setLoading(true)
-          const tagIdValue = selectedTagIds.length > 0
+        const tagIdValue = selectedTagIds.length > 0
             ? selectedTagIds.map(tag => tag.value).join(',')
             : null;
         let payload = {
@@ -881,7 +869,7 @@ const HistoryTrend = () => {
             interval: values?.interval?.value,
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
-            tagId:tagIdValue
+            tagId: tagIdValue
         }
         dispatch(HistorytrendReportDownloadData(payload)).then((res) => {
 
@@ -909,7 +897,7 @@ const HistoryTrend = () => {
         })
     }
     const getHistoryData = () => {
-        setLoading(true)
+
         // Get comma-separated tag IDs or null if none selected
         const tagIdValue = selectedTagIds.length > 0
             ? selectedTagIds.map(tag => tag.value).join(',')
@@ -920,7 +908,7 @@ const HistoryTrend = () => {
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
-            defaultLoad:""
+            defaultLoad: ""
         }
         dispatch(
             getHistoryDataList(payload)
@@ -929,11 +917,11 @@ const HistoryTrend = () => {
             if (res.payload?.status == 200) {
                 let data = res?.payload?.data
                 setTableData(data)
-                setLoading(false)
+
             }
         }).catch((err) => {
             toast.error(err);
-            setLoading(false)
+
         })
     }
 
@@ -1092,7 +1080,7 @@ const HistoryTrend = () => {
                                                 className="history-action-btn "
                                                 data-tooltip-id="screenshotTooltip"
                                                 data-tooltip-content="Press Conrol + B to Take Screenshot"
-                                                // onClick={handleDownloadScreenshot}
+                                            // onClick={handleDownloadScreenshot}
                                             >
                                                 <FaCamera className="" />
                                             </Button>
@@ -1116,34 +1104,34 @@ const HistoryTrend = () => {
 
                                 <div >
                                     <Table striped responsive>
-                                         <thead >
-                                    <tr>
-                                        <th>Tag Name</th>
-                                    <th>Eng Unit</th>
-                                    <th>Description</th>
-                                        <th>Current Value</th>
-                                         <th>Standard Division Value</th>
-                                        <th>Minimum</th>
-                                        <th>Maximum</th>
-                                        <th>Average</th>
-                                        
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {tableData.map((row, index) => (
-                                        <tr key={index}>
-                                        <td>{row.itemId}</td>
-                                        <td>{row.unitName}</td>
-                                        <td>{row.description}</td>
-                                        <td>{row?.itemValue}</td>
-                                        <td>{row?.stdDevValue}</td>
-                                        <td>{row.minValue}</td>
-                                        <td>{row.maxValue}</td>
-                                        <td>{row.avgValue}</td>
-                                        
-                                        </tr>
-                                    ))}
-                                    </tbody>
+                                        <thead >
+                                            <tr>
+                                                <th>Tag Name</th>
+                                                <th>Eng Unit</th>
+                                                <th>Description</th>
+                                                <th>Current Value</th>
+                                                <th>Standard Division Value</th>
+                                                <th>Minimum</th>
+                                                <th>Maximum</th>
+                                                <th>Average</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tableData.map((row, index) => (
+                                                <tr key={index}>
+                                                    <td>{row.itemId}</td>
+                                                    <td>{row.unitName}</td>
+                                                    <td>{row.description}</td>
+                                                    <td>{row?.itemValue}</td>
+                                                    <td>{row?.stdDevValue}</td>
+                                                    <td>{row.minValue}</td>
+                                                    <td>{row.maxValue}</td>
+                                                    <td>{row.avgValue}</td>
+
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </Table>
                                 </div>
                             </CardBody>
