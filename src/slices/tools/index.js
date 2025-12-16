@@ -15,10 +15,13 @@ const initialState = {
   toolCategoryData: [],
   toolCategoryCount: 0,
   toolSubCategoryData: [],
+  schedulerListData: [],
+  schedulerListCount: 0,
   toolSubCategoryCount: 0,
   groupMappingData: [],
   groupMappingCount: 0,
   intervalData: [],
+  slotsData: [],
   frequencyData:[],
   tagDataByGroup: [],
   toolLoader: false,
@@ -96,6 +99,24 @@ export const getTagGroupList = createAsyncThunk(
   }
 );
 
+export const getSchedulerList = createAsyncThunk(
+  "user/get-all-schedulerlist",
+  async (params = {}, thunkAPI) => {
+    const { page = 1, limit = 1000, search = '' } = params;
+    const queryParams = new URLSearchParams({
+      page:page-1,
+      size:limit,
+      ...(search && { search })
+    });
+    
+    return await thunkHandler(
+      get(`schedule-task?${queryParams.toString()}`),
+      thunkAPI
+    );
+  }
+);
+
+
 export const getMappedGroupList = createAsyncThunk(
   "user/get-all-mappedgrouplist",
   async (params = {}, thunkAPI) => {
@@ -117,13 +138,17 @@ export const getMappedGroupList = createAsyncThunk(
 export const getHistoryDataList = createAsyncThunk(
   "user/get-all-historydatalist",
   async (data, thunkAPI) => {
+    const { startDate, endDate, defaultLoad, grpId, tagId, ...restParams } = data || {};
+    const queryParams = new URLSearchParams({
+      startDateTime:startDate,
+      endDateTime:endDate,
+      defaultLoad,
+      ...(defaultLoad !== "Y" && { grpId, tagId }),
+      ...restParams
+    }).toString();
+    
     return await thunkHandler(
-      get(
-        data?.defaultLoad == "Y" 
-          ? `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?defaultLoad=${data?.defaultLoad}`
-          : `opc/history-trend-tag-wise-details/${data.startDate}/${data.endDate}?grpId=${data?.grpId}&tagId=${data?.tagId}&defaultLoad=${data?.defaultLoad}`, 
-        { ...data, noLoader: true }
-      ),
+      get(`opc/history-trend-tag-wise-details?${queryParams}`, { ...data, noLoader: true }),
       thunkAPI
     );
   }
@@ -201,21 +226,35 @@ export const HistorytrendReportDownloadData = createAsyncThunk(
 export const HistorytrendData = createAsyncThunk(
   "user/get-historytrendData",
   async (data, thunkAPI) => {
-    const config = {
-      params: data?.body             // Set the response type to 'blob' to handle binary data
-    };
+    const { grpId, interval, startDate, endDate, tagId, defaultLoad,slot, ...restParams } = data || {};
+    const queryParams = new URLSearchParams({
+      grpId,
+      defaultLoad,
+      timeSpan:interval,
+      startDateTime:startDate,
+      endDateTime:endDate,
+      ...(slot && { slot }),
+      ...(tagId && { tagId }),
+      ...restParams
+    }).toString();
+    
     return await thunkHandler(
-      get(
-        data?.tagId? 
-        `opc/history-trend-tag-wise/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`:
-        `opc/history-trend-tag-wise/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}`,
-        config
-      ),
+      get(`opc/history-trend-tag-wise?${queryParams}`),
       thunkAPI
     );
   }
 );
 
+
+export const getSlotsList = createAsyncThunk(
+  "user/get-all-slotlist",
+  async (data, thunkAPI) => {
+    https: return await thunkHandler(
+      get("dropdown/time-slots"),
+      thunkAPI
+    );
+  }
+);
 
 
 export const getIntervalList = createAsyncThunk(
@@ -415,18 +454,41 @@ const ToolSlice = createSlice({
         state.tagDataByGroup = [];
         state.toolLoader = false;
       })
-      .addCase(getIntervalList.pending, (state, action) => {
+      .addCase(getSlotsList.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(getSlotsList.fulfilled, (state, action) => {
+        state.slotsData = action?.payload?.data;
+        state.toolLoader = false;
+      })
+      .addCase(getSlotsList.rejected, (state, action) => {
+        state.slotsData = [];
+        state.toolLoader = false;
+      })
+       .addCase(getIntervalList.pending, (state, action) => {
         state.toolLoader = true;
       })
       .addCase(getIntervalList.fulfilled, (state, action) => {
         state.intervalData = action?.payload?.data;
-        // state.toolSubCategoryCount = action?.payload?.payload?.count;
         state.toolLoader = false;
       })
       .addCase(getIntervalList.rejected, (state, action) => {
         state.intervalData = [];
         state.toolLoader = false;
       })
+      .addCase(getSchedulerList.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(getSchedulerList.fulfilled, (state, action) => {
+        state.schedulerListData = action?.payload?.content;
+        state.schedulerListCount = action?.payload?.totalElements;
+        state.toolLoader = false;
+      })
+      .addCase(getSchedulerList.rejected, (state, action) => {
+        state.toolData = {};
+        state.toolLoader = false;
+      })
+
       .addCase(getTagGroupList.pending, (state, action) => {
         state.toolLoader = true;
       })

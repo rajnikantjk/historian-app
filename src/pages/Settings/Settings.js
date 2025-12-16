@@ -11,7 +11,7 @@ const Setting = () => {
      const navigate = useNavigate();
       const { toolLoader } = useSelector(
          (state) => state.Tool)
-     const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+     const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
      
      useEffect(() => {
         if(userRole != "ROLE_ADMIN"){

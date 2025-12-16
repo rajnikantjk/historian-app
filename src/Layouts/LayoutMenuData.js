@@ -14,7 +14,7 @@ const Navdata = () => {
   const [isGptCategory, setIsGptCategory] = useState(false);
   const [isNewsLatter, setIsNewsLatter] = useState(false); 
   const [iscurrentState, setIscurrentState] = useState("Dashboard");
- const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+ const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
   const updateIconSidebar = (e) => {
     if (e && e.target && e.target.getAttribute("subitems")) {
       const ul = document.getElementById("two-column-menu");

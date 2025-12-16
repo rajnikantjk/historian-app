@@ -23,8 +23,8 @@ const ProfileDropdown = () => {
   const [userName, setUserName] = useState("Admin");
 
   useEffect(() => {
-    if (sessionStorage.getItem("authUser")) {
-      const obj = JSON.parse(sessionStorage.getItem("authUser"));
+    if (localStorage.getItem("authUser")) {
+      const obj = JSON.parse(localStorage.getItem("authUser"));
       const name = obj?.fname || "";
       setUserName(name.charAt(0).toUpperCase() + name.slice(1).toLowerCase());
     }

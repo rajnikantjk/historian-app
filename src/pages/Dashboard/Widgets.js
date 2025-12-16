@@ -548,6 +548,7 @@ const Widgets = () => {
       startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
       endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
       tagId: null,
+      timeSpan:values?.interval?.value,
       defaultLoad: "Y"
     }
     dispatch(

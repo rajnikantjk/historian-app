@@ -16,22 +16,28 @@ import {
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Input,
+  Button,
+  Spinner,
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
 import DeleteModal from "../../Components/Common/DeleteModal";
-import { DeleteMappingData, getTaglist, getMappedGroupList, groupDataDownload } from "../../slices/tools";
-import GroupMappingModal from "./GroupMappingModal";
+import { UpdateAiSubCategory, getTaglist, getSchedulerList, AddNewGroupDetails, EditGroupDetails, DeleteGroupData } from "../../slices/tools";
+
 
 const customerstatus = [
   { label: "All", value: "" },
   { label: "Active", value: "active" },
   { label: "Deactivate", value: "inactive" },
 ];
-const GroupMapping = () => {
-  document.title = "Group Mapping | Augmation Tech";
+const ScheduleConfig = () => {
+  document.title = "Scheduler List | Augmation Tech";
 
   const dispatch = useDispatch();
-  const { groupMappingCount, groupMappingData, toolLoader,toolCategoryData } = useSelector(
+  const { schedulerListCount, schedulerListData, toolLoader,toolCategoryData } = useSelector(
     (state) => state.Tool
   );  const categoriesData = [
     {
@@ -53,21 +59,30 @@ const GroupMapping = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [userStatus, setuserStatus] = useState({});
   const [addModal, setAddModal] = useState(false);
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState({ defaultLoad: "N" });
   const [rowId, setRowId] = useState("");
   const [additionalstatus, setAdditionalstatus] = useState(categoriesData[0]);
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
-   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+  const [errors, setErrors] = useState({});
+ const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+  const handleOnChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setValues({
+      ...values,
+      [name]: type === 'checkbox' ? (checked ? 'Y' : 'N') : value
+    });
+    setErrors({ ...errors, [name]: "" });
+  };
 
   const handleOnChangeLimit =(value)=>{
     setPage(1);
     setLimit(value);
   }
-  const nPages = Math.ceil(groupMappingCount / limit);
+  const nPages = Math.ceil(schedulerListCount / limit);
 
   const onClickOpenAddModal = () => {
-    setAddModal(true);
+    // setAddModal(true);
     setRowId("");
   };
 
@@ -99,7 +114,7 @@ const GroupMapping = () => {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getMappedGroupList({ page: page,
+          getSchedulerList({ page: page,
         limit: limit,
         search: searchValue})
         );
@@ -109,7 +124,7 @@ const GroupMapping = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getMappedGroupList({ page: page,
+        getSchedulerList({ page: page,
         limit: limit,
         search: searchValue})
       );
@@ -119,26 +134,75 @@ const GroupMapping = () => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
     return date1;
   };
+
+  const formValidation = () => {
+    let isFormValid = true;
+    let newErrors = {};
+    const requiredFields = [ "grpName"];
+
+    requiredFields.forEach((field) => {
+      if (!values?.grpName || values?.grpName.trim() === "") {
+        isFormValid = false;
+        newErrors["grpName"] = " Please enter a group name";
+      }
+    });
+    
+    setErrors(newErrors);
+    return isFormValid;
+  };
+
+   const handleOnAddCategory = () => {
+      if (formValidation()) {
+        setLoader(true);
+  
+        dispatch(
+          AddNewGroupDetails({
+            id: "0",
+            grpName: values?.grpName,
+            defaultLoad: values?.defaultLoad || "N",
+            isActive: "Y"
+          })
+        )
+          .then((res) => {
+            if (res?.payload?.status == 200) {
+              setAddModal(false);
+              dispatch(getSchedulerList());
+              setLoader(false);
+              toast.success("Group added successfully");
+              setValues({});
+            } else {
+              setLoader(false);
+              toast.error(res?.payload?.data?.message);
+            }
+          })
+          .catch((err) => {
+            setLoader(false);
+            toast.error(err.response.data.message);
+          });
+      }
+    }
+
+
   const onClickDelete = (status) => {
     const data1 = {
-      id: status?.grpId
+      id: status?.id,
+      status: "Delete",
     };
 
     setuserStatus(data1);
     setDeleteModal(true);
   };
   const handleOnEdit = (item) => {
-    setRowId(item?.grpId);
-  
+    setRowId(item?.id);
     setValues({
       ...values,
-      grpId:{value:item?.grpId,label:item?.grpName},
-      tagId:item?.tagName
+      grpName: item?.grpName,
+      defaultLoad: item?.defaultLoad || "N"
     });
     setAddModal(true);
   };
   const columns = useMemo(() => [
-    {
+     {
       Header: "Sr.No",
       filterable: false,
       Cell: (cellProps) => {
@@ -149,26 +213,21 @@ const GroupMapping = () => {
         return serialNumber;
       },
     },
-    {
-      Header: "Group Id",
-      accessor: (row,rowIndex) => row?.grpId ?? "-",
-
-      filterable: false,
-    },
+    
     {
       Header: "Group Name",
       accessor: (row) => row?.grpName ?? "-",
-      width: 200,
+
       filterable: false,
     },
     {
-      Header: "Tag Name",
-      accessor: (row) => row?.tagName ?? "-",
+      Header: "Default Group",
+      accessor: (row) => row?.defaultLoad == "Y" ? "Yes":"No" ?? "-",
+
       filterable: false,
     },
-
    
-    ...(userRole == "ROLE_ADMIN" ? [{
+      ...(userRole == "ROLE_ADMIN" ? [ {
       Header: "Action",
       Cell: (cellProps) => {
         return (
@@ -181,14 +240,14 @@ const GroupMapping = () => {
               <i className="ri-more-fill align-middle"></i>
             </DropdownToggle>
             <DropdownMenu className="dropdown-menu-end">
-             <DropdownItem
-                            onClick={() => {
-                              handleOnEdit(cellProps?.row?.original);
-                            }}
-                          >
-                            <i className="ri-pencil-fill align-bottom me-2 text-muted"></i>{" "}
-                            Edit
-                          </DropdownItem>
+              <DropdownItem
+                onClick={() => {
+                  handleOnEdit(cellProps?.row?.original);
+                }}
+              >
+                <i className="ri-pencil-fill align-bottom me-2 text-muted"></i>{" "}
+                Edit
+              </DropdownItem>
               <DropdownItem
                 href="#"
                 onClick={() => {
@@ -202,28 +261,31 @@ const GroupMapping = () => {
           </UncontrolledDropdown>
         );
       },
+      
     }]:[{
       Header: "",
       accessor: 'emptyAction',
       Cell: () => null
-    }]),
+    }]
+  ),
+    
   ]);
-  const handleDeleteMappingData = () => {
+  const handleDeleteGroup = () => {
     setLoader(true)
 
     dispatch(
-      DeleteMappingData({ id: userStatus.id })
+      DeleteGroupData({ id: userStatus.id })
     )
       .then((res) => {
         if (res?.payload?.status == 200) {
-          
-            toast.success("Group Mapping Deleted Successfully");
-    
+         
+            toast.success("Group Deleted Successfully");
+         
           setDeleteModal(false);
           setLoader(false)
 
           dispatch(
-            getMappedGroupList()
+            getSchedulerList()
           );
         } else {
           setLoader(false)
@@ -235,51 +297,122 @@ const GroupMapping = () => {
         toast.error(err?.data?.message);
       });
   };
-    const handleExportGroups = () => {
-      dispatch(groupDataDownload()).then((res) => {
-      
-            if (res?.payload) {
-              const blob = new Blob([res.payload], {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-              });
-      
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `tag-master-report.csv`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              URL.revokeObjectURL(url);
-              
-            }
-      
-          }
-          ).catch((err) => {
-            console.log(":err", err)
-            toast.error(err);
-            setLoading(false)
+
+   const handleOnUpdateCategory = () => {
+      if (formValidation()) {
+        setLoader(true);
+  
+        dispatch(
+          EditGroupDetails({
+            grpName: values?.grpName,
+            defaultLoad: values?.defaultLoad || "N",
+            isActive: "Y",
+            id: rowId,
           })
+        )
+          .then((res) => {
+            if (res?.payload?.status == 200) {
+              setAddModal(false);
+              setLoader(false);
+              dispatch(getSchedulerList());
+              toast.success("Group Updated Successfully");
+              setValues({});
+            } else {
+              setLoader(false);
+              toast.error(res?.payload?.data?.message);
+            }
+          })
+          .catch((err) => {
+            setLoader(false);
+            setAddModal(false);
+            toast.error(err.response.data.message);
+          });
+      }
     };
 
   return (
     <>
-       {addModal && (
-        <GroupMappingModal
-          addModal={addModal}
-          setAddModal={setAddModal}
-          values={values}
-          setValues={setValues}
-          rowId={rowId}
-          page={page}
-        />
-      )}
-      
+
+          <Modal isOpen={addModal}  id="exampleModal">
+          <ModalHeader
+            toggle={() => {
+              setAddModal(false);
+              setValues({});
+              setErrors({});
+            }}
+          >
+            {rowId ? "Update Group" : "Add Group"}{" "}
+          </ModalHeader>
+          <ModalBody>
+            <form>
+              <div className="mb-3">
+             
+                <Input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter Group Name"
+                  name="grpName"
+                  value={values.grpName || ""}
+                  onChange={handleOnChange}
+                />
+                {errors.grpName && (
+                  <div className="invalid-feedback d-block">
+                    {errors.grpName}
+                  </div>
+                )}
+              </div>
+              <div className="mb-3">
+                <div className="form-check">
+                  <Input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="defaultLoad"
+                    name="defaultLoad"
+                    checked={values.defaultLoad === "Y"}
+                    onChange={handleOnChange}
+                  />
+                  <label className="form-check-label" htmlFor="defaultLoad">
+                    Set as default group
+                  </label>
+                </div>
+              </div>
+            </form>
+          </ModalBody>
+          <div className="modal-footer">
+            <Button
+              color="light"
+              onClick={() => {
+                setAddModal(false);
+                setValues({});
+                setErrors({});
+              }}
+            >
+              Close
+            </Button>
+            <Button
+              color="primary"
+              onClick={() => {
+                rowId ? handleOnUpdateCategory() : handleOnAddCategory();
+              }}
+            >
+              {loader && (
+                <Spinner size="sm" className="flex-shrink-0  ">
+                  {" "}
+                  Loading...{" "}
+                </Spinner>
+              )}
+              <span className="flex-grow-1 ms-2">
+                {rowId ? "Update Group" : "Add Group"}
+              </span>
+            </Button>
+          </div>
+        </Modal>
+    
       <div className="page-content">
         <DeleteModal
           show={deleteModal}
           text={"Delete"}
-          onDeleteClick={() => handleDeleteMappingData()}
+          onDeleteClick={() => handleDeleteGroup()}
           onCloseClick={() => setDeleteModal(false)}
           loader={loader}
         />
@@ -289,9 +422,9 @@ const GroupMapping = () => {
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">
-                    Tag Group Mapping
+                    Schedule Task List
                   </h5>
-              {/* {   groupMappingCount > 10 &&  <div className="flex-shrink-0">
+              {/* {   schedulerListCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
                       <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
@@ -314,11 +447,11 @@ const GroupMapping = () => {
                     </>
                   ) : (
                     <>
-                      {groupMappingData &&
-                      groupMappingData?.length > 0 ? (
+                      {schedulerListData &&
+                      schedulerListData?.length > 0 ? (
                         <TableContainer
                           columns={columns || []}
-                          data={groupMappingData || []}
+                          data={schedulerListData || []}
                           isGlobalFilter={true}
                           isAddUserList={false}
                           customPageSize={limit}
@@ -329,33 +462,25 @@ const GroupMapping = () => {
                           divClass="table-responsive mb-1"
                           tableClass="mb-0 align-middle table-borderless"
                           theadClass="table-light text-muted"
-                          SearchPlaceholder="Search Group..."
+                          SearchPlaceholder="Search Schedule Task..."
                           setSearchValue={setSearchValue}
                           searchValue={searchValue}
                           nPages={nPages}
                           currentPage={page}
                           setCurrentPage={setPage}
                           isPagination={
-                           ( groupMappingCount > 100 ) ? true : false
+                           ( schedulerListCount > 100 ) ? true : false
                           }
-                         customButtons={userRole == "ROLE_ADMIN" ?[
-                            {
-                              color: 'soft-success',
-                              icon: 'download-2-line',
-                              text: 'Export Tag Master',
-                              onClick: handleExportGroups,
-                              className: 'me-2'
-                            }
-                          ]:[]}
+                         
                           iscreated={userRole == "ROLE_ADMIN" }
-                          addbuttontext={"Add New Group Mapping"}
+                          addbuttontext={"Add New Schedule"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           // isAdditionalStatus={true}
                           additionalstatus={additionalstatus}
                           setAdditionalstatus={setAdditionalstatus}
                           AdditionalOption={categoriesData}
-                          totalDataCount={groupMappingCount}
-                          ispaginationshow={groupMappingCount > 100 && limit <groupMappingCount ? true : false }
+                          totalDataCount={schedulerListCount}
+                          ispaginationshow={schedulerListCount > 100 && limit <schedulerListCount ? true : false }
 
                         />
                       ) : (
@@ -371,22 +496,13 @@ const GroupMapping = () => {
                             customerStatus={customerStatus}
                             tableClass="mb-0 align-middle table-borderless"
                             theadClass="table-light text-muted"
-                            SearchPlaceholder="Search Group..."
+                            SearchPlaceholder="Search Schedule Task..."
                             setSearchValue={setSearchValue}
                             searchValue={searchValue}
                             isPagination={false}
                             iscreated={userRole == "ROLE_ADMIN"}
-                            addbuttontext={"Add New Group Mapping"}
+                            addbuttontext={"Add New Schedule"}
                             onClickOpenAddModal={onClickOpenAddModal}
-                             customButtons={userRole == "ROLE_ADMIN" ?[
-                            {
-                              color: 'soft-success',
-                              icon: 'download-2-line',
-                              text: 'Export Tag Master',
-                              onClick: handleExportGroups,
-                              className: 'me-2'
-                            }
-                          ]:[]}
                             // isAdditionalStatus={true}
                             additionalstatus={additionalstatus}
                             setAdditionalstatus={setAdditionalstatus}
@@ -407,4 +523,4 @@ const GroupMapping = () => {
   );
 };
 
-export default GroupMapping;
+export default ScheduleConfig;

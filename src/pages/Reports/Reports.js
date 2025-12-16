@@ -91,7 +91,7 @@ const Reports = () => {
 ];
 
     const navigate = useNavigate();
-    const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+    const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
     
     useEffect(() => {
         if (userRole !== "ROLE_ADMIN") {

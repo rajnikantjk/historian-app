@@ -28,7 +28,7 @@ import DatePicker from "react-datepicker";
 import classnames from "classnames";
 import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
-import { getHistoryDataList, getIntervalList, getTagGroupList, HistorytrendData, HistorytrendReportDownloadData, getTagsByGroupId } from "../../slices/tools";
+import { getHistoryDataList, getIntervalList, getTagGroupList, HistorytrendData, HistorytrendReportDownloadData, getTagsByGroupId, getSlotsList } from "../../slices/tools";
 import moment from "moment";
 import { Tooltip } from "react-tooltip";
 import { FaDownload, FaHistory, FaCamera } from "react-icons/fa";
@@ -196,8 +196,9 @@ const HistoryTrend = () => {
     // Get the appropriate styles based on the current theme
     const singleSelectStyle = getSelectStyles(theme);
     const multiSelectStyle = getMultiSelectStyles(theme);
-    const { toolSubCategoryData, intervalData, tagDataByGroup } = useSelector(
+    const { toolSubCategoryData, intervalData, tagDataByGroup, slotsData } = useSelector(
         (state) => state.Tool)
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [screenshotLoading, setScreenshotLoading] = useState(false);
@@ -414,7 +415,7 @@ const HistoryTrend = () => {
                 labels: {
                     datetimeUTC: false,
                     format: 'dd MMM HH:mm',
-                    show: true, // 👈 This hides the X-axis labels
+                    show: true, // 
                 }, categories: [
                     "2024-05-12",
                     "2024-05-14",
@@ -616,8 +617,16 @@ const HistoryTrend = () => {
         Promise.all([
             dispatch(getTagGroupList()),
             dispatch(getIntervalList()),
-
-        ]);
+            dispatch(getSlotsList()),
+        ]).then(() => {
+            // Set default selected slot to the first one after slots are loaded
+            // if (slotsData && slotsData.length > 0) {
+            //     setSelectedSlot({
+            //         value: slotsData[0].value,
+            //         label: slotsData[0].key
+            //     });
+            // }
+        });
     }, [dispatch]);
 
     const handleStartDateChange = (date) => {
@@ -758,6 +767,8 @@ const HistoryTrend = () => {
                 startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
                 endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
                 tagId: tagIdValue,
+                defaultLoad:"N",
+                slot: selectedSlot?.value || null, // Add selected slot to payload, default to 0 if not selected
             }
             dispatch(
                 HistorytrendData(payload)
@@ -869,7 +880,8 @@ const HistoryTrend = () => {
             interval: values?.interval?.value,
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
-            tagId: tagIdValue
+            tagId: tagIdValue,
+            slots: selectedSlot?.value || null, // Add selected slot to payload, default to 0 if not selected
         }
         dispatch(HistorytrendReportDownloadData(payload)).then((res) => {
 
@@ -908,7 +920,8 @@ const HistoryTrend = () => {
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
-            defaultLoad: ""
+            defaultLoad: "N",
+            timeSpan:values?.interval?.value,
         }
         dispatch(
             getHistoryDataList(payload)
@@ -1059,6 +1072,22 @@ const HistoryTrend = () => {
                                                         interval: e,
                                                     });
                                                 }} />
+                                        </div>
+                                        <div className="history-filter">
+                                            <label className="filter-label">Slots <span className="text-danger">*</span></label>
+                                            <Select 
+                                                options={slotsData?.map(item => ({
+                                                    value: item.value,
+                                                    label: item.key
+                                                }))} 
+                                                className="history-select" 
+                                                placeholder="Select Slot" 
+                                                styles={singleSelectStyle} 
+                                                value={selectedSlot}
+                                                onChange={(e) => {
+                                                    setSelectedSlot(e);
+                                                }} 
+                                            />
                                         </div>
                                         <div className="history-actions position-relative">
                                             <Button className="togglebutton-design-off" onClick={handleApplyFilter}>Apply</Button>

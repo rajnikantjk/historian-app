@@ -12,7 +12,7 @@ import {
   Col,
   Button,
 } from "reactstrap";
-import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData, getTagsByGroupId, getHistoryDataList } from "../../slices/tools";
+import { getFrequencyList, getIntervalList, getTagGroupList, LivetrandGetData, LivetrandReportDownloadData, getTagsByGroupId, getHistoryDataList, getSlotsList } from "../../slices/tools";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Select from "react-select";
@@ -193,8 +193,9 @@ const LiveTrend = () => {
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState([]);
-  const { toolSubCategoryData, intervalData, frequencyData, tagDataByGroup } = useSelector(
+  const { toolSubCategoryData, intervalData, frequencyData, tagDataByGroup, slotsData } = useSelector(
     (state) => state.Tool)
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [apiCalled, setApiCalled] = useState(false);
   const [screenshotLoading, setScreenshotLoading] = useState(false);
   const colorList = [
@@ -698,8 +699,17 @@ const LiveTrend = () => {
     Promise.all([
       dispatch(getTagGroupList()),
       dispatch(getIntervalList()),
-      dispatch(getFrequencyList())
-    ]);
+      dispatch(getFrequencyList()),
+      dispatch(getSlotsList())
+    ]).then(() => {
+      // Set default selected slot to the first one after slots are loaded
+      // if (slotsData && slotsData.length > 0) {
+      //   setSelectedSlot({
+      //     value: slotsData[0].value,
+      //     label: slotsData[0].key
+      //   });
+      // }
+    });
   }, [dispatch]);
 
   // Prepare tag options with Select All/Deselect All (vice versa based on selection)
@@ -1089,12 +1099,14 @@ const LiveTrend = () => {
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
+        slot: selectedSlot?.value || null,
         defaultLoad: ""
       } : {
         tagId: tagIdValue,
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
+        slot: selectedSlot?.value || null,
         defaultLoad: ""
       };
 
@@ -1135,7 +1147,8 @@ const LiveTrend = () => {
       startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
       endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
       tagId: tagIdValue,
-      defaultLoad: ""
+      defaultLoad: "N",
+      timeSpan:values?.interval?.value,
     }
     dispatch(
       getHistoryDataList(payload)
@@ -1258,6 +1271,22 @@ const LiveTrend = () => {
                               interval: e,
                             });
                           }} />
+                      </div>
+                      <div className="history-filter">
+                        <label className="text-white mb-1 d-block">Slots <span className="text-danger">*</span></label>
+                        <Select 
+                          options={slotsData?.map(item => ({
+                            value: item.value,
+                            label: item.key
+                          }))} 
+                          className="history-select" 
+                          placeholder="Select Slot" 
+                          styles={singleSelectStyle} 
+                          value={selectedSlot}
+                          onChange={(e) => {
+                            setSelectedSlot(e);
+                          }} 
+                        />
                       </div>
                       <div className="history-filter">
                         <label className="text-white mb-1 d-block">Refresh Rate <span className="text-danger">*</span></label>

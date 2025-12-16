@@ -15,7 +15,7 @@ import { ToastContainer } from 'react-toastify';
 function App() {
   return (
     <React.Fragment>
-      <ToastContainer/>
+      <ToastContainer  position={"bottom-right"} />
 
       <Route />
     </React.Fragment>

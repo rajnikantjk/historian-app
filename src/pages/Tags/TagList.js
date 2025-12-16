@@ -63,7 +63,7 @@ const TagList = () => {
   const [importModal, setImportModal] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
   const [limit, setLimit] = useState(100);
-  const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+  const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
 
   const handleOnChangeLimit = (value) => {
     setPage(1);

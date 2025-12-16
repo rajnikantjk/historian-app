@@ -65,7 +65,7 @@ const TagGroupList = () => {
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
   const [errors, setErrors] = useState({});
- const userRole = JSON.parse(sessionStorage.getItem("authUser"))?.role;
+ const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
   const handleOnChange = (e) => {
     const { name, value, type, checked } = e.target;
     setValues({
