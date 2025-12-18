@@ -921,7 +921,7 @@ const HistoryTrend = () => {
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
             defaultLoad: "N",
-            timeSpan:values?.interval?.value,
+            timeSpan:null,
         }
         dispatch(
             getHistoryDataList(payload)

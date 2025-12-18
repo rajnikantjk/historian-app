@@ -22,6 +22,7 @@ const initialState = {
   groupMappingCount: 0,
   intervalData: [],
   slotsData: [],
+  reportListData:[],
   frequencyData:[],
   tagDataByGroup: [],
   toolLoader: false,
@@ -245,6 +246,23 @@ export const HistorytrendData = createAsyncThunk(
   }
 );
 
+export const saveSchdule=createAsyncThunk(
+  "user/saveSchdule",
+  async (data, thunkAPI) => {
+    return await thunkHandler(post("schedule-task", data), thunkAPI);
+  }
+);
+
+export const getReportTypeList = createAsyncThunk(
+  "user/get-all-reportlist",
+  async (data, thunkAPI) => {
+    https: return await thunkHandler(
+      get("dropdown/report-types"),
+      thunkAPI
+    );
+  }
+);
+
 
 export const getSlotsList = createAsyncThunk(
   "user/get-all-slotlist",
@@ -291,6 +309,16 @@ export const getCompanyLogo= createAsyncThunk(
   async (grpId, thunkAPI) => {
     https: return await thunkHandler(
       get(`company`),
+      thunkAPI
+    );
+  }
+);
+
+export const DeleteScheduleData = createAsyncThunk(
+  "tag/delete-schedule",
+  async (data, thunkAPI) => {
+    https: return await thunkHandler(
+      del(`schedule-task/${data?.id}`, data),
       thunkAPI
     );
   }
@@ -454,6 +482,17 @@ const ToolSlice = createSlice({
         state.tagDataByGroup = [];
         state.toolLoader = false;
       })
+      .addCase(getReportTypeList.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(getReportTypeList.fulfilled, (state, action) => {
+        state.reportListData = action?.payload?.data;
+        state.toolLoader = false;
+      })
+      .addCase(getReportTypeList.rejected, (state, action) => {
+        state.reportListData = [];
+        state.toolLoader = false;
+      })
       .addCase(getSlotsList.pending, (state, action) => {
         state.toolLoader = true;
       })
@@ -480,8 +519,8 @@ const ToolSlice = createSlice({
         state.toolLoader = true;
       })
       .addCase(getSchedulerList.fulfilled, (state, action) => {
-        state.schedulerListData = action?.payload?.content;
-        state.schedulerListCount = action?.payload?.totalElements;
+        state.schedulerListData = action?.payload?.data;
+        state.schedulerListCount = action?.payload?.data?.length;
         state.toolLoader = false;
       })
       .addCase(getSchedulerList.rejected, (state, action) => {
