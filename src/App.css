@@ -186,11 +186,12 @@
 }
 
 .react-datepicker-wrapper {
-  width: 250px !important ;
+  width: 350px !important ;
+  max-width:350px !important ;
 }
 .react-datepicker__input-container{
-  width: 250px !important ;
-  max-width: 250px !important ;
+  width: 350px !important ;
+  max-width:350px !important ;
   display: flex;
 
 }

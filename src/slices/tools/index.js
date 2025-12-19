@@ -149,7 +149,7 @@ export const getHistoryDataList = createAsyncThunk(
     }).toString();
     
     return await thunkHandler(
-      get(`opc/history-trend-tag-wise-details?${queryParams}`, { ...data, noLoader: true }),
+      get(`report/history-trend-tag-wise-details?${queryParams}`, { ...data, noLoader: true }),
       thunkAPI
     );
   }
@@ -240,7 +240,7 @@ export const HistorytrendData = createAsyncThunk(
     }).toString();
     
     return await thunkHandler(
-      get(`opc/history-trend-tag-wise?${queryParams}`),
+      get(`report/history-trend-chart-tag-wise?${queryParams}`),
       thunkAPI
     );
   }
@@ -519,8 +519,8 @@ const ToolSlice = createSlice({
         state.toolLoader = true;
       })
       .addCase(getSchedulerList.fulfilled, (state, action) => {
-        state.schedulerListData = action?.payload?.data;
-        state.schedulerListCount = action?.payload?.data?.length;
+        state.schedulerListData = action?.payload?.content;
+        state.schedulerListCount = action?.payload?.totalElements;
         state.toolLoader = false;
       })
       .addCase(getSchedulerList.rejected, (state, action) => {

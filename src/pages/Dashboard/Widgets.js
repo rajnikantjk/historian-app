@@ -370,10 +370,53 @@ const Widgets = () => {
       console.log('Secondary WebSocket connected');
     };
 
-    secondarySocketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (isArray(data)) {
-        setSpeedometerDatas(data)
+    secondarySocketRef.current.onmessage =async (event) => {
+      let rawData;
+       
+        // Handle binary data
+        if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+          const data = event.data instanceof Blob ?
+            await event.data.arrayBuffer() :
+            event.data;
+
+          // Check for compression marker (first byte)
+          const compressionType = new Uint8Array(data, 0, 1)[0];
+          const compressedData = new Uint8Array(data, 1);
+
+          if (compressionType === 0x01 || compressionType === 0x02) {
+            // Use the Compression Streams API if available (modern browsers)
+            if (window.CompressionStream) {
+              const ds = new DecompressionStream(compressionType === 0x01 ? 'gzip' : 'deflate');
+              const decompressedStream = new Blob([compressedData]).stream().pipeThrough(ds);
+              const decompressedBlob = await new Response(decompressedStream).blob();
+              const text = await decompressedBlob.text();
+              rawData = JSON.parse(text);
+            }
+            // Fallback to pako if available
+            else if (window.pako) {
+              const decompressed = compressionType === 0x01 ?
+                pako.ungzip(compressedData, { to: 'string' }) :
+                pako.inflate(compressedData, { to: 'string' });
+              rawData = JSON.parse(decompressed);
+            }
+            // Fallback to plain text (may be corrupted if actually compressed)
+            else {
+              const decoder = new TextDecoder();
+              rawData = JSON.parse(decoder.decode(compressedData));
+              console.warn('No decompression available, using raw data (may be corrupted)');
+            }
+          } else {
+            // No compression, just decode as text
+            const decoder = new TextDecoder();
+            rawData = JSON.parse(decoder.decode(compressedData));
+          }
+        }
+        // Handle text data
+        else {
+          rawData = JSON.parse(event.data);
+        }
+      if (isArray(rawData)) {
+        setSpeedometerDatas(rawData)
       }
 
     };
@@ -400,7 +443,7 @@ const Widgets = () => {
     socketRef.current.onmessage = async (event) => {
       try {
         let rawData;
-
+       
         // Handle binary data
         if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
           const data = event.data instanceof Blob ?
@@ -517,7 +560,7 @@ const Widgets = () => {
       console.error('WebSocket error:', error);
     };
   };
-
+  
   useEffect(() => {
     initializeSocket();
     connectSecondarySocket();
