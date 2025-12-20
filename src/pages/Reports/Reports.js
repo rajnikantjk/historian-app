@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { 
-    Row, 
-    Col, 
-    Card, 
-    CardBody, 
+import {
+    Row,
+    Col,
+    Card,
+    CardBody,
     Button,
     Modal,
     ModalHeader,
@@ -13,47 +13,146 @@ import {
     Input,
     Form,
     InputGroup,
-    InputGroupText
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loader from "../../Components/Common/Loader";
 import FeatherIcon from "feather-icons-react";
+import { getIntervalList, getReportTypeList, getSlotsList, getTagGroupList, getTaglist } from "../../slices/tools";
+import { useDispatch, useSelector } from "react-redux";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import Select from 'react-select';
 
 const Reports = () => {
-   
-      const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [tagOptions, setTagOptions] = useState([]);
+    
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [isFlowModalOpen, setIsFlowModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-   const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState({
         history: {
-            startDateTime: "",
-            endDateTime: "",
+            startDateTime: new Date(),
+            endDateTime: new Date(),
             timeSpan: "",
             group: "",
             tag: "",
             slot: ""
         },
         flow: {
-            dateTime: "",
+            dateTime: new Date(),
             slot: "",
             group: "",
             tag: ""
         }
     });
+    const dispatch = useDispatch()
+    const { slotsData, intervalData ,toolSubCategoryData} = useSelector(
+        (state) => state.Tool
+    );
 
-     const toggleHistoryModal = () => setIsHistoryModalOpen(!isHistoryModalOpen);
-    const toggleFlowModal = () => setIsFlowModalOpen(!isFlowModalOpen);
+    const defaultFilters = {
+        history: {
+            startDateTime: new Date(),
+            endDateTime: new Date(),
+            timeSpan: "",
+            group: "",
+            tag: "",
+            slot: ""
+        },
+        flow: {
+            dateTime: new Date(),
+            slot: "",
+            group: "",
+            tag: ""
+        }
+    };
 
- 
-    const handleInputChange = (reportType, field, value) => {
+    const resetFilters = (reportType) => {
         setFilters(prev => ({
             ...prev,
-            [reportType]: {
-                ...prev[reportType],
-                [field]: value
-            }
+            [reportType]: { ...defaultFilters[reportType] }
         }));
+    };
+
+    const toggleHistoryModal = () => {
+        if (isHistoryModalOpen) {
+            resetFilters('history');
+        }
+        setIsHistoryModalOpen(!isHistoryModalOpen);
+    };
+
+    const toggleFlowModal = () => {
+        if (isFlowModalOpen) {
+            resetFilters('flow');
+        }
+        setIsFlowModalOpen(!isFlowModalOpen);
+    };
+
+    const groupOptions = toolSubCategoryData?.map(item => ({
+        value: item?.id,
+      label: item?.grpName,
+    }))
+
+const intervaldata = intervalData?.map((item, i) => {
+        return {
+            value: item?.value,
+            label: item?.key,
+        };
+      
+    })
+
+    const slotOptions = slotsData?.map(item => ({
+        value: item.value,
+        label: item.key
+    }))
+    const handleInputChange = (reportType, field, selectedOption) => {
+        setFilters(prev => {
+            const newValue = Array.isArray(selectedOption) 
+                ? selectedOption.map(opt => opt?.value).filter(Boolean)
+                : selectedOption?.value || '';
+                
+            return {
+                ...prev,
+                [reportType]: {
+                    ...prev[reportType],
+                    [field]: newValue
+                }
+            };
+        });
+    };
+
+
+    const customStyles = {
+        control: (provided) => ({
+            ...provided,
+            minHeight: '38px',
+            height: '38px',
+            borderRadius: '0.25rem',
+            borderColor: '#ced4da',
+            '&:hover': {
+                borderColor: '#86b7fe',
+                boxShadow: '0 0 0 0.25rem rgba(13, 110, 253, 0.25)'
+            },
+            '&:focus-within': {
+                borderColor: '#86b7fe',
+                boxShadow: '0 0 0 0.25rem rgba(13, 110, 253, 0.25)'
+            }
+        }),
+        valueContainer: (provided) => ({
+            ...provided,
+            height: '36px',
+            padding: '0 8px'
+        }),
+        input: (provided) => ({
+            ...provided,
+            margin: '0px',
+            padding: '0px'
+        }),
+        indicatorsContainer: (provided) => ({
+            ...provided,
+            height: '36px'
+        })
     };
 
     const handleSubmit = (e, reportType) => {
@@ -69,30 +168,30 @@ const Reports = () => {
         }, 1500);
     };
 
-   const reportCards = [
-    {
-        id: "history",
-        title: "History Report",
-        icon: "clock",
-        color: "primary",
-        description: "Generate detailed historical data reports with custom date ranges and filters.",
-        buttonText: "Download History Report",
-        onClick: toggleHistoryModal
-    },
-    {
-        id: "flow",
-        title: "Flow Totalizer Report",
-        icon: "activity",
-        color: "success",
-        description: "Create comprehensive flow totalizer reports with various aggregation options.",
-        buttonText: "Download Flow Totalizer Report",
-        onClick: toggleFlowModal
-    }
-];
+    const reportCards = [
+        {
+            id: "history",
+            title: "History Report",
+            icon: "clock",
+            color: "primary",
+            description: "Generate detailed historical data reports with custom date ranges and filters.",
+            buttonText: "Download History Report",
+            onClick: toggleHistoryModal
+        },
+        {
+            id: "flow",
+            title: "Flow Totalizer Report",
+            icon: "activity",
+            color: "success",
+            description: "Create comprehensive flow totalizer reports with various aggregation options.",
+            buttonText: "Download Flow Totalizer Report",
+            onClick: toggleFlowModal
+        }
+    ];
 
     const navigate = useNavigate();
     const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
-    
+
     useEffect(() => {
         if (userRole !== "ROLE_ADMIN") {
             toast.error("You are not authorized to access this page");
@@ -100,108 +199,36 @@ const Reports = () => {
         }
     }, [userRole, navigate]);
 
-    const renderFormFields = () => (
-        <>
-            <Row className="g-3">
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>Start Date & Time</Label>
-                        <Input 
-                            type="datetime-local" 
-                            required
-                            value={filters.startDateTime}
-                            onChange={(e) => handleInputChange('startDateTime', e.target.value)}
-                        />
-                    </FormGroup>
-                </Col>
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>End Date & Time</Label>
-                        <Input 
-                            type="datetime-local" 
-                            required
-                            value={filters.endDateTime}
-                            onChange={(e) => handleInputChange('endDateTime', e.target.value)}
-                        />
-                    </FormGroup>
-                </Col>
-            </Row>
-            <Row className="g-3">
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>Time Span</Label>
-                        <Input 
-                            type="select"
-                            value={filters.timeSpan}
-                            onChange={(e) => handleInputChange('timeSpan', e.target.value)}
-                        >
-                            <option value="">Select Interval</option>
-                            <option value="15min">15 Minutes</option>
-                            <option value="1h">1 Hour</option>
-                            <option value="4h">4 Hours</option>
-                            <option value="1d">1 Day</option>
-                        </Input>
-                    </FormGroup>
-                </Col>
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>Group</Label>
-                        <InputGroup>
-                            <InputGroupText>
-                                <FeatherIcon icon="folder" className="icon-xs" />
-                            </InputGroupText>
-                            <Input 
-                                type="select"
-                                value={filters.group}
-                                onChange={(e) => handleInputChange('group', e.target.value)}
-                            >
-                                <option value="">Select Group</option>
-                                {/* Add actual groups here */}
-                            </Input>
-                        </InputGroup>
-                    </FormGroup>
-                </Col>
-            </Row>
-            <Row className="g-3">
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>Tag</Label>
-                        <InputGroup>
-                            <InputGroupText>
-                                <FeatherIcon icon="tag" className="icon-xs" />
-                            </InputGroupText>
-                            <Input 
-                                type="select"
-                                value={filters.tag}
-                                onChange={(e) => handleInputChange('tag', e.target.value)}
-                            >
-                                <option value="">Select Tag</option>
-                                {/* Add actual tags here */}
-                            </Input>
-                        </InputGroup>
-                    </FormGroup>
-                </Col>
-                <Col md={6}>
-                    <FormGroup>
-                        <Label>Slot</Label>
-                        <InputGroup>
-                            <InputGroupText>
-                                <FeatherIcon icon="hard-drive" className="icon-xs" />
-                            </InputGroupText>
-                            <Input 
-                                type="select"
-                                value={filters.slot}
-                                onChange={(e) => handleInputChange('slot', e.target.value)}
-                            >
-                                <option value="">Select Slot</option>
-                                {/* Add actual slots here */}
-                            </Input>
-                        </InputGroup>
-                    </FormGroup>
-                </Col>
-            </Row>
-        </>
-    );
+    // Load tags for the dropdown
+    const loadTags = async (inputValue) => {
+
+        try {
+            const response = await dispatch(getTaglist({ search: inputValue || '', page: 1, limit: 1000 }));
+            const options = response.payload?.content?.map(tag => ({
+                value: tag.id,
+                label: tag.displayTagName,
+                ...tag
+            })) || [];
+            if (!inputValue) {
+                setTagOptions(options);
+            }
+            return options;
+        } catch (error) {
+            console.error('Error loading tags:', error);
+            return [];
+        } finally {
+
+        }
+    };
+
+    useEffect(() => {
+        loadTags()
+        dispatch(getSlotsList())
+        dispatch(getIntervalList())
+        dispatch(getTagGroupList({page:1,limit:1000}))
+    }, [])
+
+  
 
     return (
         <div className="page-content">
@@ -210,14 +237,7 @@ const Reports = () => {
                     <Col xs={12}>
                         <div className="page-title-box d-flex align-items-center justify-content-between">
                             <h4 className="mb-0">Reports </h4>
-                            {/* <div className="d-flex gap-2">
-                                <Button color="light" className="d-flex align-items-center">
-                                    <FeatherIcon icon="download" className="me-1" /> Export All
-                                </Button>
-                                <Button color="primary" className="d-flex align-items-center">
-                                    <FeatherIcon icon="plus" className="me-1" /> New Report
-                                </Button>
-                            </div> */}
+
                         </div>
                     </Col>
                 </Row>
@@ -238,11 +258,11 @@ const Reports = () => {
                                     <p className="text-muted flex-grow-1">{report.description}</p>
                                     <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                                         <div className="text-muted">
-                                            <FeatherIcon icon="clock" className="icon-xs me-1" /> 
+                                            <FeatherIcon icon="clock" className="icon-xs me-1" />
                                             Last generated: 2 hours ago
                                         </div>
-                                        <Button 
-                                            color={report.color} 
+                                        <Button
+                                            color={report.color}
                                             className="btn-label"
                                             onClick={report.onClick}
                                         >
@@ -256,55 +276,10 @@ const Reports = () => {
                     ))}
                 </Row>
 
-                {/* Recent Reports Section */}
-                {/* <Row className="mt-4">
-                    <Col xs={12}>
-                        <Card>
-                            <CardBody>
-                                <div className="d-flex align-items-center justify-content-between mb-4">
-                                    <h5 className="card-title mb-0">Recent Reports</h5>
-                                    <Button color="light" size="sm">
-                                        <FeatherIcon icon="refresh-cw" className="icon-xs me-1" /> Refresh
-                                    </Button>
-                                </div>
-                                
-                                <div className="table-responsive">
-                                    <table className="table table-centered table-nowrap align-middle mb-0">
-                                        <thead className="table-light">
-                                            <tr>
-                                                <th>Report Name</th>
-                                                <th>Type</th>
-                                                <th>Generated On</th>
-                                                <th>Status</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Production_Report_20231214</td>
-                                                <td>History</td>
-                                                <td>14 Dec 2023, 10:30 AM</td>
-                                                <td><span className="badge bg-success">Completed</span></td>
-                                                <td>
-                                                    <Button color="light" size="sm" className="me-1">
-                                                        <FeatherIcon icon="download" className="icon-xs" />
-                                                    </Button>
-                                                    <Button color="light" size="sm">
-                                                        <FeatherIcon icon="trash-2" className="icon-xs text-danger" />
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                          
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </CardBody>
-                        </Card>
-                    </Col>
-                </Row> */}
+
             </div>
 
-             {/* History Report Modal */}
+            {/* History Report Modal */}
             <Modal isOpen={isHistoryModalOpen} toggle={toggleHistoryModal} size="lg">
                 <ModalHeader toggle={toggleHistoryModal}>
                     <i className="ri-file-chart-line me-2"></i> Configure History Report
@@ -315,22 +290,44 @@ const Reports = () => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Start Date & Time</Label>
-                                    <Input 
-                                        type="datetime-local" 
+                                    <DatePicker
+                                        selected={filters.history.startDateTime}
+                                        onChange={(date) => setFilters(prev => ({
+                                            ...prev,
+                                            history: {
+                                                ...prev.history,
+                                                startDateTime: date
+                                            }
+                                        }))}
+                                        showTimeSelect
+                                        timeFormat="HH:mm"
+                                        timeIntervals={15}
+                                        timeCaption="Time"
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        className="form-control"
                                         required
-                                        value={filters.history.startDateTime}
-                                        onChange={(e) => handleInputChange('history', 'startDateTime', e.target.value)}
                                     />
                                 </FormGroup>
                             </Col>
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>End Date & Time</Label>
-                                    <Input 
-                                        type="datetime-local" 
+                                    <DatePicker
+                                        selected={filters.history.endDateTime}
+                                        onChange={(date) => setFilters(prev => ({
+                                            ...prev,
+                                            history: {
+                                                ...prev.history,
+                                                endDateTime: date
+                                            }
+                                        }))}
+                                        showTimeSelect
+                                        timeFormat="HH:mm"
+                                        timeIntervals={15}
+                                        timeCaption="Time"
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        className="form-control"
                                         required
-                                        value={filters.history.endDateTime}
-                                        onChange={(e) => handleInputChange('history', 'endDateTime', e.target.value)}
                                     />
                                 </FormGroup>
                             </Col>
@@ -339,30 +336,32 @@ const Reports = () => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Time Span</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.history.timeSpan}
-                                        onChange={(e) => handleInputChange('history', 'timeSpan', e.target.value)}
-                                    >
-                                        <option value="">Select Time Span</option>
-                                        <option value="15min">15 Minutes</option>
-                                        <option value="1h">1 Hour</option>
-                                        <option value="4h">4 Hours</option>
-                                        <option value="1d">1 Day</option>
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={intervaldata?.find(opt => opt.value === filters.history.timeSpan) || null}
+                                        onChange={(selected) => handleInputChange('history', 'timeSpan', selected)}
+                                        options={intervaldata}
+                                        placeholder="Select Time Span"
+                                        styles={customStyles}
+                                        isClearable
+                                    />
                                 </FormGroup>
                             </Col>
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Group</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.history.group}
-                                        onChange={(e) => handleInputChange('history', 'group', e.target.value)}
-                                    >
-                                        <option value="">Select Group</option>
-                                        {/* Populate with actual groups */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={groupOptions?.find(opt => opt.value === filters.history.group) || null}
+                                        onChange={(selected) => handleInputChange('history', 'group', selected)}
+                                        options={groupOptions}
+                                        placeholder="Select Group"
+                                        styles={customStyles}
+                                        isClearable
+                                      
+                                    />
                                 </FormGroup>
                             </Col>
                         </Row>
@@ -370,33 +369,45 @@ const Reports = () => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Tag</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.history.tag}
-                                        onChange={(e) => handleInputChange('history', 'tag', e.target.value)}
-                                    >
-                                        <option value="">Select Tag</option>
-                                        {/* Populate with actual tags */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={Array.isArray(filters.history.tag) 
+                                            ? filters.history.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId)) 
+                                            : []}
+                                        onChange={(selected) => handleInputChange('history', 'tag', selected || [])}
+                                        options={tagOptions}
+                                        placeholder="Select Tags"
+                                        styles={customStyles}
+                                        isMulti
+                                        isClearable
+                                        closeMenuOnSelect={false}
+                                        hideSelectedOptions={false}
+                                    />
                                 </FormGroup>
                             </Col>
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Slot</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.history.slot}
-                                        onChange={(e) => handleInputChange('history', 'slot', e.target.value)}
-                                    >
-                                        <option value="">Select Slot</option>
-                                        {/* Populate with actual slots */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={slotOptions?.find(opt => opt.value === filters.history.slot) || null}
+                                        onChange={(selected) => handleInputChange('history', 'slot', selected)}
+                                        options={slotOptions}
+                                        placeholder="Select Slot"
+                                        styles={customStyles}
+                                        isClearable
+                                    />
                                 </FormGroup>
                             </Col>
                         </Row>
                     </ModalBody>
                     <div className="modal-footer">
-                        <Button type="button" color="light" onClick={toggleHistoryModal}>
+                        <Button type="button" color="light" onClick={() => {
+                            resetFilters('history');
+                            toggleHistoryModal();
+                        }}>
                             Cancel
                         </Button>{' '}
                         <Button type="submit" color="primary">
@@ -405,7 +416,7 @@ const Reports = () => {
                     </div>
                 </Form>
             </Modal>
-             <Modal isOpen={isFlowModalOpen} toggle={toggleFlowModal} size="lg">
+            <Modal isOpen={isFlowModalOpen} toggle={toggleFlowModal} size="lg">
                 <ModalHeader toggle={toggleFlowModal}>
                     <i className="ri-pie-chart-2-line me-2"></i> Configure Flow Totalizer Report
                 </ModalHeader>
@@ -415,25 +426,38 @@ const Reports = () => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Date & Time</Label>
-                                    <Input 
-                                        type="datetime-local" 
+                                    <DatePicker
+                                        selected={filters.flow.dateTime}
+                                        onChange={(date) => setFilters(prev => ({
+                                            ...prev,
+                                            flow: {
+                                                ...prev.flow,
+                                                dateTime: date
+                                            }
+                                        }))}
+                                        showTimeSelect
+                                        timeFormat="HH:mm"
+                                        timeIntervals={15}
+                                        timeCaption="Time"
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        className="form-control"
                                         required
-                                        value={filters.flow.dateTime}
-                                        onChange={(e) => handleInputChange('flow', 'dateTime', e.target.value)}
                                     />
                                 </FormGroup>
                             </Col>
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Slot</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.flow.slot}
-                                        onChange={(e) => handleInputChange('flow', 'slot', e.target.value)}
-                                    >
-                                        <option value="">Select Slot</option>
-                                        {/* Populate with actual slots */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={slotOptions?.find(opt => opt.value === filters.flow.slot) || null}
+                                        onChange={(selected) => handleInputChange('flow', 'slot', selected)}
+                                        options={slotOptions}
+                                        placeholder="Select Slot"
+                                        styles={customStyles}
+                                        isClearable
+                                    />
                                 </FormGroup>
                             </Col>
                         </Row>
@@ -441,33 +465,46 @@ const Reports = () => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Group</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.flow.group}
-                                        onChange={(e) => handleInputChange('flow', 'group', e.target.value)}
-                                    >
-                                        <option value="">Select Group</option>
-                                        {/* Populate with actual groups */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={groupOptions?.find(opt => opt.value === filters.flow.group) || null}
+                                        onChange={(selected) => handleInputChange('flow', 'group', selected)}
+                                        options={groupOptions}
+                                        placeholder="Select Group"
+                                        styles={customStyles}
+                                        isClearable
+                                       
+                                    />
                                 </FormGroup>
                             </Col>
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Tag</Label>
-                                    <Input 
-                                        type="select"
-                                        value={filters.flow.tag}
-                                        onChange={(e) => handleInputChange('flow', 'tag', e.target.value)}
-                                    >
-                                        <option value="">Select Tag</option>
-                                        {/* Populate with actual tags */}
-                                    </Input>
+                                    <Select
+                                        className="react-select-container"
+                                        classNamePrefix="select"
+                                        value={Array.isArray(filters.flow.tag) 
+                                            ? filters.flow.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId)) 
+                                            : []}
+                                        onChange={(selected) => handleInputChange('flow', 'tag', selected || [])}
+                                        options={tagOptions}
+                                        placeholder="Select Tags"
+                                        styles={customStyles}
+                                        isMulti
+                                        isClearable
+                                        closeMenuOnSelect={false}
+                                        hideSelectedOptions={false}
+                                    />
                                 </FormGroup>
                             </Col>
                         </Row>
                     </ModalBody>
                     <div className="modal-footer">
-                        <Button type="button" color="light" onClick={toggleFlowModal}>
+                        <Button type="button" color="light" onClick={() => {
+                            resetFilters('flow');
+                            toggleFlowModal();
+                        }}>
                             Cancel
                         </Button>{' '}
                         <Button type="submit" color="success">

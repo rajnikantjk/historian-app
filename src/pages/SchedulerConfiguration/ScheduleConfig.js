@@ -44,7 +44,8 @@ const ScheduleConfig = () => {
   const dispatch = useDispatch();
   const { schedulerListCount, slotsData, reportListData, schedulerListData, toolLoader, toolCategoryData } = useSelector(
     (state) => state.Tool
-  ); const categoriesData = [
+  );
+   const categoriesData = [
     {
       value: "",
       label: "All",
