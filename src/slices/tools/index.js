@@ -155,6 +155,32 @@ export const getHistoryDataList = createAsyncThunk(
   }
 );
 
+export const downloadHistoryTrendReport = createAsyncThunk(
+  "user/downloadHistoryTrendReport",
+  async (data, thunkAPI) => {
+     const config = {
+      responseType: 'blob'             // Set the response type to 'blob' to handle binary data
+    };
+    return await thunkHandler(
+      post("report/history-trend-export-report", data,config),
+      thunkAPI
+    );
+  }
+);
+
+export const downloadFlowTotalizerReport = createAsyncThunk(
+  "user/downloadFlowTotalizerReport",
+  async (data, thunkAPI) => {
+    const config = {
+      responseType: 'blob'             // Set the response type to 'blob' to handle binary data
+    };
+    return await thunkHandler(
+      post("report/flow-totalizer-report", data,config),
+      thunkAPI
+    );
+  }
+);
+
 export const AddGroupMapping = createAsyncThunk(
   "user/add-groupmapping",
   async (data, thunkAPI) => {
@@ -234,7 +260,7 @@ export const HistorytrendData = createAsyncThunk(
       timeSpan:interval,
       startDateTime:startDate,
       endDateTime:endDate,
-      ...(slot && { slot }),
+      slot,
       ...(tagId && { tagId }),
       ...restParams
     }).toString();

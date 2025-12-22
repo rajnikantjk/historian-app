@@ -181,7 +181,8 @@ const LiveTrend = () => {
   let intervalId = null;
   // Get the current theme (you might need to adjust this based on your theme implementation)
   const [theme, setTheme] = useState('light');
-
+  const [speedometerDatas, setSpeedometerDatas] = useState([])
+  const secondarySocketRef = useRef(null);
   // Get the appropriate styles based on the current theme
   const singleSelectStyle = getSelectStyles(theme);
   const multiSelectStyle = getMultiSelectStyles(theme);
@@ -702,13 +703,7 @@ const LiveTrend = () => {
       dispatch(getFrequencyList()),
       dispatch(getSlotsList())
     ]).then(() => {
-      // Set default selected slot to the first one after slots are loaded
-      // if (slotsData && slotsData.length > 0) {
-      //   setSelectedSlot({
-      //     value: slotsData[0].value,
-      //     label: slotsData[0].key
-      //   });
-      // }
+
     });
   }, [dispatch]);
 
@@ -932,17 +927,14 @@ const LiveTrend = () => {
     }));
   };
 
-  // Function to initialize the WebSocket
-  const initializeSocket = () => {
-    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise`);
+  const connectSecondarySocket = () => {
+    secondarySocketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/meter/tag-wise`);
 
-    socketRef.current.onopen = () => {
-      console.log('WebSocket connection established');
-
+    secondarySocketRef.current.onopen = () => {
+      console.log('Secondary WebSocket connected');
     };
 
-    socketRef.current.onmessage =async (event) => {
-    try {
+    secondarySocketRef.current.onmessage = async (event) => {
       let rawData;
 
       // Handle binary data
@@ -987,23 +979,93 @@ const LiveTrend = () => {
       else {
         rawData = JSON.parse(event.data);
       }
-
-      // Process the data
       if (isArray(rawData)) {
+        setSpeedometerDatas(rawData)
+      }
 
-   
+    };
 
-        // Step 1: Collect all unique tag names
-        const allTagNames = Array.from(
-          new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
-        );
+    secondarySocketRef.current.onclose = () => {
+      console.log('Secondary WebSocket closed');
+    };
 
-        // Step 2: Sort data chronologically
-        const sortedData = rawData.sort(
-          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-        );
+    secondarySocketRef.current.onerror = (error) => {
+      console.error('Secondary WebSocket error:', error);
+    };
+  };
 
-         const convertFilledData = (filledData) => {
+  // Function to initialize the WebSocket
+  const initializeSocket = () => {
+    socketRef.current = new WebSocket(`${process.env.REACT_APP_API_URL}live/tag-wise`);
+
+    socketRef.current.onopen = () => {
+      console.log('WebSocket connection established');
+
+    };
+
+    socketRef.current.onmessage = async (event) => {
+      try {
+        let rawData;
+
+        // Handle binary data
+        if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+          const data = event.data instanceof Blob ?
+            await event.data.arrayBuffer() :
+            event.data;
+
+          // Check for compression marker (first byte)
+          const compressionType = new Uint8Array(data, 0, 1)[0];
+          const compressedData = new Uint8Array(data, 1);
+
+          if (compressionType === 0x01 || compressionType === 0x02) {
+            // Use the Compression Streams API if available (modern browsers)
+            if (window.CompressionStream) {
+              const ds = new DecompressionStream(compressionType === 0x01 ? 'gzip' : 'deflate');
+              const decompressedStream = new Blob([compressedData]).stream().pipeThrough(ds);
+              const decompressedBlob = await new Response(decompressedStream).blob();
+              const text = await decompressedBlob.text();
+              rawData = JSON.parse(text);
+            }
+            // Fallback to pako if available
+            else if (window.pako) {
+              const decompressed = compressionType === 0x01 ?
+                pako.ungzip(compressedData, { to: 'string' }) :
+                pako.inflate(compressedData, { to: 'string' });
+              rawData = JSON.parse(decompressed);
+            }
+            // Fallback to plain text (may be corrupted if actually compressed)
+            else {
+              const decoder = new TextDecoder();
+              rawData = JSON.parse(decoder.decode(compressedData));
+              console.warn('No decompression available, using raw data (may be corrupted)');
+            }
+          } else {
+            // No compression, just decode as text
+            const decoder = new TextDecoder();
+            rawData = JSON.parse(decoder.decode(compressedData));
+          }
+        }
+        // Handle text data
+        else {
+          rawData = JSON.parse(event.data);
+        }
+
+        // Process the data
+        if (isArray(rawData)) {
+          
+
+
+          // Step 1: Collect all unique tag names
+          const allTagNames = Array.from(
+            new Set(rawData.flatMap(entry => entry.tagdata.map(t => t.name)))
+          );
+
+          // Step 2: Sort data chronologically
+          const sortedData = rawData.sort(
+            (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+          );
+
+          const convertFilledData = (filledData) => {
             // Collect all unique tag names
             const allTagNames = Array.from(
               new Set(filledData.flatMap(item => item.tagdata.map(t => t.name)))
@@ -1023,46 +1085,46 @@ const LiveTrend = () => {
 
             return { timestamp, tagdata };
           };
-        // Example usage:
-        const transformed = convertFilledData(sortedData);
+          // Example usage:
+          const transformed = convertFilledData(sortedData);
 
 
 
 
 
-        setState((prevState) => {
-          const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
-          const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
+          setState((prevState) => {
+            const tagNames = transformed?.tagdata?.map(tag => tag.name) || [];
+            const dynamicYaxes = generateDynamicYaxes(tagNames, colorList);
 
-          return {
-            ...prevState,
-            series: transformed?.tagdata || [],
-            seriesLine: transformed?.tagdata || [],
-            options: {
-              ...prevState.options,
-              colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
-              yaxis: dynamicYaxes, // Dynamic y-axes based on tags
-              xaxis: {
-                type: "datetime",
-                categories: transformed?.timestamp || [],
-              }
-            },
-            optionsLine: {
-              ...prevState.optionsLine,
-              colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
-              xaxis: {
-                type: "datetime",
-                categories: transformed?.timestamp || []
+            return {
+              ...prevState,
+              series: transformed?.tagdata || [],
+              seriesLine: transformed?.tagdata || [],
+              options: {
+                ...prevState.options,
+                colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+                yaxis: dynamicYaxes, // Dynamic y-axes based on tags
+                xaxis: {
+                  type: "datetime",
+                  categories: transformed?.timestamp || [],
+                }
               },
-              yaxis: {
-                max: 100,
-                tickAmount: 2
+              optionsLine: {
+                ...prevState.optionsLine,
+                colors: tagNames.map((_, idx) => colorList[idx % colorList.length]),
+                xaxis: {
+                  type: "datetime",
+                  categories: transformed?.timestamp || []
+                },
+                yaxis: {
+                  max: 100,
+                  tickAmount: 2
+                }
               }
-            }
-          };
-        });
-      }
-    }catch (err) {
+            };
+          });
+        }
+      } catch (err) {
         console.error('Error processing WebSocket message:', err);
       }
     }
@@ -1078,11 +1140,13 @@ const LiveTrend = () => {
 
   useEffect(() => {
     initializeSocket();
-
+    // connectSecondarySocket();
     // Cleanup on component unmount
     return () => {
-      if (socketRef.current) {
+      if (socketRef.current){
+      // if (socketRef.current || secondarySocketRef.current) {
         socketRef.current.close();
+        // secondarySocketRef.current?.close();
       }
     };
   }, []);
@@ -1099,15 +1163,19 @@ const LiveTrend = () => {
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
-        slot: selectedSlot?.value || null,
-        defaultLoad: ""
+        slot: selectedSlot?.value ?? null,
+        defaultLoad: null,
+        // startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+        // endDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
       } : {
         tagId: tagIdValue,
         timeSpan: values?.interval?.value,
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
-        slot: selectedSlot?.value || null,
-        defaultLoad: ""
+        slot: selectedSlot?.value ?? null,
+        defaultLoad: null,
+        // startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+        // endDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
       };
 
       // console.log("params", params)
@@ -1115,6 +1183,35 @@ const LiveTrend = () => {
       socketRef.current.send(JSON.stringify(params));
     }
   };
+
+  const sendMeterPrameters = () => {
+    if (secondarySocketRef.current?.readyState === WebSocket.OPEN) {
+      const tagIdValue = selectedTagIds.length > 0 ? selectedTagIds.map(tag => tag.value).join(',')
+        : "";
+      const params = selectedTagIds.length > 0 ? {
+        tagId: tagIdValue,
+        timeSpan: values?.interval?.value,
+        grpId: values?.grpId?.value,
+        updateRate: values?.frequency?.value,
+        slot: selectedSlot?.value ?? null,
+        defaultLoad:null,
+        // startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+        // endDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      } : {
+        tagId: tagIdValue,
+        timeSpan: values?.interval?.value,
+        grpId: values?.grpId?.value,
+        updateRate: values?.frequency?.value,
+        slot: selectedSlot?.value ?? null,
+        defaultLoad: null,
+        // startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+        // endDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
+      };
+      // console.log("params2", params)
+
+      secondarySocketRef.current.send(JSON.stringify(params));
+    }
+  }
 
   const stopData = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -1127,6 +1224,7 @@ const LiveTrend = () => {
       stopData()
     } else {
       sendParameters()
+      // sendMeterPrameters();
     }
     setIsLive(!isLive)
 
@@ -1134,7 +1232,8 @@ const LiveTrend = () => {
 
   const handleApplyFilter = () => {
     sendParameters();
-    getHistoryData()
+     getHistoryData()
+    // sendMeterPrameters();
   }
 
   const getHistoryData = () => {
@@ -1144,11 +1243,11 @@ const LiveTrend = () => {
 
     let payload = {
       grpId: values?.grpId?.value,
-      startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
-      endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
+       startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+        endDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
       tagId: tagIdValue,
-      defaultLoad: "N",
-      timeSpan:null,
+      defaultLoad: null,
+      timeSpan: null,
     }
     dispatch(
       getHistoryDataList(payload)
@@ -1273,19 +1372,19 @@ const LiveTrend = () => {
                           }} />
                       </div>
                       <div className="history-filter">
-                        <label className="text-white mb-1 d-block">Slots <span className="text-danger">*</span></label>
-                        <Select 
+                        <label className="text-white mb-1 d-block">Slots</label>
+                        <Select
                           options={slotsData?.map(item => ({
                             value: item.value,
                             label: item.key
-                          }))} 
-                          className="history-select" 
-                          placeholder="Select Slot" 
-                          styles={singleSelectStyle} 
+                          }))}
+                          className="history-select"
+                          placeholder="Select Slot"
+                          styles={singleSelectStyle}
                           value={selectedSlot}
                           onChange={(e) => {
                             setSelectedSlot(e);
-                          }} 
+                          }}
                         />
                       </div>
                       <div className="history-filter">
@@ -1363,7 +1462,7 @@ const LiveTrend = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {tableData.map((row, index) => (
+                      {tableData?.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
                           <td>{row.unitName}</td>

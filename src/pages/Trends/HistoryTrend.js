@@ -28,7 +28,7 @@ import DatePicker from "react-datepicker";
 import classnames from "classnames";
 import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
-import { getHistoryDataList, getIntervalList, getTagGroupList, HistorytrendData, HistorytrendReportDownloadData, getTagsByGroupId, getSlotsList } from "../../slices/tools";
+import { getHistoryDataList, getIntervalList, getTagGroupList, HistorytrendData, HistorytrendReportDownloadData, getTagsByGroupId, getSlotsList, downloadHistoryTrendReport } from "../../slices/tools";
 import moment from "moment";
 import { Tooltip } from "react-tooltip";
 import { FaDownload, FaHistory, FaCamera } from "react-icons/fa";
@@ -767,8 +767,8 @@ const HistoryTrend = () => {
                 startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
                 endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
                 tagId: tagIdValue,
-                defaultLoad:"N",
-                slot: selectedSlot?.value || null, // Add selected slot to payload, default to 0 if not selected
+                defaultLoad:null,
+                slot: selectedSlot?.value ?? null, // Add selected slot to payload, default to 0 if not selected
             }
             dispatch(
                 HistorytrendData(payload)
@@ -876,24 +876,30 @@ const HistoryTrend = () => {
             ? selectedTagIds.map(tag => tag.value).join(',')
             : null;
         let payload = {
+            defaultLoad:null,
             grpId: values?.grpId?.value,
-            interval: values?.interval?.value,
-            startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
-            endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
+            timeSpan: values?.interval?.value,
+            // interval: values?.interval?.value,
+            startDateTime: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
+            endDateTime: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
-            slots: selectedSlot?.value || null, // Add selected slot to payload, default to 0 if not selected
+            slot: selectedSlot?.value ?? null, // Add selected slot to payload, default to 0 if not selected
         }
-        dispatch(HistorytrendReportDownloadData(payload)).then((res) => {
-
-            if (res?.payload) {
+        
+        dispatch(downloadHistoryTrendReport(payload)).then((res) => {
+                
+            if (res?.payload?.status){
+                toast.error("Something went wrong")
+                setLoading(false)
+            }else {
                 const blob = new Blob([res.payload], {
-                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type: 'application/zip',
                 });
 
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `${values?.grpId?.label}_HistoryTrendReport.xlsx`;
+                a.download = `History-Report.zip`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -920,8 +926,9 @@ const HistoryTrend = () => {
             startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
-            defaultLoad: "N",
+            defaultLoad: null,
             timeSpan:null,
+            slot: selectedSlot?.value ?? null,
         }
         dispatch(
             getHistoryDataList(payload)
@@ -1074,7 +1081,7 @@ const HistoryTrend = () => {
                                                 }} />
                                         </div>
                                         <div className="history-filter">
-                                            <label className="filter-label">Slots <span className="text-danger">*</span></label>
+                                            <label className="filter-label">Slots </label>
                                             <Select 
                                                 options={slotsData?.map(item => ({
                                                     value: item.value,
@@ -1091,7 +1098,7 @@ const HistoryTrend = () => {
                                         </div>
                                         <div className="history-actions position-relative">
                                             <Button className="togglebutton-design-off" onClick={handleApplyFilter}>Apply</Button>
-                                            {/* <div
+                                            <div
                                                 className=" border border-white rounded-3 px-2 py-2 d-inline-flex align-items-center"
                                                 data-tooltip-id="downloadTooltip"
                                                 data-tooltip-content="Download Report"
@@ -1103,7 +1110,7 @@ const HistoryTrend = () => {
                                                     <path d="M13.5 5.5h3v1h-3zM18.5 5.5h3v1h-3zM13.5 8.5h3v1h-3zM18.5 8.5h3v1h-3zM13.5 11.5h3v1h-3zM18.5 11.5h3v1h-3zM13.5 14.5h3v1h-3zM18.5 14.5h3v1h-3zM13.5 17.5h3v1h-3zM18.5 17.5h3v1h-3zM4.5 8.5l4 8M4.5 16.5l4-8" />
                                                 </svg>
                                                 <span className="mx-1 text-white">Export</span>
-                                            </div> */}
+                                            </div> 
                                             <Button
                                                 color="light"
                                                 className="history-action-btn "
@@ -1128,7 +1135,7 @@ const HistoryTrend = () => {
 
                         {/* Table Section */}
                         <Card className="border border-gray shadow-sm">
-                            <CardHeader className="bg-primary text-white  fs-5 ">Tag Details of Selected Tags & TimeSpan</CardHeader>
+                            <CardHeader className="bg-primary text-white  fs-5 ">Tag Details</CardHeader>
                             <CardBody>
 
                                 <div >

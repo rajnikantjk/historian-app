@@ -743,7 +743,7 @@ const Widgets = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {tableData.map((row, index) => (
+                      {tableData?.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
                           <td>{row.unitName}</td>
