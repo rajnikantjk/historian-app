@@ -578,7 +578,7 @@ const Widgets = () => {
       setTimeout(() => {
         sendParameters();
         sendMeterPrameters();
-        getHistoryData()
+        // getHistoryData()
       }, 100)
     }
 
@@ -743,7 +743,7 @@ const Widgets = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {tableData?.map((row, index) => (
+                      {speedometerDatas?.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
                           <td>{row.unitName}</td>
