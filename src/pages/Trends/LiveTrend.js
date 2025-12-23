@@ -1140,13 +1140,13 @@ const LiveTrend = () => {
 
   useEffect(() => {
     initializeSocket();
-    // connectSecondarySocket();
+    connectSecondarySocket();
     // Cleanup on component unmount
     return () => {
-      if (socketRef.current){
-      // if (socketRef.current || secondarySocketRef.current) {
+      // if (socketRef.current){
+      if (socketRef.current || secondarySocketRef.current) {
         socketRef.current.close();
-        // secondarySocketRef.current?.close();
+        secondarySocketRef.current?.close();
       }
     };
   }, []);
@@ -1232,8 +1232,8 @@ const LiveTrend = () => {
 
   const handleApplyFilter = () => {
     sendParameters();
-     getHistoryData()
-    // sendMeterPrameters();
+    //  getHistoryData()
+    sendMeterPrameters();
   }
 
   const getHistoryData = () => {
@@ -1380,6 +1380,7 @@ const LiveTrend = () => {
                           }))}
                           className="history-select"
                           placeholder="Select Slot"
+                          isClearable 
                           styles={singleSelectStyle}
                           value={selectedSlot}
                           onChange={(e) => {
@@ -1462,7 +1463,7 @@ const LiveTrend = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {tableData?.map((row, index) => (
+                      {speedometerDatas?.map((row, index) => (
                         <tr key={index}>
                           <td>{row.itemId}</td>
                           <td>{row.unitName}</td>

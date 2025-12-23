@@ -927,7 +927,7 @@ const HistoryTrend = () => {
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
             defaultLoad: null,
-            timeSpan:null,
+            timeSpan:values?.interval?.value,
             slot: selectedSlot?.value ?? null,
         }
         dispatch(
@@ -1089,6 +1089,7 @@ const HistoryTrend = () => {
                                                 }))} 
                                                 className="history-select" 
                                                 placeholder="Select Slot" 
+                                                isClearable
                                                 styles={singleSelectStyle} 
                                                 value={selectedSlot}
                                                 onChange={(e) => {

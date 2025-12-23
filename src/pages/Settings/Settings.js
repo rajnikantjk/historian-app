@@ -27,8 +27,8 @@ const Setting = () => {
             type: type,
         };
          dispatch(updateOPCalarm(body)).then((res) => {
-               
-                        toast.success(res?.payload?.message);
+
+                        toast.success(res?.payload);
                 
                })
                  .catch((err) => {

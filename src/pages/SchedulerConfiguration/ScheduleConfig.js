@@ -70,9 +70,12 @@ const ScheduleConfig = () => {
   const [additionalstatus, setAdditionalstatus] = useState(categoriesData[0]);
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
-  const [modal, setModal] = useState(false);
-  const [selectedPath, setSelectedPath] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [modalData, setModalData] = useState({
+    isOpen: false,
+    title: '',
+    content: '',
+    isPath: false
+  });
   const [errors, setErrors] = useState({});
    const [formErrors, setFormErrors] = useState({});
   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
@@ -135,20 +138,18 @@ const ScheduleConfig = () => {
     label: item.key
   }))
 
-  const toggleModal = () => setModal(!modal);
-
-  const handleViewClick = (path) => {
-    setSelectedPath(path);
-    setCopied(false);
-    toggleModal();
+  const handleViewClick = (content, title = 'View Details', isPath = false) => {
+    setModalData({
+      isOpen: true,
+      title,
+      content,
+      isPath
+    });
   };
 
   const copyToClipboard = () => {
-    if (selectedPath) {
-      navigator.clipboard.writeText(selectedPath);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    navigator.clipboard.writeText(modalData.content);
+    toast.success('Copied to clipboard!');
   };
 
   // Load tags for the dropdown
@@ -573,75 +574,100 @@ const ScheduleConfig = () => {
   };
   const columns = useMemo(() => [
     {
-      Header: "Sr.No",
+      id: 'serialNo',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Sr.No</div>,
       filterable: false,
       Cell: (cellProps) => {
         const rowIndex = cellProps.row.index;
-        const currentPage = page; // Current page (1-based)
-        const pageSize = limit;   // Items per page
+        const currentPage = page;
+        const pageSize = limit;
         const serialNumber = (currentPage - 1) * pageSize + rowIndex + 1;
         return serialNumber;
       },
     },
-
     {
-      Header: "Task Name",
+      id: 'taskName',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Task Name</div>,
       accessor: (row) => row?.taskName ?? "-",
-
       filterable: false,
     },
     {
-      Header: "Tag List",
+      id: 'tagList',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Tag List</div>,
       accessor: (row) => row?.displayTagNames ?? "-",
-
       filterable: false,
     },
     {
-      Header: "Report Type",
-      accessor: (row) => row?.reportType ?? "-",
-
-      filterable: false,
-    },
-    {
-      Header: "Start Date",
-      accessor: (row) => row?.startDate ?? "-",
-
-      filterable: false,
-    },
-    {
-      Header: "Start Time",
-      accessor: (row) => row?.startTime ?? "-",
-
-      filterable: false,
-    },
-    {
-      Header: "Interval",
-      accessor: (row) => row?.intervalTime ?? "-",
-
-      filterable: false,
-    },
-    {
-      Header: "Slot",
+      id: 'slot',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Slot</div>,
       accessor: (row) => row?.slot ?? "-",
-
       filterable: false,
     },
     {
-      Header: "Active",
+      id: 'reportType',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Report Type</div>,
+      accessor: (row) => row?.reportType ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'startDate',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Start Date</div>,
+      accessor: (row) => row?.startDate ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'startTime',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Start Time</div>,
+      accessor: (row) => row?.startTime ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'interval',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Interval</div>,
+      accessor: (row) => row?.intervalTime ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'nextRun',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Next Execution Date</div>,
+      accessor: (row) => row?.nextExecutionTime ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'isActive',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Active</div>,
       accessor: (row) => row?.isActive == "Y" ? "Yes" : "No" ?? "-",
-
       filterable: false,
     },
     {
-      Header: "Path",
+      id: 'path',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Path</div>,
       Cell: ({ row }) => {
         const filePath = row.original?.storagePath;
-
         return filePath ? (
           <span
             className="text-primary"
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleViewClick(filePath)}
+            style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+            onClick={() => handleViewClick(filePath, 'Storage Location', true)}
+          >
+            View
+          </span>
+        ) : (
+          "-"
+        );
+      },
+      filterable: false,
+    },
+    {
+      id: 'description',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Description</div>,
+      Cell: ({ row }) => {
+        const filePath = row.original?.storagePath;
+        return filePath ? (
+          <span
+            className="text-primary"
+            style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+            onClick={() => handleViewClick(row.original?.description, 'Description', false)}
           >
             View
           </span>
@@ -653,6 +679,7 @@ const ScheduleConfig = () => {
     },
 
     ...(userRole == "ROLE_ADMIN" ? [{
+      id: 'action',
       Header: "Action",
       Cell: (cellProps) => {
         return (
@@ -688,6 +715,7 @@ const ScheduleConfig = () => {
       },
 
     }] : [{
+      id: 'emptyAction',
       Header: "",
       accessor: 'emptyAction',
       Cell: () => null
@@ -855,8 +883,47 @@ const ScheduleConfig = () => {
                   />
                 </div>
               </div>
+ <div className="col-12 mb-3">
+                <div>
+                <label className="form-label">Tags </label>
+                    <span className="text-danger text-xs font-normal"> *{formErrors?.tagIds}</span>
+                    </div>
+                <Select
+                  isMulti
+                  cacheOptions
+                  defaultOptions
+                  options={tagOptions}
+                  value={selectedTags}
+                  onChange={handleTagChange}
+                  getOptionValue={option => option.value}
+                  getOptionLabel={option => option.label}
+                  placeholder="Search and select tags..."
+                  loadingMessage={() => "Loading tags..."}
+                  noOptionsMessage={() => "No tags found"}
+                  isLoading={isLoadingTags}
+                  className="react-select"
+                  classNamePrefix="select"
+                  closeMenuOnSelect={false}
+                />
+              </div>
+           
 
               <div className="col-md-6 mb-3">
+                <label className="form-label">Slot</label>
+                <Select
+                  className="react-select-container"
+                  classNamePrefix="select"
+                  options={slotOptions}
+                  isClearable
+                  value={slotOptions.find(option => option.value === schedulerForm.slot)|| null}
+                  onChange={(selected) => setSchedulerForm(prev => ({
+                    ...prev,
+                    slot: selected?.value ?? null
+                  }))}
+                  placeholder="Select Slot"
+                />
+              </div>
+                 <div className="col-md-6 mb-3">
                 <div>
                 <label className="form-label">Interval   </label>
                 <span className="text-danger"> *{formErrors.interval}</span> 
@@ -903,21 +970,6 @@ const ScheduleConfig = () => {
                 </div>
               </div>
 
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Slot</label>
-                <Select
-                  className="react-select"
-                  classNamePrefix="select"
-                  options={slotOptions}
-                  value={slotOptions.find(option => option.value == schedulerForm.slot) || null}
-                  onChange={(selected) => setSchedulerForm(prev => ({
-                    ...prev,
-                    slot: selected?.value || '0'
-                  }))}
-                  placeholder="Select Slot"
-                />
-              </div>
-
               <div className="col-12 mb-3">
                 <div>
                 <label className="form-label">Storage Path </label>
@@ -948,29 +1000,7 @@ const ScheduleConfig = () => {
                 </div>
               </div>
 
-              <div className="col-12 mb-3">
-                <div>
-                <label className="form-label">Tags </label>
-                    <span className="text-danger text-xs font-normal"> *{formErrors?.tagIds}</span>
-                    </div>
-                <Select
-                  isMulti
-                  cacheOptions
-                  defaultOptions
-                  options={tagOptions}
-                  value={selectedTags}
-                  onChange={handleTagChange}
-                  getOptionValue={option => option.value}
-                  getOptionLabel={option => option.label}
-                  placeholder="Search and select tags..."
-                  loadingMessage={() => "Loading tags..."}
-                  noOptionsMessage={() => "No tags found"}
-                  isLoading={isLoadingTags}
-                  className="react-select"
-                  classNamePrefix="select"
-                  closeMenuOnSelect={false}
-                />
-              </div>
+             
 
               <div className="col-12 mb-3">
                 <label className="form-label">Description</label>
@@ -1044,24 +1074,31 @@ const ScheduleConfig = () => {
           </Button>
         </div>
       </Modal>
-      <Modal isOpen={modal} toggle={toggleModal}>
-        <ModalHeader toggle={toggleModal}>Storage Location</ModalHeader>
+      <Modal isOpen={modalData.isOpen} toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
+        <ModalHeader toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
+          {modalData.title}
+        </ModalHeader>
         <ModalBody>
-          <div className="d-flex align-items-center gap-2 mb-3">
-            <Input
-              type="text"
-              value={selectedPath}
-              readOnly
-              className="form-control"
-            />
-            <Button color="primary" onClick={copyToClipboard} className="d-flex align-items-center">
-              <Copy size={16} className="me-1" />
-              <span>{copied ? 'Copied!' : 'Copy'}</span>
-            </Button>
-          </div>
-          <div className="text-muted small">
-            Click the button to copy the path to your clipboard
-          </div>
+          {modalData.isPath ? (
+            <div className="d-flex align-items-center gap-2 mb-3">
+              <Input
+                type="text"
+                className="form-control"
+                value={modalData.content}
+                readOnly
+              />
+              <Button
+                color="primary"
+                onClick={copyToClipboard}
+              >
+                Copy
+              </Button>
+            </div>
+          ) : (
+            <div className="p-2" style={{ whiteSpace: 'pre-line' }}>
+              {modalData.content || 'No description available'}
+            </div>
+          )}
         </ModalBody>
       </Modal>
       <div className="page-content">

@@ -8,36 +8,36 @@ File: Custom Css File
 
 .css-b62m3t-container {
   .css-13cymwt-control {
-    background-color: var(--#{$prefix}gray-200);
-    border-color: var(--#{$prefix}border-color);
-    &:hover {
-      border-color: var(--#{$prefix}border-color);
-    }
+    // background-color: var(--#{$prefix}gray-200);
+    // border-color: var(--#{$prefix}border-color);
+    // &:hover {
+    //   border-color: var(--#{$prefix}border-color);
+    // }
   }
   .css-t3ipsp-control {
-    background-color: var(--#{$prefix}gray-200);
-    border-color: var(--#{$prefix}border-color);
-    box-shadow: none;
-    &:hover {
-      border-color: var(--#{$prefix}border-color) !important;
-    }
+    // background-color: var(--#{$prefix}gray-200);
+    // border-color: var(--#{$prefix}border-color);
+    // box-shadow: none;
+    // &:hover {
+    //   border-color: var(--#{$prefix}border-color) !important;
+    // }
   }
   .css-1nmdiq5-menu {
-    background-color: var(--#{$prefix}gray-200);
-    .css-10wo9uf-option {
-      cursor: pointer;
-      background-color: var(--#{$prefix}gray-200);
-      &:active {
-        background-color: var(--#{$prefix}gray-200);
-      }
-    }
-    .css-d7l1ni-option {
-      cursor: pointer;
-      background-color: var(--#{$prefix}gray-100);
-    }
+    // background-color: var(--#{$prefix}gray-200);
+    // .css-10wo9uf-option {
+    //   cursor: pointer;
+    //   background-color: var(--#{$prefix}gray-200);
+    //   &:active {
+    //     background-color: var(--#{$prefix}gray-200);
+    //   }
+    // }
+    // .css-d7l1ni-option {
+    //   cursor: pointer;
+    //   background-color: var(--#{$prefix}gray-100);
+    // }
   }
   .css-1p3m7a8-multiValue {
-    background-color: var(--#{$variable-prefix}light);
+    // background-color: var(--#{$variable-prefix}light);
   }
   .css-wsp0cs-MultiValueGeneric {
     color: $heading-color;

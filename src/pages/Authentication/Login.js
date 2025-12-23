@@ -27,7 +27,7 @@ import { useFormik } from "formik";
 // actions
 import { loginUser, socialLogin, resetLoginFlag } from "../../slices/thunks";
 
-import logoLight from "../../assets/images/lightfullogo.png";
+import logoLight from "../../assets/images/lightfulllogo.svg";
 import { getCompanyLogo } from "../../slices/tools";
 //import images
 
