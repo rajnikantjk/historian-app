@@ -32,7 +32,7 @@ const CreateNewsLatter = (props) => {
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const isResetting = useRef(false);
-  document.title = `Sent Newsletter | Augmation Tech`;
+  document.title = `Sent Newsletter | AlarmIQ - Historian/ PIMS`;
 
   const validateField = (fieldName, value) => {
     let error = null;
@@ -76,7 +76,7 @@ const CreateNewsLatter = (props) => {
             handleReset();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   };
 
@@ -202,7 +202,7 @@ const CreateNewsLatter = (props) => {
                   </Label>
 
                   <div className="editor-container">
-                  
+
                   </div>
                 </div>{" "}
               </CardBody>

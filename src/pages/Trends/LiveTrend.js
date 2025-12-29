@@ -179,6 +179,7 @@ const getMultiSelectStyles = (theme = 'light') => {
 
 const LiveTrend = () => {
   let intervalId = null;
+  document.title = "Live Trend | AlarmIQ - Historian/ PIMS";
   // Get the current theme (you might need to adjust this based on your theme implementation)
   const [theme, setTheme] = useState('light');
   const [speedometerDatas, setSpeedometerDatas] = useState([])
@@ -1052,7 +1053,7 @@ const LiveTrend = () => {
 
         // Process the data
         if (isArray(rawData)) {
-          
+
 
 
           // Step 1: Collect all unique tag names
@@ -1194,7 +1195,7 @@ const LiveTrend = () => {
         grpId: values?.grpId?.value,
         updateRate: values?.frequency?.value,
         slot: selectedSlot?.value ?? null,
-        defaultLoad:null,
+        defaultLoad: null,
         // startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
         // endDateTime: moment().format('YYYY-MM-DD HH:mm:ss')
       } : {
@@ -1243,8 +1244,8 @@ const LiveTrend = () => {
 
     let payload = {
       grpId: values?.grpId?.value,
-       startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
-        endDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+      startDateTime: moment().subtract(values?.interval?.value || 0, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+      endDateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
       tagId: tagIdValue,
       defaultLoad: null,
       timeSpan: null,
@@ -1380,7 +1381,7 @@ const LiveTrend = () => {
                           }))}
                           className="history-select"
                           placeholder="Select Slot"
-                          isClearable 
+                          isClearable
                           styles={singleSelectStyle}
                           value={selectedSlot}
                           onChange={(e) => {
@@ -1455,10 +1456,11 @@ const LiveTrend = () => {
                         <th>Eng Unit</th>
                         <th>Description</th>
                         <th>Current Value</th>
-                        <th>Standard Division Value</th>
+
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
+                        <th>Standard Deviation</th>
 
                       </tr>
                     </thead>
@@ -1469,11 +1471,11 @@ const LiveTrend = () => {
                           <td>{row.unitName}</td>
                           <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
-                          <td>{row?.stdDevValue}</td>
+
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>
-
+                          <td>{row?.stdDevValue}</td>
                         </tr>
                       ))}
                     </tbody>

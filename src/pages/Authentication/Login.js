@@ -39,7 +39,7 @@ const Login = (props) => {
     loading: state.Login.loading,
     errorMsg: state.Login.errorMsg,
   }));
-  const [companyLogo,setCompanyLogo] = useState("")
+  const [companyLogo, setCompanyLogo] = useState("")
 
   const [userLogin, setUserLogin] = useState([]);
   const [passwordShow, setPasswordShow] = useState(false);
@@ -65,13 +65,13 @@ const Login = (props) => {
     },
   });
 
-  useEffect(()=>{
-      dispatch(getCompanyLogo()).then((res)=>{
-  
-        setCompanyLogo(res?.payload?.[0]?.siderbarLogo)
-      })
-  
-    },[])
+  useEffect(() => {
+    dispatch(getCompanyLogo()).then((res) => {
+
+      setCompanyLogo(res?.payload?.[0]?.siderbarLogo)
+    })
+
+  }, [])
 
   useEffect(() => {
     if (errorMsg) {
@@ -81,7 +81,7 @@ const Login = (props) => {
     }
   }, [dispatch, errorMsg]);
   document.title =
-    "SignIn | Augmation Tech";
+    "SignIn | AlarmIQ - Historian/ PIMS";
   return (
     <React.Fragment>
       <ParticlesAuth>
@@ -105,7 +105,7 @@ const Login = (props) => {
                   <CardBody className="p-4">
                     <div className="text-center mt-2">
                       <h5 className="text-primary">
-                        Welcome To Augmation Technologies
+                        Welcome To AlarmIQ - Historian/ PIMS
                       </h5>
                       <p className="text-muted">Please Sign in to continue </p>
                     </div>
@@ -133,10 +133,10 @@ const Login = (props) => {
                             onChange={validation.handleChange}
                             onBlur={validation.handleBlur}
                             value={validation.values.userName || ""}
-                          
+
                           />
                           {validation.touched.userName &&
-                          validation.errors.userName ? (
+                            validation.errors.userName ? (
                             <FormFeedback type="invalid">
                               {validation.errors.userName}
                             </FormFeedback>
@@ -164,13 +164,13 @@ const Login = (props) => {
                               onBlur={validation.handleBlur}
                               invalid={
                                 validation.touched.password &&
-                                validation.errors.password
+                                  validation.errors.password
                                   ? true
                                   : false
                               }
                             />
                             {validation.touched.password &&
-                            validation.errors.password ? (
+                              validation.errors.password ? (
                               <FormFeedback type="invalid">
                                 {validation.errors.password}
                               </FormFeedback>

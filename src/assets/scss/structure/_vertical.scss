@@ -41,7 +41,7 @@
         .nav-link {
             display: flex;
             align-items: center;
-            padding: $vertical-menu-item-padding-y $vertical-menu-item-padding-x;
+            padding: $vertical-menu-item-padding-y 0 $vertical-menu-item-padding-y $vertical-menu-item-padding-y;
             color: $vertical-menu-item-color;
             font-size: $vertical-menu-item-font-size;
             font-family: $vertical-menu-item-font-family;
@@ -582,6 +582,8 @@
                 }
 
                 .nav-link {
+                    padding: $vertical-menu-item-padding-y $vertical-menu-item-padding-x;
+
                     span {
                         display: none;
                     }
@@ -758,7 +760,7 @@
 
     &[data-sidebar="dark"] {
         .navbar-menu {
-            background:$black;
+            background: $black;
             border-right: 1px solid $black;
 
             .hamburger-icon {
@@ -1335,7 +1337,9 @@
     }
 
     @media (min-width: 768px) {
-        &[data-sidebar-size="sm"], &[data-sidebar-size="sm-hover"] {
+
+        &[data-sidebar-size="sm"],
+        &[data-sidebar-size="sm-hover"] {
             .main-content {
                 margin-left: $vertical-menu-width-sm;
             }
@@ -1359,7 +1363,7 @@
             }
         }
     }
-    
+
     @media (min-width: 1440px) {
 
         .page-content {
@@ -1442,9 +1446,9 @@
     }
 
     .mx-n4 {
-        margin-left:  0px !important;
-        margin-right:  0px !important;
-        
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+
         &.p-1 {
             padding-left: 0px !important;
             padding-right: 0px !important;

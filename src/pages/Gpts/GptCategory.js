@@ -39,7 +39,7 @@ const customerstatus = [
   { label: "Deactivate", value: "inactive" },
 ];
 const GptCategory = () => {
-  document.title = "GPT Category | Augmation Tech";
+  document.title = "GPT Category | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const { gptCategoryCount, gptCategoryData, gptCategoryLoader } = useSelector(
@@ -460,8 +460,8 @@ const GptCategory = () => {
             isDelete
               ? "Delete"
               : userStatus?.status !== "active"
-              ? "Deactive"
-              : "Active"
+                ? "Deactive"
+                : "Active"
           }
           onDeleteClick={() => handleDeleteCategory()}
           onCloseClick={() => {
@@ -532,7 +532,7 @@ const GptCategory = () => {
                           addbuttontext={"Add Category"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           totalDataCount={gptCategoryCount}
-                          ispaginationshow={gptCategoryCount > 10 && limit <gptCategoryCount ? true : false }
+                          ispaginationshow={gptCategoryCount > 10 && limit < gptCategoryCount ? true : false}
 
                         />
                       ) : (

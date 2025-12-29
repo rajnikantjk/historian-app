@@ -7,39 +7,40 @@ import { useNavigate } from "react-router-dom";
 import Loader from "../../Components/Common/Loader";
 
 const Setting = () => {
-     const dispatch = useDispatch();
-     const navigate = useNavigate();
-      const { toolLoader } = useSelector(
-         (state) => state.Tool)
-     const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
-     
-     useEffect(() => {
-        if(userRole != "ROLE_ADMIN"){
+    document.title = "Settings | AlarmIQ - Historian/ PIMS";
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { toolLoader } = useSelector(
+        (state) => state.Tool)
+    const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+
+    useEffect(() => {
+        if (userRole != "ROLE_ADMIN") {
             toast.error("You are not authorized to access this page");
             navigate("/dashboard");
         }
 
-    },[userRole])
+    }, [userRole])
 
     const handleToggle = (type) => {
 
         const body = {
             type: type,
         };
-         dispatch(updateOPCalarm(body)).then((res) => {
+        dispatch(updateOPCalarm(body)).then((res) => {
 
-                        toast.success(res?.payload);
-                
-               })
-                 .catch((err) => {
-                   console.log(":err", err)
-                   toast.error(err);
-                 });
+            toast.success(res?.payload);
+
+        })
+            .catch((err) => {
+                console.log(":err", err)
+                toast.error(err);
+            });
     }
 
     return (
         <div className="page-content">
-             {toolLoader && <Loader />}
+            {toolLoader && <Loader />}
             <div className="m-4 p-4 bg-white rounded-3 shadow-sm">
                 <h4 className="fs-18 fw-semibold mb-4 pb-2 border-bottom">OPC Service Control</h4>
                 <Row className="g-4">

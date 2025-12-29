@@ -68,9 +68,9 @@ function GlobalFilter({
               <div
                 className={
                   isProductsFilter ||
-                  isContactsFilter ||
-                  isCompaniesFilter ||
-                  isNFTRankingFilter
+                    isContactsFilter ||
+                    isCompaniesFilter ||
+                    isNFTRankingFilter
                     ? "search-box me-2 mb-2 d-inline-block"
                     : "search-box me-2 mb-2 d-inline-block col-12"
                 }
@@ -95,12 +95,12 @@ function GlobalFilter({
                 <i className="bx bx-search-alt search-icon"></i>
               </div>
             </Col>
-           
+
 
             {isProductsFilter && <ProductsGlobalFilter />}
             {isCustomerFilter && (
               <CustomersGlobalFilter
-              customButtons={customButtons}
+                customButtons={customButtons}
                 customerstatus={customerstatus}
                 setcustomerStatus={setcustomerStatus}
                 customerStatus={customerStatus}
@@ -231,7 +231,7 @@ const TableContainer = ({
   return (
     <Fragment>
       <Row className="">
-       
+
         {isGlobalSearch && (
           <Col md={1}>
             <select
@@ -249,7 +249,7 @@ const TableContainer = ({
         )}
         {isGlobalFilter && (
           <GlobalFilter
-          customButtons={customButtons}
+            customButtons={customButtons}
             preGlobalFilteredRows={preGlobalFilteredRows}
             globalFilter={state.globalFilter}
             setGlobalFilter={setGlobalFilter}
@@ -375,7 +375,7 @@ const TableContainer = ({
       ) : (
         <div className="py-4 text-center">
           <div className="mt-4">
-            <h5>Sorry! No Result Found</h5>
+            <h5>No Record Found</h5>
           </div>
         </div>
       )}
@@ -426,9 +426,8 @@ const TableContainer = ({
                       return (
                         <div
                           key={page}
-                          className={`current-page ${
-                            page === currentPage ? "active-page" : ""
-                          }`}
+                          className={`current-page ${page === currentPage ? "active-page" : ""
+                            }`}
                           onClick={() => {
                             setCurrentPage(page);
                           }}

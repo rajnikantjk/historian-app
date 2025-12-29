@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardBody, Col, Container, Input, Label, Row,Button } from 'reactstrap';
+import { Card, CardBody, Col, Container, Input, Label, Row, Button } from 'reactstrap';
 import ParticlesAuth from "../ParticlesAuth";
 
 
@@ -9,11 +9,11 @@ import logoLight from "../../../assets/images/logo-light.png";
 
 
 const BasicSignIn = () => {
-document.title="Basic SignIn | Augmation Tech";
+    document.title = "Basic SignIn | AlarmIQ - Historian/ PIMS";
     return (
         <React.Fragment>
             <ParticlesAuth>
-                <div className="auth-page-content">                
+                <div className="auth-page-content">
                     <Container>
                         <Row>
                             <Col lg={12}>

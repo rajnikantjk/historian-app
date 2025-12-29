@@ -29,7 +29,7 @@ const customerstatus = [
 ];
 const index = () => {
   const dispatch = useDispatch();
-  document.title = "Admin Tool | Augmation Tech";
+  document.title = "Admin Tool | AlarmIQ - Historian/ PIMS";
 
   const { toolCount, toolData, toolLoader } = useSelector(
     (state) => state.Tool
@@ -45,7 +45,7 @@ const index = () => {
   const [limit, setLimit] = useState(10);
   const nPages = Math.ceil(toolCount / limit);
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -93,7 +93,7 @@ const index = () => {
         })
       );
     }
-  }, [customerStatus, searchValue, page , limit]);
+  }, [customerStatus, searchValue, page, limit]);
   const handleValidDate = (date) => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
     return date1;
@@ -139,7 +139,7 @@ const index = () => {
       accessor: (row) =>
         <a href={`${ToolRedirectLink}${row?.slugId}`} target="_blank">
 
-          <p style={{ "text-transform": "capitalize" }}>{row?.title ?? "-"}</p> 
+          <p style={{ "text-transform": "capitalize" }}>{row?.title ?? "-"}</p>
         </a>
 
     },
@@ -213,7 +213,7 @@ const index = () => {
             toast.success("Active successfully");
           }
           setDeleteModal(false);
-          dispatch(getTools({isLive : customerStatus.value , search : searchValue?.trimEnd()}));
+          dispatch(getTools({ isLive: customerStatus.value, search: searchValue?.trimEnd() }));
         }
       })
       .catch((error) => {
@@ -242,10 +242,10 @@ const index = () => {
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">Admin Tools</h5>
-              {toolCount > 10 &&    <div className="flex-shrink-0">
+                  {toolCount > 10 && <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
-                      <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
+                      <select name="pagination" style={{ width: "70px" }} value={limit} onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
                       >
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -287,7 +287,7 @@ const index = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           totalDataCount={toolCount}
-                          ispaginationshow={toolCount > 10 && limit <toolCount ? true : false }
+                          ispaginationshow={toolCount > 10 && limit < toolCount ? true : false}
 
                         />
                       ) : (
@@ -308,7 +308,7 @@ const index = () => {
                             searchValue={searchValue}
                             isPagination={false}
                           />
-                         
+
                         </>
                       )}
                     </>

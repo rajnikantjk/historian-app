@@ -34,12 +34,12 @@ const customerstatus = [
   { label: "Deactivate", value: "inactive" },
 ];
 const TagGroupList = () => {
-  document.title = "Tag Group List | Augmation Tech";
+  document.title = "Tag Group List | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
-  const { toolSubCategoryCount, toolSubCategoryData, toolLoader,toolCategoryData } = useSelector(
+  const { toolSubCategoryCount, toolSubCategoryData, toolLoader, toolCategoryData } = useSelector(
     (state) => state.Tool
-  );  const categoriesData = [
+  ); const categoriesData = [
     {
       value: "",
       label: "All",
@@ -65,7 +65,7 @@ const TagGroupList = () => {
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
   const [errors, setErrors] = useState({});
- const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+  const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
   const handleOnChange = (e) => {
     const { name, value, type, checked } = e.target;
     setValues({
@@ -75,7 +75,7 @@ const TagGroupList = () => {
     setErrors({ ...errors, [name]: "" });
   };
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -89,7 +89,7 @@ const TagGroupList = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchValue, customerStatus , additionalstatus.value]);
+  }, [searchValue, customerStatus, additionalstatus.value]);
   useEffect(() => {
     setSearchValue("");
   }, [customerStatus]);
@@ -101,22 +101,24 @@ const TagGroupList = () => {
     }
 
     if (searchValue) {
-      params.search = searchValue?.trimEnd()	;
+      params.search = searchValue?.trimEnd();
     }
     if (page) {
       params.page = page;
-    }  if (additionalstatus?.value) {
+    } if (additionalstatus?.value) {
       params.aiToolCategoryId = additionalstatus.value;
     }
     if (limit) {
       params.limit = limit;
-    }    if (searchValue) {
+    } if (searchValue) {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getTagGroupList({ page: page,
-        limit: limit,
-        search: searchValue})
+          getTagGroupList({
+            page: page,
+            limit: limit,
+            search: searchValue
+          })
         );
       };
       clearTimeout(timer);
@@ -124,12 +126,14 @@ const TagGroupList = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getTagGroupList({ page: page,
-        limit: limit,
-        search: searchValue})
+        getTagGroupList({
+          page: page,
+          limit: limit,
+          search: searchValue
+        })
       );
     }
-  }, [customerStatus, searchValue, page , additionalstatus.value , limit]);
+  }, [customerStatus, searchValue, page, additionalstatus.value, limit]);
   const handleValidDate = (date) => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
     return date1;
@@ -138,7 +142,7 @@ const TagGroupList = () => {
   const formValidation = () => {
     let isFormValid = true;
     let newErrors = {};
-    const requiredFields = [ "grpName"];
+    const requiredFields = ["grpName"];
 
     requiredFields.forEach((field) => {
       if (!values?.grpName || values?.grpName.trim() === "") {
@@ -146,41 +150,41 @@ const TagGroupList = () => {
         newErrors["grpName"] = " Please enter a group name";
       }
     });
-    
+
     setErrors(newErrors);
     return isFormValid;
   };
 
-   const handleOnAddCategory = () => {
-      if (formValidation()) {
-        setLoader(true);
-  
-        dispatch(
-          AddNewGroupDetails({
-            id: "0",
-            grpName: values?.grpName,
-            defaultLoad: values?.defaultLoad || "N",
-            isActive: "Y"
-          })
-        )
-          .then((res) => {
-            if (res?.payload?.status == 200) {
-              setAddModal(false);
-              dispatch(getTagGroupList());
-              setLoader(false);
-              toast.success("Group added successfully");
-              setValues({});
-            } else {
-              setLoader(false);
-              toast.error(res?.payload?.data?.message);
-            }
-          })
-          .catch((err) => {
+  const handleOnAddCategory = () => {
+    if (formValidation()) {
+      setLoader(true);
+
+      dispatch(
+        AddNewGroupDetails({
+          id: "0",
+          grpName: values?.grpName,
+          defaultLoad: values?.defaultLoad || "N",
+          isActive: "Y"
+        })
+      )
+        .then((res) => {
+          if (res?.payload?.status == 200) {
+            setAddModal(false);
+            dispatch(getTagGroupList());
             setLoader(false);
-            toast.error(err.response.data.message);
-          });
-      }
+            toast.success("Group added successfully");
+            setValues({});
+          } else {
+            setLoader(false);
+            toast.error(res?.payload?.data?.message);
+          }
+        })
+        .catch((err) => {
+          setLoader(false);
+          toast.error(err.response.data.message);
+        });
     }
+  }
 
 
   const onClickDelete = (status) => {
@@ -202,7 +206,7 @@ const TagGroupList = () => {
     setAddModal(true);
   };
   const columns = useMemo(() => [
-     {
+    {
       Header: "Sr.No",
       filterable: false,
       Cell: (cellProps) => {
@@ -213,7 +217,7 @@ const TagGroupList = () => {
         return serialNumber;
       },
     },
-    
+
     {
       Header: "Group Name",
       accessor: (row) => row?.grpName ?? "-",
@@ -222,12 +226,12 @@ const TagGroupList = () => {
     },
     {
       Header: "Default Group",
-      accessor: (row) => row?.defaultLoad == "Y" ? "Yes":"No" ?? "-",
+      accessor: (row) => row?.defaultLoad == "Y" ? "Yes" : "No" ?? "-",
 
       filterable: false,
     },
-   
-      ...(userRole == "ROLE_ADMIN" ? [ {
+
+    ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
       Cell: (cellProps) => {
         return (
@@ -261,14 +265,14 @@ const TagGroupList = () => {
           </UncontrolledDropdown>
         );
       },
-      
-    }]:[{
+
+    }] : [{
       Header: "",
       accessor: 'emptyAction',
       Cell: () => null
     }]
-  ),
-    
+    ),
+
   ]);
   const handleDeleteGroup = () => {
     setLoader(true)
@@ -278,9 +282,9 @@ const TagGroupList = () => {
     )
       .then((res) => {
         if (res?.payload?.status == 200) {
-         
-            toast.success("Group Deleted Successfully");
-         
+
+          toast.success("Group Deleted Successfully");
+
           setDeleteModal(false);
           setLoader(false)
 
@@ -298,116 +302,116 @@ const TagGroupList = () => {
       });
   };
 
-   const handleOnUpdateCategory = () => {
-      if (formValidation()) {
-        setLoader(true);
-  
-        dispatch(
-          EditGroupDetails({
-            grpName: values?.grpName,
-            defaultLoad: values?.defaultLoad || "N",
-            isActive: "Y",
-            id: rowId,
-          })
-        )
-          .then((res) => {
-            if (res?.payload?.status == 200) {
-              setAddModal(false);
-              setLoader(false);
-              dispatch(getTagGroupList());
-              toast.success("Group Updated Successfully");
-              setValues({});
-            } else {
-              setLoader(false);
-              toast.error(res?.payload?.data?.message);
-            }
-          })
-          .catch((err) => {
-            setLoader(false);
+  const handleOnUpdateCategory = () => {
+    if (formValidation()) {
+      setLoader(true);
+
+      dispatch(
+        EditGroupDetails({
+          grpName: values?.grpName,
+          defaultLoad: values?.defaultLoad || "N",
+          isActive: "Y",
+          id: rowId,
+        })
+      )
+        .then((res) => {
+          if (res?.payload?.status == 200) {
             setAddModal(false);
-            toast.error(err.response.data.message);
-          });
-      }
-    };
+            setLoader(false);
+            dispatch(getTagGroupList());
+            toast.success("Group Updated Successfully");
+            setValues({});
+          } else {
+            setLoader(false);
+            toast.error(res?.payload?.data?.message);
+          }
+        })
+        .catch((err) => {
+          setLoader(false);
+          setAddModal(false);
+          toast.error(err.response.data.message);
+        });
+    }
+  };
 
   return (
     <>
 
-          <Modal isOpen={addModal}  id="exampleModal">
-          <ModalHeader
-            toggle={() => {
+      <Modal isOpen={addModal} id="exampleModal">
+        <ModalHeader
+          toggle={() => {
+            setAddModal(false);
+            setValues({});
+            setErrors({});
+          }}
+        >
+          {rowId ? "Update Group" : "Add Group"}{" "}
+        </ModalHeader>
+        <ModalBody>
+          <form>
+            <div className="mb-3">
+
+              <Input
+                type="text"
+                className="form-control"
+                placeholder="Enter Group Name"
+                name="grpName"
+                value={values.grpName || ""}
+                onChange={handleOnChange}
+              />
+              {errors.grpName && (
+                <div className="invalid-feedback d-block">
+                  {errors.grpName}
+                </div>
+              )}
+            </div>
+            <div className="mb-3">
+              <div className="form-check">
+                <Input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="defaultLoad"
+                  name="defaultLoad"
+                  checked={values.defaultLoad === "Y"}
+                  onChange={handleOnChange}
+                />
+                <label className="form-check-label" htmlFor="defaultLoad">
+                  Set as default group
+                </label>
+              </div>
+            </div>
+          </form>
+        </ModalBody>
+        <div className="modal-footer">
+          <Button
+            color="light"
+            onClick={() => {
               setAddModal(false);
               setValues({});
               setErrors({});
             }}
           >
-            {rowId ? "Update Group" : "Add Group"}{" "}
-          </ModalHeader>
-          <ModalBody>
-            <form>
-              <div className="mb-3">
-             
-                <Input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter Group Name"
-                  name="grpName"
-                  value={values.grpName || ""}
-                  onChange={handleOnChange}
-                />
-                {errors.grpName && (
-                  <div className="invalid-feedback d-block">
-                    {errors.grpName}
-                  </div>
-                )}
-              </div>
-              <div className="mb-3">
-                <div className="form-check">
-                  <Input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="defaultLoad"
-                    name="defaultLoad"
-                    checked={values.defaultLoad === "Y"}
-                    onChange={handleOnChange}
-                  />
-                  <label className="form-check-label" htmlFor="defaultLoad">
-                    Set as default group
-                  </label>
-                </div>
-              </div>
-            </form>
-          </ModalBody>
-          <div className="modal-footer">
-            <Button
-              color="light"
-              onClick={() => {
-                setAddModal(false);
-                setValues({});
-                setErrors({});
-              }}
-            >
-              Close
-            </Button>
-            <Button
-              color="primary"
-              onClick={() => {
-                rowId ? handleOnUpdateCategory() : handleOnAddCategory();
-              }}
-            >
-              {loader && (
-                <Spinner size="sm" className="flex-shrink-0  ">
-                  {" "}
-                  Loading...{" "}
-                </Spinner>
-              )}
-              <span className="flex-grow-1 ms-2">
-                {rowId ? "Update Group" : "Add Group"}
-              </span>
-            </Button>
-          </div>
-        </Modal>
-    
+            Close
+          </Button>
+          <Button
+            color="primary"
+            onClick={() => {
+              rowId ? handleOnUpdateCategory() : handleOnAddCategory();
+            }}
+          >
+            {loader && (
+              <Spinner size="sm" className="flex-shrink-0  ">
+                {" "}
+                Loading...{" "}
+              </Spinner>
+            )}
+            <span className="flex-grow-1 ms-2">
+              {rowId ? "Update Group" : "Add Group"}
+            </span>
+          </Button>
+        </div>
+      </Modal>
+
       <div className="page-content">
         <DeleteModal
           show={deleteModal}
@@ -424,7 +428,7 @@ const TagGroupList = () => {
                   <h5 className="card-title mb-0 flex-grow-1">
                     Tag Group List
                   </h5>
-              {/* {   toolSubCategoryCount > 10 &&  <div className="flex-shrink-0">
+                  {/* {   toolSubCategoryCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
                       <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
@@ -448,7 +452,7 @@ const TagGroupList = () => {
                   ) : (
                     <>
                       {toolSubCategoryData &&
-                      toolSubCategoryData?.length > 0 ? (
+                        toolSubCategoryData?.length > 0 ? (
                         <TableContainer
                           columns={columns || []}
                           data={toolSubCategoryData || []}
@@ -469,10 +473,10 @@ const TagGroupList = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           isPagination={
-                           ( toolSubCategoryCount > 100 ) ? true : false
+                            (toolSubCategoryCount > 100) ? true : false
                           }
-                         
-                          iscreated={userRole == "ROLE_ADMIN" }
+
+                          iscreated={userRole == "ROLE_ADMIN"}
                           addbuttontext={"Add New Group"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           // isAdditionalStatus={true}
@@ -480,7 +484,7 @@ const TagGroupList = () => {
                           setAdditionalstatus={setAdditionalstatus}
                           AdditionalOption={categoriesData}
                           totalDataCount={toolSubCategoryCount}
-                          ispaginationshow={toolSubCategoryCount > 100 && limit <toolSubCategoryCount ? true : false }
+                          ispaginationshow={toolSubCategoryCount > 100 && limit < toolSubCategoryCount ? true : false}
 
                         />
                       ) : (
@@ -508,7 +512,7 @@ const TagGroupList = () => {
                             setAdditionalstatus={setAdditionalstatus}
                             AdditionalOption={categoriesData}
                           />
-                      
+
                         </>
                       )}
                     </>

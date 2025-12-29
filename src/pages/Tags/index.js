@@ -27,7 +27,7 @@ const customerstatus = [
   { label: "Rejected", value: "rejected" },
 ];
 const index = () => {
-  document.title = "Tool | Augmation Tech";
+  document.title = "Tool | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const { toolCount, toolData, toolLoader } = useSelector(
@@ -144,10 +144,10 @@ const index = () => {
               row?.status === "pending"
                 ? "text-warning"
                 : row?.status === "approved"
-                ? "text-success"
-                : row?.status === "rejected"
-                ? "text-danger"
-                : null
+                  ? "text-success"
+                  : row?.status === "rejected"
+                    ? "text-danger"
+                    : null
             }
           >
             <b style={{ "text-transform": "capitalize" }}>{row?.status}</b>
@@ -291,7 +291,7 @@ const index = () => {
                             searchValue={searchValue}
                             isPagination={false}
                           />
-                         
+
                         </>
                       )}
                     </>

@@ -3,10 +3,11 @@ import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
 import withRouter from "../Components/Common/withRouter";
 import { useProfile } from "../Components/Hooks/UserHooks";
+import LoginFooter from "./LoginFooter";
 
 const NonAuthLayout = ({ children }) => {
   const { userProfile, token } = useProfile();
-const pathname = useLocation()
+  const pathname = useLocation()
 
   const { layoutModeType } = useSelector((state) => ({
     layoutModeType: state.Layout.layoutModeType,
@@ -27,7 +28,8 @@ const pathname = useLocation()
     return <Navigate to="/dashboard" />;
   }
 
-  return <div>{children}</div>;
+  return <div>{children}
+    <LoginFooter /></div>;
 };
 
 export default withRouter(NonAuthLayout);

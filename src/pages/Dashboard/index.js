@@ -4,7 +4,7 @@ import Widget from "./Widgets";
 
 
 const Dashboard = () => {
-  document.title = "Dashboard | Augmation Tech";
+  document.title = "Dashboard | AlarmIQ - Historian/ PIMS";
 
   return (
     <React.Fragment>
@@ -18,7 +18,7 @@ const Dashboard = () => {
                 </Row>
               </div>
             </Col>
-            </Row></Container></div></React.Fragment>
+          </Row></Container></div></React.Fragment>
 
 
   );

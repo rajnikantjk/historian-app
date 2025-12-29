@@ -30,11 +30,11 @@ const customerstatus = [
 ];
 const index = () => {
   const dispatch = useDispatch();
-  document.title = "User | Augmation Tech";
+  document.title = "User | AlarmIQ - Historian/ PIMS";
 
   const { userCount, userData, userLoader, error } = useSelector(
     (state) => state.User
-    );
+  );
   const history = useNavigate();
 
   const [customerStatus, setcustomerStatus] = useState(customerstatus[0]);
@@ -45,7 +45,7 @@ const index = () => {
   const [limit, setLimit] = useState(10);
   const nPages = Math.ceil(userCount / limit);
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -86,7 +86,7 @@ const index = () => {
               history("/login");
             }
           })
-          .catch((err) => {});
+          .catch((err) => { });
       };
       clearTimeout(timer);
       timer = setTimeout(makeAPICall, 1000);
@@ -105,9 +105,9 @@ const index = () => {
             history("/login");
           }
         })
-        .catch((err) => {});
+        .catch((err) => { });
     }
-  }, [customerStatus, searchValue, page , limit]);
+  }, [customerStatus, searchValue, page, limit]);
   const handleValidDate = (date) => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
     return date1;
@@ -281,10 +281,10 @@ const index = () => {
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">Users</h5>
-               {userCount > 10 &&   <div className="flex-shrink-0">
+                  {userCount > 10 && <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
-                      <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
+                      <select name="pagination" style={{ width: "70px" }} value={limit} onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
                       >
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -326,7 +326,7 @@ const index = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           totalDataCount={userCount}
-                          ispaginationshow={userCount > 10 && limit <userCount ? true : false }
+                          ispaginationshow={userCount > 10 && limit < userCount ? true : false}
 
                         />
                       ) : (

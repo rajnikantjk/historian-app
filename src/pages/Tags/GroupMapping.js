@@ -28,12 +28,12 @@ const customerstatus = [
   { label: "Deactivate", value: "inactive" },
 ];
 const GroupMapping = () => {
-  document.title = "Group Mapping | Augmation Tech";
+  document.title = "Group Mapping | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
-  const { groupMappingCount, groupMappingData, toolLoader,toolCategoryData } = useSelector(
+  const { groupMappingCount, groupMappingData, toolLoader, toolCategoryData } = useSelector(
     (state) => state.Tool
-  );  const categoriesData = [
+  ); const categoriesData = [
     {
       value: "",
       label: "All",
@@ -58,9 +58,9 @@ const GroupMapping = () => {
   const [additionalstatus, setAdditionalstatus] = useState(categoriesData[0]);
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
-   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+  const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -74,7 +74,7 @@ const GroupMapping = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchValue, customerStatus , additionalstatus.value]);
+  }, [searchValue, customerStatus, additionalstatus.value]);
   useEffect(() => {
     setSearchValue("");
   }, [customerStatus]);
@@ -86,22 +86,24 @@ const GroupMapping = () => {
     }
 
     if (searchValue) {
-      params.search = searchValue?.trimEnd()	;
+      params.search = searchValue?.trimEnd();
     }
     if (page) {
       params.page = page;
-    }  if (additionalstatus?.value) {
+    } if (additionalstatus?.value) {
       params.aiToolCategoryId = additionalstatus.value;
     }
     if (limit) {
       params.limit = limit;
-    }    if (searchValue) {
+    } if (searchValue) {
       let timer;
       const makeAPICall = () => {
         dispatch(
-          getMappedGroupList({ page: page,
-        limit: limit,
-        search: searchValue})
+          getMappedGroupList({
+            page: page,
+            limit: limit,
+            search: searchValue
+          })
         );
       };
       clearTimeout(timer);
@@ -109,12 +111,14 @@ const GroupMapping = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getMappedGroupList({ page: page,
-        limit: limit,
-        search: searchValue})
+        getMappedGroupList({
+          page: page,
+          limit: limit,
+          search: searchValue
+        })
       );
     }
-  }, [customerStatus, searchValue, page , additionalstatus.value , limit]);
+  }, [customerStatus, searchValue, page, additionalstatus.value, limit]);
   const handleValidDate = (date) => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
     return date1;
@@ -129,11 +133,11 @@ const GroupMapping = () => {
   };
   const handleOnEdit = (item) => {
     setRowId(item?.grpId);
-  
+
     setValues({
       ...values,
-      grpId:{value:item?.grpId,label:item?.grpName},
-      tagId:item?.tagName
+      grpId: { value: item?.grpId, label: item?.grpName },
+      tagId: item?.tagName
     });
     setAddModal(true);
   };
@@ -151,7 +155,7 @@ const GroupMapping = () => {
     },
     {
       Header: "Group Id",
-      accessor: (row,rowIndex) => row?.grpId ?? "-",
+      accessor: (row, rowIndex) => row?.grpId ?? "-",
 
       filterable: false,
     },
@@ -167,7 +171,7 @@ const GroupMapping = () => {
       filterable: false,
     },
 
-   
+
     ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
       Cell: (cellProps) => {
@@ -181,14 +185,14 @@ const GroupMapping = () => {
               <i className="ri-more-fill align-middle"></i>
             </DropdownToggle>
             <DropdownMenu className="dropdown-menu-end">
-             <DropdownItem
-                            onClick={() => {
-                              handleOnEdit(cellProps?.row?.original);
-                            }}
-                          >
-                            <i className="ri-pencil-fill align-bottom me-2 text-muted"></i>{" "}
-                            Edit
-                          </DropdownItem>
+              <DropdownItem
+                onClick={() => {
+                  handleOnEdit(cellProps?.row?.original);
+                }}
+              >
+                <i className="ri-pencil-fill align-bottom me-2 text-muted"></i>{" "}
+                Edit
+              </DropdownItem>
               <DropdownItem
                 href="#"
                 onClick={() => {
@@ -202,7 +206,7 @@ const GroupMapping = () => {
           </UncontrolledDropdown>
         );
       },
-    }]:[{
+    }] : [{
       Header: "",
       accessor: 'emptyAction',
       Cell: () => null
@@ -216,9 +220,9 @@ const GroupMapping = () => {
     )
       .then((res) => {
         if (res?.payload?.status == 200) {
-          
-            toast.success("Group Mapping Deleted Successfully");
-    
+
+          toast.success("Group Mapping Deleted Successfully");
+
           setDeleteModal(false);
           setLoader(false)
 
@@ -235,36 +239,36 @@ const GroupMapping = () => {
         toast.error(err?.data?.message);
       });
   };
-    const handleExportGroups = () => {
-      dispatch(groupDataDownload()).then((res) => {
-      
-            if (res?.payload) {
-              const blob = new Blob([res.payload], {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-              });
-      
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `tag-master-report.csv`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              URL.revokeObjectURL(url);
-              
-            }
-      
-          }
-          ).catch((err) => {
-            console.log(":err", err)
-            toast.error(err);
-            setLoading(false)
-          })
-    };
+  const handleExportGroups = () => {
+    dispatch(groupDataDownload()).then((res) => {
+
+      if (res?.payload) {
+        const blob = new Blob([res.payload], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `tag-master-report.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+      }
+
+    }
+    ).catch((err) => {
+      console.log(":err", err)
+      toast.error(err);
+      setLoading(false)
+    })
+  };
 
   return (
     <>
-       {addModal && (
+      {addModal && (
         <GroupMappingModal
           addModal={addModal}
           setAddModal={setAddModal}
@@ -274,7 +278,7 @@ const GroupMapping = () => {
           page={page}
         />
       )}
-      
+
       <div className="page-content">
         <DeleteModal
           show={deleteModal}
@@ -291,7 +295,7 @@ const GroupMapping = () => {
                   <h5 className="card-title mb-0 flex-grow-1">
                     Tag Group Mapping
                   </h5>
-              {/* {   groupMappingCount > 10 &&  <div className="flex-shrink-0">
+                  {/* {   groupMappingCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
                       <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
@@ -315,7 +319,7 @@ const GroupMapping = () => {
                   ) : (
                     <>
                       {groupMappingData &&
-                      groupMappingData?.length > 0 ? (
+                        groupMappingData?.length > 0 ? (
                         <TableContainer
                           columns={columns || []}
                           data={groupMappingData || []}
@@ -336,9 +340,9 @@ const GroupMapping = () => {
                           currentPage={page}
                           setCurrentPage={setPage}
                           isPagination={
-                           ( groupMappingCount > 100 ) ? true : false
+                            (groupMappingCount > 100) ? true : false
                           }
-                         customButtons={userRole == "ROLE_ADMIN" ?[
+                          customButtons={userRole == "ROLE_ADMIN" ? [
                             {
                               color: 'soft-success',
                               icon: 'download-2-line',
@@ -346,8 +350,8 @@ const GroupMapping = () => {
                               onClick: handleExportGroups,
                               className: 'me-2'
                             }
-                          ]:[]}
-                          iscreated={userRole == "ROLE_ADMIN" }
+                          ] : []}
+                          iscreated={userRole == "ROLE_ADMIN"}
                           addbuttontext={"Add New Group Mapping"}
                           onClickOpenAddModal={onClickOpenAddModal}
                           // isAdditionalStatus={true}
@@ -355,7 +359,7 @@ const GroupMapping = () => {
                           setAdditionalstatus={setAdditionalstatus}
                           AdditionalOption={categoriesData}
                           totalDataCount={groupMappingCount}
-                          ispaginationshow={groupMappingCount > 100 && limit <groupMappingCount ? true : false }
+                          ispaginationshow={groupMappingCount > 100 && limit < groupMappingCount ? true : false}
 
                         />
                       ) : (
@@ -378,21 +382,21 @@ const GroupMapping = () => {
                             iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Group Mapping"}
                             onClickOpenAddModal={onClickOpenAddModal}
-                             customButtons={userRole == "ROLE_ADMIN" ?[
-                            {
-                              color: 'soft-success',
-                              icon: 'download-2-line',
-                              text: 'Export Tag Master',
-                              onClick: handleExportGroups,
-                              className: 'me-2'
-                            }
-                          ]:[]}
+                            customButtons={userRole == "ROLE_ADMIN" ? [
+                              {
+                                color: 'soft-success',
+                                icon: 'download-2-line',
+                                text: 'Export Tag Master',
+                                onClick: handleExportGroups,
+                                className: 'me-2'
+                              }
+                            ] : []}
                             // isAdditionalStatus={true}
                             additionalstatus={additionalstatus}
                             setAdditionalstatus={setAdditionalstatus}
                             AdditionalOption={categoriesData}
                           />
-                      
+
                         </>
                       )}
                     </>

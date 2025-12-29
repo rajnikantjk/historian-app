@@ -2,6 +2,22 @@
 // _footer.scss
 // 
 
+
+.login-footer {
+    bottom: 0;
+    padding: 10px calc(#{$grid-gutter-width} * 0.5);
+    position: absolute;
+    right: 0;
+    color: $footer-color;
+    left: 0px;
+    // height: $footer-height;
+    background-color: $footer-bg;
+
+    @media (max-width: 991.98px) {
+        left: 0;
+    }
+}
+
 .footer {
     bottom: 0;
     padding: 10px calc(#{$grid-gutter-width} * 0.5);
@@ -28,6 +44,7 @@
             }
         }
     }
+
     &[data-sidebar-size="md"] {
         .footer {
             left: $vertical-menu-width-md;
@@ -40,10 +57,10 @@
 
 }
 
-[data-layout="horizontal"]{
+[data-layout="horizontal"] {
     .footer {
         left: 0 !important;
-    } 
+    }
 }
 
 [data-layout="vertical"][data-layout-style="detached"] {
@@ -52,11 +69,11 @@
         .footer {
             left: 0 !important;
             background-color: transparent;
-        } 
+        }
     }
 }
 
-[data-layout="twocolumn"] { 
+[data-layout="twocolumn"] {
     .footer {
         @media (min-width: 768.1px) {
             left: calc(#{$twocolumn-menu-iconview-width} + #{$twocolumn-menu-width});

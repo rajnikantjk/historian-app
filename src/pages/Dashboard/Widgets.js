@@ -370,51 +370,51 @@ const Widgets = () => {
       console.log('Secondary WebSocket connected');
     };
 
-    secondarySocketRef.current.onmessage =async (event) => {
+    secondarySocketRef.current.onmessage = async (event) => {
       let rawData;
-       
-        // Handle binary data
-        if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
-          const data = event.data instanceof Blob ?
-            await event.data.arrayBuffer() :
-            event.data;
 
-          // Check for compression marker (first byte)
-          const compressionType = new Uint8Array(data, 0, 1)[0];
-          const compressedData = new Uint8Array(data, 1);
+      // Handle binary data
+      if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+        const data = event.data instanceof Blob ?
+          await event.data.arrayBuffer() :
+          event.data;
 
-          if (compressionType === 0x01 || compressionType === 0x02) {
-            // Use the Compression Streams API if available (modern browsers)
-            if (window.CompressionStream) {
-              const ds = new DecompressionStream(compressionType === 0x01 ? 'gzip' : 'deflate');
-              const decompressedStream = new Blob([compressedData]).stream().pipeThrough(ds);
-              const decompressedBlob = await new Response(decompressedStream).blob();
-              const text = await decompressedBlob.text();
-              rawData = JSON.parse(text);
-            }
-            // Fallback to pako if available
-            else if (window.pako) {
-              const decompressed = compressionType === 0x01 ?
-                pako.ungzip(compressedData, { to: 'string' }) :
-                pako.inflate(compressedData, { to: 'string' });
-              rawData = JSON.parse(decompressed);
-            }
-            // Fallback to plain text (may be corrupted if actually compressed)
-            else {
-              const decoder = new TextDecoder();
-              rawData = JSON.parse(decoder.decode(compressedData));
-              console.warn('No decompression available, using raw data (may be corrupted)');
-            }
-          } else {
-            // No compression, just decode as text
+        // Check for compression marker (first byte)
+        const compressionType = new Uint8Array(data, 0, 1)[0];
+        const compressedData = new Uint8Array(data, 1);
+
+        if (compressionType === 0x01 || compressionType === 0x02) {
+          // Use the Compression Streams API if available (modern browsers)
+          if (window.CompressionStream) {
+            const ds = new DecompressionStream(compressionType === 0x01 ? 'gzip' : 'deflate');
+            const decompressedStream = new Blob([compressedData]).stream().pipeThrough(ds);
+            const decompressedBlob = await new Response(decompressedStream).blob();
+            const text = await decompressedBlob.text();
+            rawData = JSON.parse(text);
+          }
+          // Fallback to pako if available
+          else if (window.pako) {
+            const decompressed = compressionType === 0x01 ?
+              pako.ungzip(compressedData, { to: 'string' }) :
+              pako.inflate(compressedData, { to: 'string' });
+            rawData = JSON.parse(decompressed);
+          }
+          // Fallback to plain text (may be corrupted if actually compressed)
+          else {
             const decoder = new TextDecoder();
             rawData = JSON.parse(decoder.decode(compressedData));
+            console.warn('No decompression available, using raw data (may be corrupted)');
           }
+        } else {
+          // No compression, just decode as text
+          const decoder = new TextDecoder();
+          rawData = JSON.parse(decoder.decode(compressedData));
         }
-        // Handle text data
-        else {
-          rawData = JSON.parse(event.data);
-        }
+      }
+      // Handle text data
+      else {
+        rawData = JSON.parse(event.data);
+      }
       if (isArray(rawData)) {
         setSpeedometerDatas(rawData)
       }
@@ -443,7 +443,7 @@ const Widgets = () => {
     socketRef.current.onmessage = async (event) => {
       try {
         let rawData;
-       
+
         // Handle binary data
         if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
           const data = event.data instanceof Blob ?
@@ -498,8 +498,8 @@ const Widgets = () => {
           const sortedData = rawData.sort(
             (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
           );
-          
-         
+
+
 
           const convertFilledData = (filledData) => {
             // Collect all unique tag names
@@ -521,7 +521,7 @@ const Widgets = () => {
 
             return { timestamp, tagdata };
           };
-       
+
           // Example usage:
           const transformed = convertFilledData(sortedData);
 
@@ -560,7 +560,7 @@ const Widgets = () => {
       console.error('WebSocket error:', error);
     };
   };
-  
+
   useEffect(() => {
     initializeSocket();
     connectSecondarySocket();
@@ -585,13 +585,13 @@ const Widgets = () => {
 
   }, [values?.frequency?.value, values?.grpId?.value, values?.interval?.value]);
   const getHistoryData = () => {
-   
+
     let payload = {
       grpId: "",
       startDate: moment(new Date()).startOf('day').format("YYYY-MM-DD HH:mm:ss"),
       endDate: moment(new Date()).endOf('day').format("YYYY-MM-DD HH:mm:ss"),
       tagId: null,
-      timeSpan:null,
+      timeSpan: null,
       defaultLoad: "Y"
     }
     dispatch(
@@ -601,11 +601,11 @@ const Widgets = () => {
       if (res.payload?.status == 200) {
         let data = res?.payload?.data
         setTableData(data)
-       
+
       }
     }).catch((err) => {
       toast.error(err);
-    
+
     })
   }
 
@@ -732,13 +732,14 @@ const Widgets = () => {
                     <thead >
                       <tr>
                         <th>Tag Name</th>
-                        <th>Eng Unit</th>
+                        <th>Eng. Unit</th>
                         <th>Description</th>
                         <th>Current Value</th>
-                        <th>Standard Division Value</th>
+
                         <th>Minimum</th>
                         <th>Maximum</th>
                         <th>Average</th>
+                        <th>Standard Deviation</th>
 
                       </tr>
                     </thead>
@@ -749,10 +750,11 @@ const Widgets = () => {
                           <td>{row.unitName}</td>
                           <td>{row.description}</td>
                           <td>{row?.itemValue}</td>
-                          <td>{row?.stdDevValue}</td>
+
                           <td>{row.minValue}</td>
                           <td>{row.maxValue}</td>
                           <td>{row.avgValue}</td>
+                          <td>{row?.stdDevValue}</td>
 
                         </tr>
                       ))}

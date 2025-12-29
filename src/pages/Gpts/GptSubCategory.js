@@ -34,7 +34,7 @@ const customerstatus = [
 ];
 
 const GptSubCategory = () => {
-  document.title = "GPT Subcategory | Augmation Tech";
+  document.title = "GPT Subcategory | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const {
@@ -71,7 +71,7 @@ const GptSubCategory = () => {
   const [isDelete, setIsDelete] = useState(false);
   const [limit, setLimit] = useState(10);
 
-  const handleOnChangeLimit =(value)=>{
+  const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
   }
@@ -102,7 +102,7 @@ const GptSubCategory = () => {
     }
 
     if (searchValue) {
-      params.search =  searchValue?.trimEnd();
+      params.search = searchValue?.trimEnd();
     }
     if (page) {
       params.page = page;
@@ -112,7 +112,7 @@ const GptSubCategory = () => {
     }
     if (limit) {
       params.limit = limit;
-    }    if (searchValue) {
+    } if (searchValue) {
       let timer;
       const makeAPICall = () => {
         dispatch(
@@ -131,7 +131,7 @@ const GptSubCategory = () => {
         })
       );
     }
-  }, [customerStatus, searchValue, page, additionalstatus , limit]);
+  }, [customerStatus, searchValue, page, additionalstatus, limit]);
 
   const handleValidDate = (date) => {
     const date1 = moment(new Date(date)).format("DD MMM Y");
@@ -212,7 +212,7 @@ const GptSubCategory = () => {
             <DropdownMenu className="dropdown-menu-end">
               <DropdownItem
                 onClick={() => {
-                  handleOnEdit(cellProps?.row?.original);    setIsDelete(false);
+                  handleOnEdit(cellProps?.row?.original); setIsDelete(false);
                 }}
               >
                 <i className="ri-pencil-fill align-bottom me-2 text-muted"></i>{" "}
@@ -281,17 +281,17 @@ const GptSubCategory = () => {
     } else {
       setLoader(true);
 
-    dispatch(
-      UpdateGptSubCategory({ id: userStatus.id, status: userStatus.status })
-    )
-      .then((res) => {
-        if (res?.payload.success === true) {
-          if (userStatus?.status !== "active") {
-            toast.success("Deactive successfully");
-          } else {
-            toast.success("Active successfully");
-          }
-          setDeleteModal(false);
+      dispatch(
+        UpdateGptSubCategory({ id: userStatus.id, status: userStatus.status })
+      )
+        .then((res) => {
+          if (res?.payload.success === true) {
+            if (userStatus?.status !== "active") {
+              toast.success("Deactive successfully");
+            } else {
+              toast.success("Active successfully");
+            }
+            setDeleteModal(false);
 
             dispatch(
               getGptsSubCategory({
@@ -350,8 +350,8 @@ const GptSubCategory = () => {
             isDelete
               ? "Delete"
               : userStatus?.status !== "active"
-              ? "Deactive"
-              : "Active"
+                ? "Deactive"
+                : "Active"
           }
           onDeleteClick={() => handleDeleteUser()}
           onCloseClick={() => {
@@ -368,10 +368,10 @@ const GptSubCategory = () => {
                   <h5 className="card-title mb-0 flex-grow-1">
                     GPT Subcategory
                   </h5>
-         {   gptSubCategoryCount > 10 &&      <div className="flex-shrink-0">
+                  {gptSubCategoryCount > 10 && <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
                       Show
-                      <select name="pagination" style={{width:"70px"}}  value={limit}       onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
+                      <select name="pagination" style={{ width: "70px" }} value={limit} onChange={(e) => handleOnChangeLimit(Number(e.target.value))}
                       >
                         <option value="10">10</option>
                         <option value="25">25</option>
@@ -420,7 +420,7 @@ const GptSubCategory = () => {
                           isAdditionalStatus={true}
                           onClickOpenAddModal={onClickOpenAddModal}
                           totalDataCount={gptSubCategoryCount}
-                          ispaginationshow={gptSubCategoryCount > 10 && limit <gptSubCategoryCount ? true : false }
+                          ispaginationshow={gptSubCategoryCount > 10 && limit < gptSubCategoryCount ? true : false}
                         />
                       ) : (
                         <>

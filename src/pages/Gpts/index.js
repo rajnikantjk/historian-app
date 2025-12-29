@@ -34,7 +34,7 @@ const customerstatus = [
   { label: "Rejected", value: "rejected" },
 ];
 const index = () => {
-  document.title = "GPT | Augmation Tech";
+  document.title = "GPT | AlarmIQ - Historian/ PIMS";
   const GptRedirectLink = process.env.REACT_APP_GPT_URL
 
   const dispatch = useDispatch();
@@ -180,10 +180,10 @@ const index = () => {
               row?.status === "pending"
                 ? "text-warning"
                 : row?.status === "approved"
-                ? "text-success"
-                : row?.status === "rejected"
-                ? "text-danger"
-                : null
+                  ? "text-success"
+                  : row?.status === "rejected"
+                    ? "text-danger"
+                    : null
             }
           >
             <b style={{ "text-transform": "capitalize" }}>{row?.status}</b>

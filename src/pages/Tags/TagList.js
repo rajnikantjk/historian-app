@@ -44,7 +44,7 @@ const customerstatus = [
   { label: "Deactivate", value: "inactive" },
 ];
 const TagList = () => {
-  document.title = "Tag List | Augmation Tech";
+  document.title = "Tag List | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const { toolCategoryCount, toolCategoryData, toolLoader } = useSelector(
@@ -78,7 +78,7 @@ const TagList = () => {
     setImportLoading(true);
     dispatch(tagBulkImport(formData))
       .then((res) => {
- 
+
         if (res?.payload?.status == 200) {
           toast.success(res?.payload?.message || 'Tags imported successfully');
           setImportModal(false);
@@ -98,29 +98,29 @@ const TagList = () => {
 
   const handleExportTags = () => {
     dispatch(tagDataDownload()).then((res) => {
-    
-          if (res?.payload) {
-            const blob = new Blob([res.payload], {
-              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            });
-    
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `taglist.csv`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-            
-          }
-    
-        }
-        ).catch((err) => {
-          console.log(":err", err)
-          toast.error(err);
-          setLoading(false)
-        })
+
+      if (res?.payload) {
+        const blob = new Blob([res.payload], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `taglist.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+      }
+
+    }
+    ).catch((err) => {
+      console.log(":err", err)
+      toast.error(err);
+      setLoading(false)
+    })
   };
   const nPages = Math.ceil(toolCategoryCount / limit);
 
@@ -155,9 +155,11 @@ const TagList = () => {
       const makeAPICall = () => {
         dispatch(
           getTaglist(
-            { page: page,
-        limit: limit,
-        search: searchValue}
+            {
+              page: page,
+              limit: limit,
+              search: searchValue
+            }
           )
         );
       };
@@ -166,9 +168,11 @@ const TagList = () => {
       return () => clearTimeout(timer);
     } else {
       dispatch(
-        getTaglist({ page: page,
-        limit: limit,
-        search: searchValue})
+        getTaglist({
+          page: page,
+          limit: limit,
+          search: searchValue
+        })
       );
     }
   }, [customerStatus, searchValue, page, limit]);
@@ -225,7 +229,7 @@ const TagList = () => {
 
       filterable: false,
     },
-     {
+    {
       Header: "Display TagName",
       accessor: (row) => row?.displayTagName ?? "-",
       filterable: false,
@@ -235,15 +239,15 @@ const TagList = () => {
       accessor: (row) => row?.unitName ?? "-",
       filterable: false,
     },
-   
+
 
     {
       Header: "Description",
       accessor: (row) => row?.description ?? "-",
       filterable: false,
     },
-   
-  
+
+
 
     ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
@@ -434,7 +438,7 @@ const TagList = () => {
         </ModalHeader>
         <ModalBody>
           <form>
-           <div className="mb-3">
+            <div className="mb-3">
               <label htmlFor="customer-name" className="col-form-label">
                 OPC Server Name: <span className="text-danger">*</span>
                 {errors.serverName && (
@@ -455,7 +459,7 @@ const TagList = () => {
 
 
               <label htmlFor="customer-name" className="col-form-label">
-               OPC Tag Name: <span className="text-danger">*</span>
+                OPC Tag Name: <span className="text-danger">*</span>
                 {errors.tagName && (
                   <span className="text-danger">{errors.tagName}</span>
                 )}
@@ -470,7 +474,7 @@ const TagList = () => {
                 onChange={handleOnChange}
               />
             </div>
-            
+
             <div className="mb-3">
 
               <label htmlFor="customer-name" className="col-form-label">
@@ -570,7 +574,7 @@ const TagList = () => {
         <Row>
           <Col lg={12}>
             <Card id="invoiceList">
-              
+
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">Tag List</h5>
@@ -615,7 +619,7 @@ const TagList = () => {
                           // customerstatus={customerstatus}
                           setcustomerStatus={setcustomerStatus}
                           customerStatus={customerStatus}
-                          customButtons={userRole == "ROLE_ADMIN" ?[
+                          customButtons={userRole == "ROLE_ADMIN" ? [
                             {
                               color: 'soft-primary',
                               icon: 'upload-2-line',
@@ -630,7 +634,7 @@ const TagList = () => {
                               onClick: handleExportTags,
                               className: 'me-2'
                             }
-                          ]:[]}
+                          ] : []}
                           divClass="table-responsive mb-1"
                           tableClass="mb-0 align-middle table-borderless"
                           theadClass="table-light text-muted"
@@ -667,22 +671,22 @@ const TagList = () => {
                             isPagination={false}
                             iscreated={userRole == "ROLE_ADMIN"}
                             addbuttontext={"Add New Tag"}
-                             customButtons={userRole == "ROLE_ADMIN" ?[
-                            {
-                              color: 'soft-primary',
-                              icon: 'upload-2-line',
-                              text: 'Bulk Upload Tags',
-                              onClick: handleImportTags,
-                              className: 'me-2'
-                            },
-                            {
-                              color: 'soft-success',
-                              icon: 'download-2-line',
-                              text: 'Export Tags',
-                              onClick: handleExportTags,
-                              className: 'me-2'
-                            }
-                          ]:[]}
+                            customButtons={userRole == "ROLE_ADMIN" ? [
+                              {
+                                color: 'soft-primary',
+                                icon: 'upload-2-line',
+                                text: 'Bulk Upload Tags',
+                                onClick: handleImportTags,
+                                className: 'me-2'
+                              },
+                              {
+                                color: 'soft-success',
+                                icon: 'download-2-line',
+                                text: 'Export Tags',
+                                onClick: handleExportTags,
+                                className: 'me-2'
+                              }
+                            ] : []}
                             onClickOpenAddModal={onClickOpenAddModal}
                           />
 
@@ -696,8 +700,8 @@ const TagList = () => {
           </Col>
         </Row>
       </div>
-      
-      <FileUploadModal 
+
+      <FileUploadModal
         isOpen={importModal}
         toggle={() => setImportModal(false)}
         onFileUpload={handleFileUpload}

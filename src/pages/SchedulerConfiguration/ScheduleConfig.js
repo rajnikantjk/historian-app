@@ -39,13 +39,13 @@ const customerstatus = [
   { label: "Deactivate", value: "inactive" },
 ];
 const ScheduleConfig = () => {
-  document.title = "Scheduler List | Augmation Tech";
+  document.title = "Scheduler List | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const { schedulerListCount, slotsData, reportListData, schedulerListData, toolLoader, toolCategoryData } = useSelector(
     (state) => state.Tool
   );
-   const categoriesData = [
+  const categoriesData = [
     {
       value: "",
       label: "All",
@@ -77,14 +77,14 @@ const ScheduleConfig = () => {
     isPath: false
   });
   const [errors, setErrors] = useState({});
-   const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
 
   const getNext15MinuteSlot = () => {
     const now = new Date();
     const minutes = now.getMinutes();
     const nextSlotMinutes = Math.ceil(minutes / 15) * 15;
-    
+
     // If we're at the top of the hour, add an hour and reset minutes
     if (nextSlotMinutes === 60) {
       now.setHours(now.getHours() + 1);
@@ -92,7 +92,7 @@ const ScheduleConfig = () => {
     } else {
       now.setMinutes(nextSlotMinutes, 0, 0);
     }
-    
+
     return now;
   };
 
@@ -163,7 +163,7 @@ const ScheduleConfig = () => {
         label: tag.displayTagName,
         ...tag
       })) || [];
-   
+
       setTagOptions(options);
       return options;
     } catch (error) {
@@ -295,66 +295,66 @@ const ScheduleConfig = () => {
   // Handle form submission
   const handleSchedulerSubmit = (e) => {
     e?.preventDefault();
-    
+
     // Validate all fields
     const errors = {};
-    
+
     if (!schedulerForm.taskName?.trim()) {
       errors.taskName = 'Task name is required';
     }
-    
+
     if (!schedulerForm.reportType) {
       errors.reportType = 'Please select a report type';
     }
-    
+
     if (!schedulerForm.startDate) {
       errors.startDate = 'Start date is required';
     }
-    
+
     if (!schedulerForm.startTime) {
       errors.startTime = 'Start time is required';
     }
-    
-    if ((!schedulerForm.intervalHours && schedulerForm.intervalHours !== 0) || 
-        (!schedulerForm.intervalMinutes && schedulerForm.intervalMinutes !== 0)) {
+
+    if ((!schedulerForm.intervalHours && schedulerForm.intervalHours !== 0) ||
+      (!schedulerForm.intervalMinutes && schedulerForm.intervalMinutes !== 0)) {
       errors.interval = 'Interval is required';
     }
-    
+
     if (!schedulerForm.storagePath?.trim()) {
       errors.storagePath = 'Storage path is required';
     }
 
-     if (selectedTags?.length == 0) {
+    if (selectedTags?.length == 0) {
       errors.tagIds = 'Tag is required';
     }
-    
-    
+
+
     // Update form errors state
     setFormErrors(errors);
-    
+
     // If there are errors, stop form submission
     if (Object.keys(errors).length > 0) {
       return;
     }
-    
- 
+
+
 
     setLoader(true);
-    const { intervalHours, intervalMinutes,toEmail, ...formData } = schedulerForm;
+    const { intervalHours, intervalMinutes, toEmail, ...formData } = schedulerForm;
     const payload = {
       ...formData,
       intervalTime: `${String(intervalHours).padStart(2, '0')}:${String(intervalMinutes).padStart(2, '0')}`,
       startDate: moment(schedulerForm.startDate).format('YYYY-MM-DD'),
-      startTime: schedulerForm.startTime.includes(':') ? 
-        (schedulerForm.startTime.split(':').length === 2 ? 
-          `${schedulerForm.startTime}:00` : 
-          schedulerForm.startTime) : 
+      startTime: schedulerForm.startTime.includes(':') ?
+        (schedulerForm.startTime.split(':').length === 2 ?
+          `${schedulerForm.startTime}:00` :
+          schedulerForm.startTime) :
         '00:00:00',
       tagIds: selectedTags.map(tag => tag.value).join(','),
     };
 
     // Here you would typically dispatch an action to save the scheduler
- 
+
     dispatch(saveSchdule(payload)).then((resp) => {
 
       if (resp.payload?.status === "success") {
@@ -374,18 +374,18 @@ const ScheduleConfig = () => {
           tagIds: [],
 
         })
-            setLoader(false);
+        setLoader(false);
         dispatch(getSchedulerList())
-        toast.success(schedulerForm?.id ? "Schedule Task updated successfully" : "Schedule Task added successfully")
+        toast.success(schedulerForm?.id ? "Schedule updated successfully" : "Schedule added successfully")
 
       } else {
         toast.error(resp.payload?.data?.message)
-            setLoader(false);
+        setLoader(false);
       }
 
     }).catch((err) => {
-      
-          setLoader(false);
+
+      setLoader(false);
       toast.error("Something went wrong")
     })
   };
@@ -398,7 +398,7 @@ const ScheduleConfig = () => {
     });
     setErrors({ ...errors, [name]: "" });
   };
- 
+
   const handleOnChangeLimit = (value) => {
     setPage(1);
     setLimit(value);
@@ -410,23 +410,23 @@ const ScheduleConfig = () => {
     setRowId("");
     // Clear selected tags when opening the add new schedule modal
     setSelectedTags([]);
-    setSchedulerForm(()=>{
-    const nextSlot = getNext15MinuteSlot();
-    return {
-      id: null,
-      taskName: '',
-      reportType: '',
-      startDate: new Date(),
-      startTime: formatTimes(nextSlot),
-      intervalHours: null,
-      intervalMinutes: null,
-      storagePath: '',
-      slot: null,
-      isActive: 'Y',
-      description: '',
-      tagIds: [],
-    };
-  })
+    setSchedulerForm(() => {
+      const nextSlot = getNext15MinuteSlot();
+      return {
+        id: null,
+        taskName: '',
+        reportType: '',
+        startDate: new Date(),
+        startTime: formatTimes(nextSlot),
+        intervalHours: null,
+        intervalMinutes: null,
+        storagePath: '',
+        slot: null,
+        isActive: 'Y',
+        description: '',
+        tagIds: [],
+      };
+    })
   };
   useEffect(() => {
     loadTags()
@@ -484,7 +484,7 @@ const ScheduleConfig = () => {
 
 
 
- 
+
 
   const onClickDelete = (status) => {
 
@@ -500,15 +500,15 @@ const ScheduleConfig = () => {
     try {
       // Create a new object without displayTagNames and tagNames
       const { displayTagNames, tagNames, ...itemWithoutTags } = item;
-      
+
       // Get the exact tag names from the item
       const savedTagNames = (item?.displayTagNames || '').split(',')
         .map(tag => tag.trim())
         .filter(Boolean);
-      
+
       // Load all available tags
       const allTags = await loadTags('');
-      
+
       // Create a map of all tags by their display name for quick lookup
       const tagMap = {};
       allTags.forEach(tag => {
@@ -517,11 +517,11 @@ const ScheduleConfig = () => {
           tagMap[key] = tag;
         }
       });
-      
+
       // Find the exact matching tag objects
       const selectedTagObjects = [];
       const unmatchedTags = [];
-      
+
       savedTagNames.forEach(tagName => {
         const normalizedTagName = tagName.toLowerCase().trim();
         if (tagMap[normalizedTagName]) {
@@ -530,7 +530,7 @@ const ScheduleConfig = () => {
           unmatchedTags.push(tagName);
         }
       });
-      
+
       // For any unmatched tags, create placeholder objects
       unmatchedTags.forEach(tagName => {
         selectedTagObjects.push({
@@ -539,7 +539,7 @@ const ScheduleConfig = () => {
           displayTagName: tagName
         });
       });
-      
+
       // Set the form state with the item data
       setSchedulerForm({
         ...itemWithoutTags,
@@ -549,13 +549,13 @@ const ScheduleConfig = () => {
         tagIds: selectedTagObjects.map(tag => tag.value).join(','),
         displayTagNames: selectedTagObjects.map(tag => tag.label || tag.displayTagName || tag.value).join(',')
       });
-      
+
       // Set the selected tags for the Select component
       setSelectedTags(selectedTagObjects.map(tag => ({
         value: tag.value,
         label: tag.label || tag.displayTagName || tag.value
       })));
-      
+
       // Open the modal
       setAddModal(true);
     } catch (error) {
@@ -564,7 +564,7 @@ const ScheduleConfig = () => {
       const tagNamesArray = (item?.displayTagNames || '').split(',')
         .map(tag => tag.trim())
         .filter(Boolean);
-        
+
       setSelectedTags(tagNamesArray.map(tagName => ({
         value: tagName,
         label: tagName
@@ -594,7 +594,19 @@ const ScheduleConfig = () => {
     {
       id: 'tagList',
       Header: <div style={{ whiteSpace: 'nowrap' }}>Tag List</div>,
-      accessor: (row) => row?.displayTagNames ?? "-",
+      Cell: ({ row }) => {
+        return row.original?.displayTagNames ? (
+          <span
+            className="text-primary"
+            style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+            onClick={() => handleViewClick(row.original?.displayTagNames, 'Tag List', false)}
+          >
+            View
+          </span>
+        ) : (
+          "-"
+        );
+      },
       filterable: false,
     },
     {
@@ -778,15 +790,15 @@ const ScheduleConfig = () => {
             setFormErrors({});
           }}
         >
-          {rowId ? "Update Schedule Task" : "Add New Schedule Task"}
+          {rowId ? "Update Schedule" : "Add New Schedule"}
         </ModalHeader>
         <ModalBody>
           <form onSubmit={handleSchedulerSubmit}>
             <div className="row">
               <div className="col-md-6 mb-3">
                 <div>
-                <label className="form-label">Task Name </label>
-                <span className="text-danger">* {formErrors.taskName}</span>
+                  <label className="form-label">Task Name </label>
+                  <span className="text-danger">* {formErrors.taskName}</span>
                 </div>
                 <Input
                   type="text"
@@ -796,14 +808,14 @@ const ScheduleConfig = () => {
                   value={schedulerForm.taskName || ''}
                   onChange={handleSchedulerChange}
                 />
-                
+
               </div>
 
               <div className="col-md-6 mb-3">
                 <div>
-                <label className="form-label">Report Type </label>
-                <span className="text-danger text-xs font-normal"> *{formErrors?.reportType}</span>
-                
+                  <label className="form-label">Report Type </label>
+                  <span className="text-danger text-xs font-normal"> *{formErrors?.reportType}</span>
+
                 </div>
                 <Select
                   className="react-select"
@@ -826,7 +838,7 @@ const ScheduleConfig = () => {
                   // classNamePrefix="select"
                   placeholder="Select Report Type"
                 />
-                   {formErrors.reportType && <div className="invalid-feedback">{formErrors.reportType}</div>}
+                {formErrors.reportType && <div className="invalid-feedback">{formErrors.reportType}</div>}
               </div>
 
               <div className="col-md-6 mb-3">
@@ -883,11 +895,11 @@ const ScheduleConfig = () => {
                   />
                 </div>
               </div>
- <div className="col-12 mb-3">
+              <div className="col-12 mb-3">
                 <div>
-                <label className="form-label">Tags </label>
-                    <span className="text-danger text-xs font-normal"> *{formErrors?.tagIds}</span>
-                    </div>
+                  <label className="form-label">Tags </label>
+                  <span className="text-danger text-xs font-normal"> *{formErrors?.tagIds}</span>
+                </div>
                 <Select
                   isMulti
                   cacheOptions
@@ -906,7 +918,7 @@ const ScheduleConfig = () => {
                   closeMenuOnSelect={false}
                 />
               </div>
-           
+
 
               <div className="col-md-6 mb-3">
                 <label className="form-label">Slot</label>
@@ -915,7 +927,7 @@ const ScheduleConfig = () => {
                   classNamePrefix="select"
                   options={slotOptions}
                   isClearable
-                  value={slotOptions.find(option => option.value === schedulerForm.slot)|| null}
+                  value={slotOptions.find(option => option.value === schedulerForm.slot) || null}
                   onChange={(selected) => setSchedulerForm(prev => ({
                     ...prev,
                     slot: selected?.value ?? null
@@ -923,10 +935,10 @@ const ScheduleConfig = () => {
                   placeholder="Select Slot"
                 />
               </div>
-                 <div className="col-md-6 mb-3">
+              <div className="col-md-6 mb-3">
                 <div>
-                <label className="form-label">Interval   </label>
-                <span className="text-danger"> *{formErrors.interval}</span> 
+                  <label className="form-label">Interval   </label>
+                  <span className="text-danger"> *{formErrors.interval}</span>
                 </div>
                 <div className={`d-flex gap-2 ${formErrors.interval ? 'is-invalid' : ''}`}>
                   <div className="flex-grow-1 position-relative">
@@ -936,7 +948,7 @@ const ScheduleConfig = () => {
                       max="9000"
                       value={schedulerForm.intervalHours}
                       onChange={(e) => {
-                        const hours = Math.min(9000, Math.max(0, parseInt(e.target.value) ));
+                        const hours = Math.min(9000, Math.max(0, parseInt(e.target.value)));
                         setSchedulerForm(prev => ({
                           ...prev,
                           intervalHours: hours
@@ -955,7 +967,7 @@ const ScheduleConfig = () => {
                       max="59"
                       value={schedulerForm.intervalMinutes}
                       onChange={(e) => {
-                        const minutes = Math.min(59, Math.max(0, parseInt(e.target.value) ));
+                        const minutes = Math.min(59, Math.max(0, parseInt(e.target.value)));
                         setSchedulerForm(prev => ({
                           ...prev,
                           intervalMinutes: minutes
@@ -972,12 +984,12 @@ const ScheduleConfig = () => {
 
               <div className="col-12 mb-3">
                 <div>
-                <label className="form-label">Storage Path </label>
-                
-                    <span className="text-danger">
-                     * { formErrors.storagePath}
-                    </span>
-                 
+                  <label className="form-label">Storage Path </label>
+
+                  <span className="text-danger">
+                    * {formErrors.storagePath}
+                  </span>
+
                 </div>
                 <div className="input-group">
                   <Input
@@ -989,7 +1001,7 @@ const ScheduleConfig = () => {
                     onChange={handleSchedulerChange}
                     readOnly={false}
                   />
-                 
+
                   {/* <Button 
                         color="primary" 
                         onClick={handleFolderSelect}
@@ -1000,7 +1012,7 @@ const ScheduleConfig = () => {
                 </div>
               </div>
 
-             
+
 
               <div className="col-12 mb-3">
                 <label className="form-label">Description</label>
@@ -1115,7 +1127,7 @@ const ScheduleConfig = () => {
               <CardHeader className="border-0">
                 <div className="d-flex align-items-center">
                   <h5 className="card-title mb-0 flex-grow-1">
-                    Schedule Task List
+                    Schedule Configuration
                   </h5>
                   {/* {   schedulerListCount > 10 &&  <div className="flex-shrink-0">
                     <div className="d-flex gap-2 flex-wrap">
@@ -1155,7 +1167,7 @@ const ScheduleConfig = () => {
                           divClass="table-responsive mb-1"
                           tableClass="mb-0 align-middle table-borderless"
                           theadClass="table-light text-muted"
-                          SearchPlaceholder="Search Schedule Task..."
+                          SearchPlaceholder="Search Schedule..."
                           setSearchValue={setSearchValue}
                           searchValue={searchValue}
                           nPages={nPages}
@@ -1189,7 +1201,7 @@ const ScheduleConfig = () => {
                             customerStatus={customerStatus}
                             tableClass="mb-0 align-middle table-borderless"
                             theadClass="table-light text-muted"
-                            SearchPlaceholder="Search Schedule Task..."
+                            SearchPlaceholder="Search Schedule..."
                             setSearchValue={setSearchValue}
                             searchValue={searchValue}
                             isPagination={false}

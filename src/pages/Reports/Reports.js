@@ -18,11 +18,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Loader from "../../Components/Common/Loader";
 import FeatherIcon from "feather-icons-react";
-import { 
-    getIntervalList, 
-    getReportTypeList, 
-    getSlotsList, 
-    getTagGroupList, 
+import {
+    getIntervalList,
+    getReportTypeList,
+    getSlotsList,
+    getTagGroupList,
     getTaglist,
     downloadHistoryTrendReport,
     downloadFlowTotalizerReport,
@@ -34,6 +34,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from 'react-select';
 
 const Reports = () => {
+    document.title = "Reports | AlarmIQ - Historian/ PIMS";
     const [tagOptions, setTagOptions] = useState([]);
     const [defaulttagOptions, setDefaultTagOptions] = useState([]);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -60,10 +61,10 @@ const Reports = () => {
         }
     });
     const dispatch = useDispatch()
-    const { slotsData, intervalData ,toolSubCategoryData} = useSelector(
+    const { slotsData, intervalData, toolSubCategoryData } = useSelector(
         (state) => state.Tool
     );
-  
+
     const defaultFilters = {
         history: {
             startDateTime: new Date(Date.now() - 30 * 60000), // 30 minutes before current time
@@ -81,17 +82,17 @@ const Reports = () => {
         }
     };
 
-   const resetFilters = (reportType) => {
-    setFilters(prev => ({
-        ...prev,
-        [reportType]: { ...defaultFilters[reportType] }
-    }));
-    // Clear the selected slot
-    setSelectedSlot(prev => ({
-        ...prev,
-        [reportType]: null
-    }));
-};
+    const resetFilters = (reportType) => {
+        setFilters(prev => ({
+            ...prev,
+            [reportType]: { ...defaultFilters[reportType] }
+        }));
+        // Clear the selected slot
+        setSelectedSlot(prev => ({
+            ...prev,
+            [reportType]: null
+        }));
+    };
 
     const toggleHistoryModal = () => {
         if (isHistoryModalOpen) {
@@ -109,60 +110,60 @@ const Reports = () => {
 
     const groupOptions = toolSubCategoryData?.map(item => ({
         value: item?.id,
-      label: item?.grpName,
+        label: item?.grpName,
     }))
 
-const intervaldata = intervalData?.map((item, i) => {
+    const intervaldata = intervalData?.map((item, i) => {
         return {
             value: item?.value,
             label: item?.key,
         };
-      
+
     })
 
     const slotOptions = slotsData?.map(item => ({
         value: item.value,
         label: item.key
     }))
-  const handleInputChange = (reportType, field, selectedOption) => {
-    if (field === 'slot') {
-        // Handle slot selection
-        setSelectedSlot(prev => ({
-            ...prev,
-            [reportType]: selectedOption
-        }));
+    const handleInputChange = (reportType, field, selectedOption) => {
+        if (field === 'slot') {
+            // Handle slot selection
+            setSelectedSlot(prev => ({
+                ...prev,
+                [reportType]: selectedOption
+            }));
 
-        // Update filters with the slot value
-        setFilters(prev => ({
-            ...prev,
-            [reportType]: {
-                ...prev[reportType],
-                slot: selectedOption?.value || 0
-            }
-        }));
-    } else {
-        // Handle other fields
-        setFilters(prev => {
-            const newValue = Array.isArray(selectedOption) 
-                ? selectedOption.map(opt => opt?.value).filter(Boolean)
-                : selectedOption?.value || '';
-              
-            const updatedState = {
+            // Update filters with the slot value
+            setFilters(prev => ({
                 ...prev,
                 [reportType]: {
                     ...prev[reportType],
-                    [field]: newValue
+                    slot: selectedOption?.value || 0
                 }
-            };
-            
-            if (field === "group") {
-                updatedState[reportType].tag = [];
-            }
-            
-            return updatedState;
-        });
-    }
-};
+            }));
+        } else {
+            // Handle other fields
+            setFilters(prev => {
+                const newValue = Array.isArray(selectedOption)
+                    ? selectedOption.map(opt => opt?.value).filter(Boolean)
+                    : selectedOption?.value || '';
+
+                const updatedState = {
+                    ...prev,
+                    [reportType]: {
+                        ...prev[reportType],
+                        [field]: newValue
+                    }
+                };
+
+                if (field === "group") {
+                    updatedState[reportType].tag = [];
+                }
+
+                return updatedState;
+            });
+        }
+    };
 
 
     const customStyles = {
@@ -197,155 +198,155 @@ const intervaldata = intervalData?.map((item, i) => {
         })
     };
 
-  const handleSubmit = async (e, reportType) => {
-    e.preventDefault();
-    
-    // Get current filters for the report type
-    const currentFilters = filters[reportType];
-    let isValid = true;
-    let errorMessage = '';
-   
-    // Common validation for both report types
-    if (!currentFilters.group && currentFilters.tag?.length == 0) {
-        isValid = false;
-        errorMessage = 'Please select either a Group or a Tag';
-    }
+    const handleSubmit = async (e, reportType) => {
+        e.preventDefault();
 
-    // Date validation for history report
-    if (reportType === 'history') {
-        if (currentFilters.startDateTime >= currentFilters.endDateTime) {
-            isValid = false;
-            errorMessage = 'Start date/time must be before end date/time';
-        }
-    }
+        // Get current filters for the report type
+        const currentFilters = filters[reportType];
+        let isValid = true;
+        let errorMessage = '';
 
-    // Specific validations for history report
-    if (reportType === 'history') {
-        if (!currentFilters.startDateTime) {
+        // Common validation for both report types
+        if (!currentFilters.group && currentFilters.tag?.length == 0) {
             isValid = false;
-            errorMessage = 'Start Date/Time is required';
-        } else if (!currentFilters.endDateTime) {
-            isValid = false;
-            errorMessage = 'End Date/Time is required';
-        } else if (!currentFilters.timeSpan) {
-            isValid = false;
-            errorMessage = 'Time Span is required';
+            errorMessage = 'Please select either a Group or a Tag';
         }
-    } 
-    // Specific validation for flow report
-    else if (reportType === 'flow') {
-        if (!currentFilters.dateTime) {
-            isValid = false;
-            errorMessage = 'Date/Time is required';
-        }
-         if ( currentFilters.slot === "") {
-            isValid = false;
-            errorMessage = 'Slot is required';
-        }
-    }
 
-    if (!isValid) {
-        toast.error(errorMessage);
-        return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-        // Prepare the API payload
-        let payload = {
-            ...currentFilters,
-            slot: selectedSlot[reportType]?.value ?? null
-        };
-// Helper function to format dates as 'yyyy-MM-dd HH:mm'
-    const formatDate = (date, format = 'yyyy-MM-dd HH:mm') => {
-    const d = new Date(date);
-    const pad = (num) => num.toString().padStart(2, '0');
-    
-    const replacements = {
-        'yyyy': d.getFullYear(),
-        'MM': pad(d.getMonth() + 1),
-        'dd': pad(d.getDate()),
-        'HH': pad(d.getHours()),
-        'mm': pad(d.getMinutes()),
-        'ss': pad(d.getSeconds())
-    };
-
-    return format.replace(/yyyy|MM|dd|HH|mm|ss/g, match => replacements[match] || match);
-};
-    
-        // Convert dates to ISO string for the API
+        // Date validation for history report
         if (reportType === 'history') {
-             const {group,tag,...rest} = payload
-            payload = {
-                ...rest,
-                defaultLoad:null,
-                grpId:group == ""? null:group,
-                tagId:tag?.map(tags => tags).join(','),
-                startDateTime: formatDate(rest.startDateTime, 'yyyy-MM-dd HH:mm:ss'),
-                endDateTime: formatDate(rest.endDateTime, 'yyyy-MM-dd HH:mm:ss')
-            };
-        } else if (reportType === 'flow') {
-            const {dateTime,group,tag,...rest} = payload
-            payload = {
-                ...rest,
-                grpId:group == ""? null:group,
-                tagId:tag?.map(tags => tags).join(','),
-                date: formatDate(dateTime, 'yyyy-MM-dd HH:mm')
-            };
+            if (currentFilters.startDateTime >= currentFilters.endDateTime) {
+                isValid = false;
+                errorMessage = 'Start date/time must be before end date/time';
+            }
         }
 
-        // Determine which API to call based on report type
-        const apiAction = reportType === 'history' 
-            ? downloadHistoryTrendReport 
-            : downloadFlowTotalizerReport;
-
-        // Dispatch the API call
-        const result = await dispatch(apiAction(payload)).unwrap();
-
-        // Handle the file download
-        if (result && result.fileUrl) {
-            // Create a temporary link to trigger the download
-            const link = document.createElement('a');
-            link.href = result.fileUrl;
-            link.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            toast.success('Report downloaded successfully');
-            setIsLoading(false);
-        // Close the appropriate modal
-        reportType === 'history' ? toggleHistoryModal() : toggleFlowModal();
-        } else {
-            const fileExtension = reportType === 'history' ? 'zip' : 'xlsx';
-    const mimeType = reportType === 'history' 
-        ? 'application/zip' 
-        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    
-            // Handle the case where the API returns the file data directly
-            const blob = new Blob([result], { type: mimeType });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-           link.download = `${reportType === "flow" ? "flow-totalizer" : reportType}-report.${fileExtension}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            
-            toast.success('Report downloaded successfully');
-            setIsLoading(false);
-            resetFilters("history")
-            resetFilters("flow")
+        // Specific validations for history report
+        if (reportType === 'history') {
+            if (!currentFilters.startDateTime) {
+                isValid = false;
+                errorMessage = 'Start Date/Time is required';
+            } else if (!currentFilters.endDateTime) {
+                isValid = false;
+                errorMessage = 'End Date/Time is required';
+            } else if (!currentFilters.timeSpan) {
+                isValid = false;
+                errorMessage = 'Sampling Interval is required';
+            }
         }
-    } catch (error) {
-         setIsLoading(false);
-        toast.error(error?.data?.message || 'Failed to download report');
-    } finally {
-        
-    }
-};
+        // Specific validation for flow report
+        else if (reportType === 'flow') {
+            if (!currentFilters.dateTime) {
+                isValid = false;
+                errorMessage = 'Date/Time is required';
+            }
+            if (currentFilters.slot === "") {
+                isValid = false;
+                errorMessage = 'Slot is required';
+            }
+        }
+
+        if (!isValid) {
+            toast.error(errorMessage);
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            // Prepare the API payload
+            let payload = {
+                ...currentFilters,
+                slot: selectedSlot[reportType]?.value ?? null
+            };
+            // Helper function to format dates as 'yyyy-MM-dd HH:mm'
+            const formatDate = (date, format = 'yyyy-MM-dd HH:mm') => {
+                const d = new Date(date);
+                const pad = (num) => num.toString().padStart(2, '0');
+
+                const replacements = {
+                    'yyyy': d.getFullYear(),
+                    'MM': pad(d.getMonth() + 1),
+                    'dd': pad(d.getDate()),
+                    'HH': pad(d.getHours()),
+                    'mm': pad(d.getMinutes()),
+                    'ss': pad(d.getSeconds())
+                };
+
+                return format.replace(/yyyy|MM|dd|HH|mm|ss/g, match => replacements[match] || match);
+            };
+
+            // Convert dates to ISO string for the API
+            if (reportType === 'history') {
+                const { group, tag, ...rest } = payload
+                payload = {
+                    ...rest,
+                    defaultLoad: null,
+                    grpId: group == "" ? null : group,
+                    tagId: tag?.map(tags => tags).join(','),
+                    startDateTime: formatDate(rest.startDateTime, 'yyyy-MM-dd HH:mm:ss'),
+                    endDateTime: formatDate(rest.endDateTime, 'yyyy-MM-dd HH:mm:ss')
+                };
+            } else if (reportType === 'flow') {
+                const { dateTime, group, tag, ...rest } = payload
+                payload = {
+                    ...rest,
+                    grpId: group == "" ? null : group,
+                    tagId: tag?.map(tags => tags).join(','),
+                    date: formatDate(dateTime, 'yyyy-MM-dd HH:mm')
+                };
+            }
+
+            // Determine which API to call based on report type
+            const apiAction = reportType === 'history'
+                ? downloadHistoryTrendReport
+                : downloadFlowTotalizerReport;
+
+            // Dispatch the API call
+            const result = await dispatch(apiAction(payload)).unwrap();
+
+            // Handle the file download
+            if (result && result.fileUrl) {
+                // Create a temporary link to trigger the download
+                const link = document.createElement('a');
+                link.href = result.fileUrl;
+                link.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                toast.success('Report downloaded successfully');
+                setIsLoading(false);
+                // Close the appropriate modal
+                reportType === 'history' ? toggleHistoryModal() : toggleFlowModal();
+            } else {
+                const fileExtension = reportType === 'history' ? 'zip' : 'xlsx';
+                const mimeType = reportType === 'history'
+                    ? 'application/zip'
+                    : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+                // Handle the case where the API returns the file data directly
+                const blob = new Blob([result], { type: mimeType });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${reportType === "flow" ? "flow-totalizer" : reportType}-report.${fileExtension}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                toast.success('Report downloaded successfully');
+                setIsLoading(false);
+                resetFilters("history")
+                resetFilters("flow")
+            }
+        } catch (error) {
+            setIsLoading(false);
+            toast.error(error?.data?.message || 'Failed to download report');
+        } finally {
+
+        }
+    };
 
     const reportCards = [
         {
@@ -405,28 +406,28 @@ const intervaldata = intervalData?.map((item, i) => {
         loadTags()
         dispatch(getSlotsList())
         dispatch(getIntervalList())
-        dispatch(getTagGroupList({page:1,limit:1000}))
+        dispatch(getTagGroupList({ page: 1, limit: 1000 }))
     }, [])
 
-     useEffect(() => {
-            if (filters?.history?.group || filters?.flow?.group) {
-                dispatch(getTagsByGroupId(filters?.history?.group || filters?.flow?.group)).then((res) => {
-                     const options = res?.payload?.map(tag => ({
-                value: tag.id,
-                label: tag.displayTagName,
-                ...tag
-            })) || [];
-                  
-                    setTagOptions(options)
-                }).catch((err) => {
-                    console.error("Error fetching tags by group ID:", err);
-                    toast.error("Failed to fetch tags for selected group");
-                });
-            }else{
-                setTagOptions(defaulttagOptions)
-            }
-        }, [filters?.history?.group, filters?.flow?.group]);
-                                       
+    useEffect(() => {
+        if (filters?.history?.group || filters?.flow?.group) {
+            dispatch(getTagsByGroupId(filters?.history?.group || filters?.flow?.group)).then((res) => {
+                const options = res?.payload?.map(tag => ({
+                    value: tag.id,
+                    label: tag.displayTagName,
+                    ...tag
+                })) || [];
+
+                setTagOptions(options)
+            }).catch((err) => {
+                console.error("Error fetching tags by group ID:", err);
+                toast.error("Failed to fetch tags for selected group");
+            });
+        } else {
+            setTagOptions(defaulttagOptions)
+        }
+    }, [filters?.history?.group, filters?.flow?.group]);
+
 
 
     return (
@@ -457,7 +458,7 @@ const intervaldata = intervalData?.map((item, i) => {
                                     <p className="text-muted flex-grow-1">{report.description}</p>
                                     <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                                         <div className="text-muted">
-                                         
+
                                         </div>
                                         <Button
                                             color={report.color}
@@ -534,30 +535,30 @@ const intervaldata = intervalData?.map((item, i) => {
                             </Col>
                         </Row>
                         <Row>
-                             <Col md={6}>
+                            <Col md={6}>
                                 <FormGroup>
                                     <Label>Group</Label>
                                     <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
                                         value={groupOptions?.find(opt => opt.value === filters.history.group) || null}
-                                        onChange={(selected) => handleInputChange('history', 'group', selected )}
+                                        onChange={(selected) => handleInputChange('history', 'group', selected)}
                                         options={groupOptions}
                                         placeholder="Select Group"
                                         styles={customStyles}
                                         isClearable
-                                      
+
                                     />
                                 </FormGroup>
                             </Col>
-                             <Col md={6}>
+                            <Col md={6}>
                                 <FormGroup>
                                     <Label>Tag</Label>
                                     <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
-                                        value={Array.isArray(filters.history.tag) 
-                                            ? filters.history.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId)) 
+                                        value={Array.isArray(filters.history.tag)
+                                            ? filters.history.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId))
                                             : []}
                                         onChange={(selected) => handleInputChange('history', 'tag', selected || [])}
                                         options={tagOptions}
@@ -570,20 +571,20 @@ const intervaldata = intervalData?.map((item, i) => {
                                     />
                                 </FormGroup>
                             </Col>
-                           
-                           
+
+
                         </Row>
                         <Row>
                             <Col md={6}>
                                 <FormGroup>
-                                    <Label>Time Span<span className="text-danger">*</span></Label>
+                                    <Label>Sampling Interval<span className="text-danger">*</span></Label>
                                     <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
                                         value={intervaldata?.find(opt => opt.value === filters.history.timeSpan) || null}
                                         onChange={(selected) => handleInputChange('history', 'timeSpan', selected)}
                                         options={intervaldata}
-                                        placeholder="Select Time Span"
+                                        placeholder="Select Sampling Interval"
                                         styles={customStyles}
                                         isClearable
                                     />
@@ -592,7 +593,7 @@ const intervaldata = intervalData?.map((item, i) => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Slot</Label>
-                                  <Select
+                                    <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
                                         value={selectedSlot.history}
@@ -651,7 +652,7 @@ const intervaldata = intervalData?.map((item, i) => {
                             <Col md={6}>
                                 <FormGroup>
                                     <Label>Slot<span className="text-danger">*</span></Label>
-                                   <Select
+                                    <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
                                         value={selectedSlot.flow}
@@ -677,7 +678,7 @@ const intervaldata = intervalData?.map((item, i) => {
                                         placeholder="Select Group"
                                         styles={customStyles}
                                         isClearable
-                                       
+
                                     />
                                 </FormGroup>
                             </Col>
@@ -687,8 +688,8 @@ const intervaldata = intervalData?.map((item, i) => {
                                     <Select
                                         className="react-select-container"
                                         classNamePrefix="select"
-                                        value={Array.isArray(filters.flow.tag) 
-                                            ? filters.flow.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId)) 
+                                        value={Array.isArray(filters.flow.tag)
+                                            ? filters.flow.tag.map(tagId => tagOptions?.find(opt => opt.value === tagId))
                                             : []}
                                         onChange={(selected) => handleInputChange('flow', 'tag', selected || [])}
                                         options={tagOptions}

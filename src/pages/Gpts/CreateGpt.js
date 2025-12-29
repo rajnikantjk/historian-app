@@ -70,7 +70,7 @@ const CreateGpt = (props) => {
   const { slugId } = useParams();
   const { pathname } = useLocation();
   const loader = gptSubcategoryLoader || gptLoader;
-  document.title = `${slugId ? "Update" : "Create"} GPT | Augmation Tech`;
+  document.title = `${slugId ? "Update" : "Create"} GPT | AlarmIQ - Historian/ PIMS`;
 
   useEffect(() => {
     const params = {};
@@ -94,7 +94,7 @@ const CreateGpt = (props) => {
           setGptSubCategoryData(data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     setErrors({});
     if (slugId) {
       handleGetGPTData();
@@ -390,7 +390,7 @@ const CreateGpt = (props) => {
               setErrors({});
             }
           })
-          .catch((err) => {});
+          .catch((err) => { });
       } else {
         dispatch(updateGPT({ body: formdata, id: gptData[0]?._id }))
           .then((res) => {
@@ -401,7 +401,7 @@ const CreateGpt = (props) => {
               toast.error(res?.payload?.data?.message);
             }
           })
-          .catch((err) => {});
+          .catch((err) => { });
       }
     }
   };
@@ -578,8 +578,8 @@ const CreateGpt = (props) => {
                       value={
                         inputValue?.categoryId
                           ? gptSubCategoryData?.find(
-                              (item) => item?.value == inputValue?.categoryId
-                            )
+                            (item) => item?.value == inputValue?.categoryId
+                          )
                           : ""
                       }
                       onChange={(e) => {

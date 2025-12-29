@@ -1,10 +1,10 @@
 import React from 'react';
 import { Col, Container, Row } from 'reactstrap';
 
-const Footer = () => {
+const LoginFooter = () => {
     return (
         <React.Fragment>
-            <footer className="footer">
+            <footer className="login-footer">
                 <Container fluid>
                     <Row>
                         <Col sm={6}>
@@ -22,4 +22,4 @@ const Footer = () => {
     );
 };
 
-export default Footer;
+export default LoginFooter;

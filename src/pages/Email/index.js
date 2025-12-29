@@ -36,7 +36,7 @@ const EmailPage = (props) => {
   const dispatch = useDispatch();
   const isInitialLoad = useRef(true);
   const isResetting = useRef(false);
-  document.title = `Email | Augmation Tech`;
+  document.title = `Email | AlarmIQ - Historian/ PIMS`;
   const fileInputRef = useRef(null);
   const validateField = (fieldName, value) => {
     let error = null;
@@ -84,7 +84,7 @@ const EmailPage = (props) => {
             handleReset();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   };
   const handleInputChange = (e) => {
@@ -137,7 +137,7 @@ const EmailPage = (props) => {
       }));
     }
   };
-  const handleDescription = ( editor) => {
+  const handleDescription = (editor) => {
     if (isResetting.current) {
       return;
     }
@@ -154,18 +154,18 @@ const EmailPage = (props) => {
   };
 
 
-   const handleReset = () => {
-     isResetting.current = true;
-     setInputValue({
-       subject: "",
-       description: "",
-     });
-     setErrors({});
-     fileInputRef.current.value = null;
-     setTimeout(() => {
-       isResetting.current = false;
-     }, 0);
-   };
+  const handleReset = () => {
+    isResetting.current = true;
+    setInputValue({
+      subject: "",
+      description: "",
+    });
+    setErrors({});
+    fileInputRef.current.value = null;
+    setTimeout(() => {
+      isResetting.current = false;
+    }, 0);
+  };
   return (
     <div className="page-content">
       {newsLatterLoader && <Loader />}
@@ -308,8 +308,8 @@ const EmailPage = (props) => {
                   </Label>
 
                   <div className="editor-container">
-                
-                   
+
+
                   </div>
                 </div>
               </CardBody>

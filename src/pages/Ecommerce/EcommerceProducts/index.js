@@ -925,7 +925,7 @@ const EcommerceProducts = (props) => {
                       </div>
 
                       <div className="mt-4">
-                        <h5>Sorry! No Result Found</h5>
+                        <h5>No Record Found</h5>
                       </div>
                     </div>
                   )}

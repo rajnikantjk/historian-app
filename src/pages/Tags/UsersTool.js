@@ -34,7 +34,7 @@ const AdditionalOption = [
   { label: "OFFLINE", value: "false" },
 ];
 const index = () => {
-  document.title = "Users Tool | Augmation Tech";
+  document.title = "Users Tool | AlarmIQ - Historian/ PIMS";
   const ToolRedirectLink = process.env.REACT_APP_TOOl_URL
 
   const dispatch = useDispatch();
@@ -178,10 +178,10 @@ const index = () => {
               row?.status === "pending"
                 ? "text-warning"
                 : row?.status === "approved"
-                ? "text-success"
-                : row?.status === "rejected"
-                ? "text-danger"
-                : null
+                  ? "text-success"
+                  : row?.status === "rejected"
+                    ? "text-danger"
+                    : null
             }
           >
             <b style={{ "text-transform": "capitalize" }}>{row?.status}</b>

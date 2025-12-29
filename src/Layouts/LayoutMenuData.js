@@ -12,9 +12,9 @@ const Navdata = () => {
   const [isToolsList, setIsToolsList] = useState(false);
   const [isGpts, setIsGpts] = useState(false);
   const [isGptCategory, setIsGptCategory] = useState(false);
-  const [isNewsLatter, setIsNewsLatter] = useState(false); 
+  const [isNewsLatter, setIsNewsLatter] = useState(false);
   const [iscurrentState, setIscurrentState] = useState("Dashboard");
- const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+  const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
   const updateIconSidebar = (e) => {
     if (e && e.target && e.target.getAttribute("subitems")) {
       const ul = document.getElementById("two-column-menu");
@@ -68,7 +68,7 @@ const Navdata = () => {
     isTools,
     isCategoryTools,
     isToolsList,
-    isGpts,isGptCategory
+    isGpts, isGptCategory
   ]);
 
 
@@ -141,64 +141,65 @@ const Navdata = () => {
       icon: "ri-history-line",
       link: "/history-trend",
     },
-     userRole == "ROLE_ADMIN" ?{
-      label: "Configuration Management",
+    {
+      label: "Report Management",
       isHeader: true,
-    }:[],
-     userRole == "ROLE_ADMIN" ? {
+    },
+    userRole == "ROLE_ADMIN" ? {
       id: "scheduler-configuration",
       label: "Scheduler Configuration",
       icon: "ri-time-line",
       link: "/scheduler-configuration",
     } : [],
-  userRole == "ROLE_ADMIN" ? {
-      id: "settings",
-      label: "General Settings",
-      icon: "ri-settings-3-line",
-      link: "/settings",
-    } : [],
-     userRole == "ROLE_ADMIN" ? {
+
+    {
       id: "reports",
       label: "Reports",
       icon: "ri-file-list-3-line",
       link: "/reports",
+    },
+    userRole == "ROLE_ADMIN" ? {
+      id: "settings",
+      label: "General Setting (OPC Control)",
+      icon: "ri-settings-3-line",
+      link: "/settings",
     } : [],
-    
- 
-      
-        // {
-        //   id: "toollist",
-        //   label: "Tools List",
-        //   stateVariables: isToolsList,
-        //   icon: "ri-apps-line",
 
-        //   click: (e) => {
-        //     e.preventDefault();
-        //     setIsToolsList(!isToolsList);
-        //     setIscurrentState("toollist");
-        //     updateIconSidebar(e);
-        //   },
-        //   subItems: [
-        
-        //     {
-        //       id: "admin-tools",
-        //       label: "Admin Tools",
-        //       link: "/admin-tool",
-        //       parentId: "toollist",
-        //     },
-        //     {
-        //       id: "user-tools",
-        //       label: "User Tools",
-        //       link: "/users-tool",
-        //       parentId: "toollist",
-        //     },    {
-        //       id: "add-tool",
-        //       label: "Add New AI Tool",
-        //       link: "/create-tool",
-        //       parentId: "toollist",
-        //     },
-        //   ],
-        // },
+
+
+    // {
+    //   id: "toollist",
+    //   label: "Tools List",
+    //   stateVariables: isToolsList,
+    //   icon: "ri-apps-line",
+
+    //   click: (e) => {
+    //     e.preventDefault();
+    //     setIsToolsList(!isToolsList);
+    //     setIscurrentState("toollist");
+    //     updateIconSidebar(e);
+    //   },
+    //   subItems: [
+
+    //     {
+    //       id: "admin-tools",
+    //       label: "Admin Tools",
+    //       link: "/admin-tool",
+    //       parentId: "toollist",
+    //     },
+    //     {
+    //       id: "user-tools",
+    //       label: "User Tools",
+    //       link: "/users-tool",
+    //       parentId: "toollist",
+    //     },    {
+    //       id: "add-tool",
+    //       label: "Add New AI Tool",
+    //       link: "/create-tool",
+    //       parentId: "toollist",
+    //     },
+    //   ],
+    // },
     //     {
     //       label: "GPT Store",
     //       isHeader: true,
@@ -242,7 +243,7 @@ const Navdata = () => {
     //     updateIconSidebar(e);
     //       },
     //       subItems: [
-       
+
     //     {
     //       id: "gpts-list",
     //       label: "GPT List",

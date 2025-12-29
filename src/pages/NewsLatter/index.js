@@ -21,7 +21,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { getNewsLatter } from "../../slices/newsLatter";
 import CommonModal from "../../Components/Common/CommonModal";
 const index = () => {
-  document.title = "Tool | Augmation Tech";
+  document.title = "Tool | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
   const { newsLatterCount, newsLatterData, newsLatterLoader } = useSelector(
@@ -69,10 +69,10 @@ const index = () => {
       );
     }
   }, [searchValue, page]);
-    const handleValidDate = (date) => {
-      const date1 = moment(new Date(date)).format("DD MMM Y");
-      return date1;
-    };
+  const handleValidDate = (date) => {
+    const date1 = moment(new Date(date)).format("DD MMM Y");
+    return date1;
+  };
   const columns = useMemo(() => [
     {
       Header: "Subject",
@@ -86,7 +86,7 @@ const index = () => {
       Header: "Created At",
       Cell: (cellProps) => (
         <>{handleValidDate(cellProps?.row?.original?.createdAt)}</>
-      ),  
+      ),
     },
 
     {

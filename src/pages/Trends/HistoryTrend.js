@@ -192,7 +192,7 @@ const getMultiSelectStyles = (theme = 'light') => {
 const HistoryTrend = () => {
     // Get the current theme (you might need to adjust this based on your theme implementation)
     const [theme, setTheme] = useState('light');
-
+    document.title = "History Trend | AlarmIQ - Historian/ PIMS";
     // Get the appropriate styles based on the current theme
     const singleSelectStyle = getSelectStyles(theme);
     const multiSelectStyle = getMultiSelectStyles(theme);
@@ -553,7 +553,7 @@ const HistoryTrend = () => {
     const tagOptions = React.useMemo(() => {
         const tagList = tagDataByGroup?.map((tag) => ({
             value: tag.id,
-            label:tag.displayTagName ?? tag?.tagName
+            label: tag.displayTagName ?? tag?.tagName
         })) || [];
 
         // Show "Deselect All" only when ALL tags are selected, otherwise show "Select All"
@@ -767,7 +767,7 @@ const HistoryTrend = () => {
                 startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
                 endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
                 tagId: tagIdValue,
-                defaultLoad:null,
+                defaultLoad: null,
                 slot: selectedSlot?.value ?? null, // Add selected slot to payload, default to 0 if not selected
             }
             dispatch(
@@ -876,7 +876,7 @@ const HistoryTrend = () => {
             ? selectedTagIds.map(tag => tag.value).join(',')
             : null;
         let payload = {
-            defaultLoad:null,
+            defaultLoad: null,
             grpId: values?.grpId?.value,
             timeSpan: values?.interval?.value,
             // interval: values?.interval?.value,
@@ -885,13 +885,13 @@ const HistoryTrend = () => {
             tagId: tagIdValue,
             slot: selectedSlot?.value ?? null, // Add selected slot to payload, default to 0 if not selected
         }
-        
+
         dispatch(downloadHistoryTrendReport(payload)).then((res) => {
-                
-            if (res?.payload?.status){
+
+            if (res?.payload?.status) {
                 toast.error("Something went wrong")
                 setLoading(false)
-            }else {
+            } else {
                 const blob = new Blob([res.payload], {
                     type: 'application/zip',
                 });
@@ -927,7 +927,7 @@ const HistoryTrend = () => {
             endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
             tagId: tagIdValue,
             defaultLoad: null,
-            timeSpan:values?.interval?.value,
+            timeSpan: values?.interval?.value,
             slot: selectedSlot?.value ?? null,
         }
         dispatch(
@@ -1082,19 +1082,19 @@ const HistoryTrend = () => {
                                         </div>
                                         <div className="history-filter">
                                             <label className="filter-label">Slots </label>
-                                            <Select 
+                                            <Select
                                                 options={slotsData?.map(item => ({
                                                     value: item.value,
                                                     label: item.key
-                                                }))} 
-                                                className="history-select" 
-                                                placeholder="Select Slot" 
+                                                }))}
+                                                className="history-select"
+                                                placeholder="Select Slot"
                                                 isClearable
-                                                styles={singleSelectStyle} 
+                                                styles={singleSelectStyle}
                                                 value={selectedSlot}
                                                 onChange={(e) => {
                                                     setSelectedSlot(e);
-                                                }} 
+                                                }}
                                             />
                                         </div>
                                         <div className="history-actions position-relative">
@@ -1111,7 +1111,7 @@ const HistoryTrend = () => {
                                                     <path d="M13.5 5.5h3v1h-3zM18.5 5.5h3v1h-3zM13.5 8.5h3v1h-3zM18.5 8.5h3v1h-3zM13.5 11.5h3v1h-3zM18.5 11.5h3v1h-3zM13.5 14.5h3v1h-3zM18.5 14.5h3v1h-3zM13.5 17.5h3v1h-3zM18.5 17.5h3v1h-3zM4.5 8.5l4 8M4.5 16.5l4-8" />
                                                 </svg>
                                                 <span className="mx-1 text-white">Export</span>
-                                            </div> 
+                                            </div>
                                             <Button
                                                 color="light"
                                                 className="history-action-btn "
@@ -1147,11 +1147,11 @@ const HistoryTrend = () => {
                                                 <th>Eng Unit</th>
                                                 <th>Description</th>
                                                 <th>Current Value</th>
-                                                <th>Standard Division Value</th>
+
                                                 <th>Minimum</th>
                                                 <th>Maximum</th>
                                                 <th>Average</th>
-
+                                                <th>Standard Deviation</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1161,11 +1161,11 @@ const HistoryTrend = () => {
                                                     <td>{row.unitName}</td>
                                                     <td>{row.description}</td>
                                                     <td>{row?.itemValue}</td>
-                                                    <td>{row?.stdDevValue}</td>
+
                                                     <td>{row.minValue}</td>
                                                     <td>{row.maxValue}</td>
                                                     <td>{row.avgValue}</td>
-
+                                                    <td>{row?.stdDevValue}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

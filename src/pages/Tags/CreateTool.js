@@ -65,7 +65,7 @@ const CreateTool = (props) => {
   const dispatch = useDispatch();
   const { slugId } = useParams();
   const { pathname } = useLocation();
-  document.title = `${slugId ? "Update" : "Create"}  Tool | Augmation Tech`;
+  document.title = `${slugId ? "Update" : "Create"}  Tool | AlarmIQ - Historian/ PIMS`;
 
   useEffect(() => {
     const params = {};
@@ -88,7 +88,7 @@ const CreateTool = (props) => {
           setToolSubCategoryData(data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     setErrors({});
     if (slugId) {
       handleGetToolData();
@@ -302,7 +302,7 @@ const CreateTool = (props) => {
               toast.error(res?.payload?.data?.message);
             }
           })
-          .catch((err) => {});
+          .catch((err) => { });
       } else {
         // dispatch(updateAiTool({ body: formdata, id: toolData[0]?._id }))
         //   .then((res) => {
@@ -393,7 +393,7 @@ const CreateTool = (props) => {
     });
   };
 
-  const handleDescription = ( editor) => {
+  const handleDescription = (editor) => {
     const data = editor
     setInputValue({
       ...inputValue,
@@ -680,8 +680,8 @@ const CreateTool = (props) => {
                       value={
                         inputValue?.category
                           ? toolSubCategoryData?.find(
-                              (item) => item?.value == inputValue?.category
-                            )
+                            (item) => item?.value == inputValue?.category
+                          )
                           : ""
                       }
                       onChange={(e) => {
@@ -708,10 +708,10 @@ const CreateTool = (props) => {
                       value={
                         inputValue?.relatedCategory?.length
                           ? toolSubCategoryData?.filter((item, i) =>
-                              inputValue?.relatedCategory?.some(
-                                (val) => item?.value == val
-                              )
+                            inputValue?.relatedCategory?.some(
+                              (val) => item?.value == val
                             )
+                          )
                           : ""
                       }
                       isMulti={true}
@@ -781,21 +781,21 @@ const CreateTool = (props) => {
                   </Label>
 
                   <div className="editor-container">
-                   
+
                   </div>
                 </div>{" "}
                 <div className="row">
                   <div className="col-12 col-sm-6">
                     <Label>Pros</Label>
                     <div className="proseditor-container">
-                     
+
                     </div>
                   </div>
                   <div className="col-12 col-sm-6">
                     <Label>Cons</Label>
                     <div className="proseditor-container">
-                     
-                    
+
+
                     </div>
                   </div>
                 </div>
