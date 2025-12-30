@@ -26,7 +26,7 @@ import moment from "moment";
 import Loader from "../../Components/Common/Loader";
 import { ToastContainer, toast } from "react-toastify";
 import DeleteModal from "../../Components/Common/DeleteModal";
-import { UpdateAiSubCategory, getTaglist, getSchedulerList, AddNewGroupDetails, EditGroupDetails, DeleteGroupData, getSlotsList, getReportTypeList, saveSchdule, DeleteScheduleData } from "../../slices/tools";
+import { UpdateAiSubCategory, getTaglist, getSchedulerList, AddNewGroupDetails, EditGroupDetails, DeleteGroupData, getSlotsList, getReportTypeList, saveSchdule, DeleteScheduleData, getIntervalList, getTagGroupList, getTagsByGroupId } from "../../slices/tools";
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import DatePicker from 'react-datepicker';
@@ -42,7 +42,7 @@ const ScheduleConfig = () => {
   document.title = "Scheduler List | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
-  const { schedulerListCount, slotsData, reportListData, schedulerListData, toolLoader, toolCategoryData } = useSelector(
+  const { schedulerListCount, slotsData, reportListData, toolSubCategoryData, intervalData, schedulerListData, toolLoader, toolCategoryData } = useSelector(
     (state) => state.Tool
   );
   const categoriesData = [
@@ -103,6 +103,17 @@ const ScheduleConfig = () => {
       hour12: false
     });
   };
+  const groupOptions = toolSubCategoryData?.map(item => ({
+    value: item?.id,
+    label: item?.grpName,
+  }))
+
+  const intervaldata = intervalData?.map((item, i) => {
+    return {
+      value: item?.value,
+      label: item?.key,
+    };
+  }).filter((data) => data != undefined);
 
   // Scheduler form state
   const [schedulerForm, setSchedulerForm] = useState(() => {
@@ -124,9 +135,11 @@ const ScheduleConfig = () => {
   });
 
   const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [tagOptions, setTagOptions] = useState([]);
+  const [defaulttagOptions, setDefaultTagOptions] = useState([]);
   const [isLoadingTags, setIsLoadingTags] = useState(false);
-
+  console.log("selectedGroup", selectedGroup, schedulerForm)
   const reportTypeOptions = reportListData?.map(item => ({
     value: item,
     label: item
@@ -165,6 +178,9 @@ const ScheduleConfig = () => {
       })) || [];
 
       setTagOptions(options);
+      if (!inputValue) {
+        setDefaultTagOptions(options);
+      }
       return options;
     } catch (error) {
       console.error('Error loading tags:', error);
@@ -183,6 +199,58 @@ const ScheduleConfig = () => {
       tagIds: newSelectedTags.map(tag => tag.value).join(','),
       displayTagNames: newSelectedTags.map(tag => tag.label).join(','),
     }));
+  };
+
+  const handleGroupChange = (selectedOption) => {
+    setSelectedGroup(selectedOption || null);
+
+    if (selectedOption?.value) {
+      setIsLoadingTags(true);
+      setSchedulerForm(prev => ({
+        ...prev,
+        grpId: selectedOption.value
+      }));
+
+      // Fetch tags for the selected group
+      dispatch(getTagsByGroupId(selectedOption.value))
+        .then((res) => {
+          const options = res?.payload?.map(tag => ({
+            value: tag.id,
+            label: tag.displayTagName,
+            ...tag
+          })) || [];
+
+          setTagOptions(options);
+
+          // Filter currently selected tags to only those that exist in the new group
+          // Optional: decide if you want to clear tags or keep valid ones
+          // For now, let's keep valid ones
+
+          const validSelectedTags = []
+
+          setSelectedTags(validSelectedTags);
+          setSchedulerForm(prev => ({
+            ...prev,
+            tagIds: validSelectedTags.map(tag => tag.value).join(','),
+            displayTagNames: validSelectedTags.map(tag => tag.label).join(','),
+          }));
+        })
+        .catch((err) => {
+          console.error("Error fetching tags by group ID:", err);
+          toast.error("Failed to fetch tags for selected group");
+          setTagOptions([]);
+        })
+        .finally(() => {
+          setIsLoadingTags(false);
+        });
+    } else {
+      // Reset to all tags if group is cleared
+      setTagOptions(defaulttagOptions);
+      setSchedulerForm(prev => ({
+        ...prev,
+        grpId: ''
+      }));
+    }
   };
 
   // Handle input change for the form
@@ -324,10 +392,23 @@ const ScheduleConfig = () => {
       errors.storagePath = 'Storage path is required';
     }
 
-    if (selectedTags?.length == 0) {
-      errors.tagIds = 'Tag is required';
+    if (!schedulerForm.grpId && (!selectedTags || selectedTags.length === 0)) {
+      const msg = 'Please select either a Group or Tags';
+      errors.tagIds = msg;
+      errors.grpId = msg;
     }
 
+    if (schedulerForm.reportType === 'FLOW_TOTALIZER') {
+      if (!schedulerForm.slot) {
+        errors.slot = 'Slot is required';
+      }
+    }
+
+    if (schedulerForm.reportType === 'HISTORY_TREND_REPORT') {
+      if (!schedulerForm.timeSpan) {
+        errors.timeSpan = 'Sampling Interval is required';
+      }
+    }
 
     // Update form errors state
     setFormErrors(errors);
@@ -351,6 +432,7 @@ const ScheduleConfig = () => {
           schedulerForm.startTime) :
         '00:00:00',
       tagIds: selectedTags.map(tag => tag.value).join(','),
+      grpId: schedulerForm.grpId,
     };
 
     // Here you would typically dispatch an action to save the scheduler
@@ -410,6 +492,8 @@ const ScheduleConfig = () => {
     setRowId("");
     // Clear selected tags when opening the add new schedule modal
     setSelectedTags([]);
+    setSelectedGroup(null);
+    setTagOptions(defaulttagOptions); // Reset tags to full list
     setSchedulerForm(() => {
       const nextSlot = getNext15MinuteSlot();
       return {
@@ -425,6 +509,7 @@ const ScheduleConfig = () => {
         isActive: 'Y',
         description: '',
         tagIds: [],
+        grpId: '' // Reset grpId
       };
     })
   };
@@ -432,6 +517,8 @@ const ScheduleConfig = () => {
     loadTags()
     dispatch(getSlotsList())
     dispatch(getReportTypeList())
+    dispatch(getIntervalList())
+    dispatch(getTagGroupList({ page: 1, limit: 1000 }))
   }, [])
 
   useEffect(() => {
@@ -543,6 +630,8 @@ const ScheduleConfig = () => {
       // Set the form state with the item data
       setSchedulerForm({
         ...itemWithoutTags,
+        slot: parseInt(item?.slot),
+        timeSpan: parseInt(item?.timeSpan),
         intervalHours: item?.intervalTime?.split(":")[0] || '0',
         intervalMinutes: item?.intervalTime?.split(":")[1] || '0',
         startDate: item?.startDate ? moment(item.startDate)._d : moment(),
@@ -555,6 +644,8 @@ const ScheduleConfig = () => {
         value: tag.value,
         label: tag.label || tag.displayTagName || tag.value
       })));
+
+      setSelectedGroup({ value: item?.grpId, label: item?.grpName });
 
       // Open the modal
       setAddModal(true);
@@ -770,6 +861,7 @@ const ScheduleConfig = () => {
 
       <Modal isOpen={addModal} size="lg" id="schedulerModal">
         <ModalHeader
+          className="bg-primary text-white"
           toggle={() => {
             setAddModal(false);
             setSchedulerForm({
@@ -789,262 +881,323 @@ const ScheduleConfig = () => {
             setSelectedTags([]);
             setFormErrors({});
           }}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => {
+              setAddModal(false);
+              setSchedulerForm({
+                id: null,
+                taskName: '',
+                reportType: '',
+                startDate: new Date(),
+                startTime: '00:00',
+                intervalTime: '01:00',
+                storagePath: '',
+                slot: null,
+                isActive: 'Y',
+                description: '',
+                tagIds: [],
+
+              });
+              setSelectedTags([]);
+              setFormErrors({});
+            }} />
+          }
         >
-          {rowId ? "Update Schedule" : "Add New Schedule"}
+          <span className="text-white">{rowId ? "Update Schedule" : "Add New Schedule"}</span>
         </ModalHeader>
         <ModalBody>
           <form onSubmit={handleSchedulerSubmit}>
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <div>
-                  <label className="form-label">Task Name </label>
-                  <span className="text-danger">* {formErrors.taskName}</span>
-                </div>
-                <Input
-                  type="text"
-                  className={`form-control ${formErrors.taskName ? 'is-invalid' : ''}`}
-                  placeholder="Enter task name"
-                  name="taskName"
-                  value={schedulerForm.taskName || ''}
-                  onChange={handleSchedulerChange}
-                />
-
-              </div>
-
-              <div className="col-md-6 mb-3">
-                <div>
-                  <label className="form-label">Report Type </label>
-                  <span className="text-danger text-xs font-normal"> *{formErrors?.reportType}</span>
-
-                </div>
-                <Select
-                  className="react-select"
-                  classNamePrefix="select"
-                  options={reportTypeOptions}
-                  value={reportTypeOptions.find(option => option.value === schedulerForm.reportType) || null}
-                  onChange={(selected) => {
-                    setSchedulerForm(prev => ({
-                      ...prev,
-                      reportType: selected?.value || ''
-                    }));
-                    if (formErrors.reportType) {
-                      setFormErrors(prev => ({
-                        ...prev,
-                        reportType: undefined
-                      }));
-                    }
-                  }}
-                  // className={`react-select ${formErrors.reportType ? 'is-invalid' : ''}`}
-                  // classNamePrefix="select"
-                  placeholder="Select Report Type"
-                />
-                {formErrors.reportType && <div className="invalid-feedback">{formErrors.reportType}</div>}
-              </div>
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Start Date <span className="text-danger">*</span></label>
-                <div>
-                  <DatePicker
-                    selected={schedulerForm.startDate ? new Date(schedulerForm.startDate) : null}
-                    onChange={(date) => {
-                      handleDateChange(date);
-                      if (formErrors.startDate) {
-                        setFormErrors(prev => ({
-                          ...prev,
-                          startDate: undefined
-                        }));
-                      }
-                    }}
-                    className={`form-control ${formErrors.startDate ? 'is-invalid' : ''}`}
-                    dateFormat="yyyy-MM-dd"
-                    minDate={new Date()}
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Start Time <span className="text-danger">*</span></label>
-                <div>
-                  <DatePicker
-                    selected={schedulerForm.startTime ? parseTimeString(schedulerForm.startTime) : null}
-                    onChange={(time) => {
-                      handleTimeChange(moment(time).format('HH:mm'), 'startTime');
-                      if (formErrors.startTime) {
-                        setFormErrors(prev => ({
-                          ...prev,
-                          startTime: undefined
-                        }));
-                      }
-                    }}
-                    showTimeSelect
-                    showTimeSelectOnly
-                    timeIntervals={timeIntervals}
-                    timeCaption="Time"
-                    dateFormat="h:mm aa"
-                    className={`form-control ${formErrors.startTime ? 'is-invalid' : ''}`}
-                    filterTime={filterPassedTime}
-                    minTime={schedulerForm.startDate &&
-                      schedulerForm.startDate.getDate() === new Date().getDate() &&
-                      schedulerForm.startDate.getMonth() === new Date().getMonth() &&
-                      schedulerForm.startDate.getFullYear() === new Date().getFullYear()
-                      ? new Date()
-                      : new Date().setHours(0, 0, 0, 0)
-                    }
-                    maxTime={new Date().setHours(23, 59, 59, 999)}
-                    placeholderText="Select start time"
-                  />
-                </div>
-              </div>
-              <div className="col-12 mb-3">
-                <div>
-                  <label className="form-label">Tags </label>
-                  <span className="text-danger text-xs font-normal"> *{formErrors?.tagIds}</span>
-                </div>
-                <Select
-                  isMulti
-                  cacheOptions
-                  defaultOptions
-                  options={tagOptions}
-                  value={selectedTags}
-                  onChange={handleTagChange}
-                  getOptionValue={option => option.value}
-                  getOptionLabel={option => option.label}
-                  placeholder="Search and select tags..."
-                  loadingMessage={() => "Loading tags..."}
-                  noOptionsMessage={() => "No tags found"}
-                  isLoading={isLoadingTags}
-                  className="react-select"
-                  classNamePrefix="select"
-                  closeMenuOnSelect={false}
-                />
-              </div>
-
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Slot</label>
-                <Select
-                  className="react-select-container"
-                  classNamePrefix="select"
-                  options={slotOptions}
-                  isClearable
-                  value={slotOptions.find(option => option.value === schedulerForm.slot) || null}
-                  onChange={(selected) => setSchedulerForm(prev => ({
-                    ...prev,
-                    slot: selected?.value ?? null
-                  }))}
-                  placeholder="Select Slot"
-                />
-              </div>
-              <div className="col-md-6 mb-3">
-                <div>
-                  <label className="form-label">Interval   </label>
-                  <span className="text-danger"> *{formErrors.interval}</span>
-                </div>
-                <div className={`d-flex gap-2 ${formErrors.interval ? 'is-invalid' : ''}`}>
-                  <div className="flex-grow-1 position-relative">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="9000"
-                      value={schedulerForm.intervalHours}
-                      onChange={(e) => {
-                        const hours = Math.min(9000, Math.max(0, parseInt(e.target.value)));
-                        setSchedulerForm(prev => ({
-                          ...prev,
-                          intervalHours: hours
-                        }));
-                      }}
-                      className="form-control pe-5"
-                    />
-                    <span className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted">
-                      Hours
-                    </span>
+              <div className="col-12">
+                <div className="card border shadow-none mb-3">
+                  <div className="card-header border-bottom" style={{ backgroundColor: '#dadfe7d3' }}>
+                    <h6 className="mb-0 text-uppercase fw-semibold">Schedule Config</h6>
                   </div>
-                  <div className="flex-grow-1 position-relative">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="59"
-                      value={schedulerForm.intervalMinutes}
-                      onChange={(e) => {
-                        const minutes = Math.min(59, Math.max(0, parseInt(e.target.value)));
-                        setSchedulerForm(prev => ({
-                          ...prev,
-                          intervalMinutes: minutes
-                        }));
-                      }}
-                      className="form-control pe-5"
-                    />
-                    <span className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted">
-                      Mins
-                    </span>
+                  <div className="card-body">
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <div>
+                          <label className="form-label">Task Name </label>
+                          <span className="text-danger">* {formErrors.taskName}</span>
+                        </div>
+                        <Input
+                          type="text"
+                          className={`form-control ${formErrors.taskName ? 'is-invalid' : ''}`}
+                          placeholder="Enter task name"
+                          name="taskName"
+                          value={schedulerForm.taskName || ''}
+                          onChange={handleSchedulerChange}
+                        />
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <div>
+                          <label className="form-label">Report Type </label>
+                          <span className="text-danger text-xs font-normal"> *{formErrors?.reportType}</span>
+                        </div>
+                        <Select
+                          className="react-select"
+                          classNamePrefix="select"
+                          options={reportTypeOptions}
+                          value={reportTypeOptions.find(option => option.value === schedulerForm.reportType) || null}
+                          onChange={(selected) => {
+                            setSchedulerForm(prev => ({
+                              ...prev,
+                              reportType: selected?.value || ''
+                            }));
+                            if (formErrors.reportType) {
+                              setFormErrors(prev => ({
+                                ...prev,
+                                reportType: undefined
+                              }));
+                            }
+                          }}
+                          placeholder="Select Report Type"
+                        />
+                        {formErrors.reportType && <div className="invalid-feedback">{formErrors.reportType}</div>}
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Start Date <span className="text-danger">*</span></label>
+                        <div>
+                          <DatePicker
+                            selected={schedulerForm.startDate ? new Date(schedulerForm.startDate) : null}
+                            onChange={(date) => {
+                              handleDateChange(date);
+                              if (formErrors.startDate) {
+                                setFormErrors(prev => ({
+                                  ...prev,
+                                  startDate: undefined
+                                }));
+                              }
+                            }}
+                            className={`form-control ${formErrors.startDate ? 'is-invalid' : ''}`}
+                            dateFormat="yyyy-MM-dd"
+                            minDate={new Date()}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Start Time <span className="text-danger">*</span></label>
+                        <div>
+                          <DatePicker
+                            selected={schedulerForm.startTime ? parseTimeString(schedulerForm.startTime) : null}
+                            onChange={(time) => {
+                              handleTimeChange(moment(time).format('HH:mm'), 'startTime');
+                              if (formErrors.startTime) {
+                                setFormErrors(prev => ({
+                                  ...prev,
+                                  startTime: undefined
+                                }));
+                              }
+                            }}
+                            showTimeSelect
+                            showTimeSelectOnly
+                            timeIntervals={timeIntervals}
+                            timeCaption="Time"
+                            dateFormat="h:mm aa"
+                            className={`form-control ${formErrors.startTime ? 'is-invalid' : ''}`}
+                            filterTime={filterPassedTime}
+                            minTime={schedulerForm.startDate &&
+                              schedulerForm.startDate.getDate() === new Date().getDate() &&
+                              schedulerForm.startDate.getMonth() === new Date().getMonth() &&
+                              schedulerForm.startDate.getFullYear() === new Date().getFullYear()
+                              ? new Date()
+                              : new Date().setHours(0, 0, 0, 0)
+                            }
+                            maxTime={new Date().setHours(23, 59, 59, 999)}
+                            placeholderText="Select start time"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <div>
+                          <label className="form-label">Interval </label>
+                          <span className="text-danger"> *{formErrors.interval}</span>
+                        </div>
+                        <div className={`d-flex gap-2 ${formErrors.interval ? 'is-invalid' : ''}`}>
+                          <div className="flex-grow-1 position-relative">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="9000"
+                              value={schedulerForm.intervalHours}
+                              onChange={(e) => {
+                                const hours = Math.min(9000, Math.max(0, parseInt(e.target.value)));
+                                setSchedulerForm(prev => ({
+                                  ...prev,
+                                  intervalHours: hours
+                                }));
+                              }}
+                              className="form-control pe-5"
+                            />
+                            <span className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted">Hours</span>
+                          </div>
+                          <div className="flex-grow-1 position-relative">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="59"
+                              value={schedulerForm.intervalMinutes}
+                              onChange={(e) => {
+                                const minutes = Math.min(59, Math.max(0, parseInt(e.target.value)));
+                                setSchedulerForm(prev => ({
+                                  ...prev,
+                                  intervalMinutes: minutes
+                                }));
+                              }}
+                              className="form-control pe-5"
+                            />
+                            <span className="position-absolute end-0 top-50 translate-middle-y me-3 text-muted">Mins</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="col-md-6 mb-3">
+                        <div>
+                          <label className="form-label">Storage Path </label>
+                          <span className="text-danger"> * {formErrors.storagePath}</span>
+                        </div>
+                        <div className="input-group">
+                          <Input
+                            type="text"
+                            className={`form-control`}
+                            placeholder="Add storage path"
+                            name="storagePath"
+                            value={schedulerForm.storagePath || ''}
+                            onChange={handleSchedulerChange}
+                            readOnly={false}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-6 mb-3">
+                        <label className="form-label">Description</label>
+                        <Input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter description"
+                          name="description"
+                          value={schedulerForm.description}
+                          onChange={handleSchedulerChange}
+                        />
+                      </div>
+
+                      <div className="col-6 mb-3">
+                        <label className="form-label d-block">Status</label>
+                        <div className="border border-gray-400 rounded py-1 px-2 d-flex align-items-center" style={{ border: `1px solid #ced4da !important` }}>
+                          <div className="form-check form-switch form-switch-lg mb-0" dir="ltr">
+                            <Input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="isActive"
+                              name="isActive"
+                              checked={schedulerForm.isActive === "Y"}
+                              onChange={(e) => setSchedulerForm(prev => ({
+                                ...prev,
+                                isActive: e.target.checked ? 'Y' : 'N'
+                              }))}
+                            />
+                            <label className="form-check-label ms-2 fw-medium" htmlFor="isActive">
+                              {schedulerForm.isActive === "Y" ? "Active" : "Inactive"}
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="col-12 mb-3">
-                <div>
-                  <label className="form-label">Storage Path </label>
+              <div className="col-12">
+                <div className="card border shadow-none ">
+                  <div className="card-header border-bottom" style={{ backgroundColor: '#dadfe7d3' }}>
+                    <h6 className="mb-0 text-uppercase fw-semibold">Report Filter</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row">
+                      <div className="col-6 mb-3">
+                        <div>
+                          <label className="form-label">Group </label>
+                          <span className="text-danger text-xs font-normal"> {formErrors?.grpId}</span>
+                        </div>
+                        <Select
+                          isClearable
+                          cacheOptions
+                          defaultOptions
+                          options={groupOptions}
+                          value={selectedGroup}
+                          onChange={handleGroupChange}
+                          getOptionValue={option => option.value}
+                          getOptionLabel={option => option.label}
+                          placeholder="Search and select group..."
+                          loadingMessage={() => "Loading group..."}
+                          noOptionsMessage={() => "No group found"}
+                          isLoading={isLoadingTags}
+                          className="react-select"
+                          classNamePrefix="select"
+                        />
+                      </div>
 
-                  <span className="text-danger">
-                    * {formErrors.storagePath}
-                  </span>
+                      <div className="col-12 mb-3">
+                        <div>
+                          <label className="form-label">Tags </label>
+                          <span className="text-danger text-xs font-normal"> {formErrors?.tagIds}</span>
+                        </div>
+                        <Select
+                          isMulti
+                          cacheOptions
+                          defaultOptions
+                          options={tagOptions}
+                          value={selectedTags}
+                          onChange={handleTagChange}
+                          getOptionValue={option => option.value}
+                          getOptionLabel={option => option.label}
+                          placeholder="Search and select tags..."
+                          loadingMessage={() => "Loading tags..."}
+                          noOptionsMessage={() => "No tags found"}
+                          isLoading={isLoadingTags}
+                          className="react-select"
+                          classNamePrefix="select"
+                          closeMenuOnSelect={false}
+                        />
+                      </div>
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Slot {schedulerForm.reportType === 'FLOW_TOTALIZER' && <span className="text-danger">*</span>} {formErrors.slot && <span className="text-danger text-xs font-normal">{formErrors.slot}</span>}</label>
+                        <Select
+                          className="react-select-container"
+                          classNamePrefix="select"
+                          options={slotOptions}
+                          isClearable
+                          value={slotOptions.find(option => option.value === schedulerForm.slot) || null}
+                          onChange={(selected) => setSchedulerForm(prev => ({
+                            ...prev,
+                            slot: selected?.value ?? null
+                          }))}
+                          placeholder="Select Slot"
+                        />
+                      </div>
+                      {schedulerForm.reportType !== 'FLOW_TOTALIZER' && (
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Sampling Interval {schedulerForm.reportType === 'HISTORY_TREND_REPORT' && <span className="text-danger">*</span>} {formErrors.timeSpan && <span className="text-danger text-xs font-normal">{formErrors.timeSpan}</span>}</label>
+                          <Select options={intervaldata} className="history-select" placeholder="Select Interval"
+                            value={intervaldata.find(option => option.value === schedulerForm.timeSpan) || null}
+                            onChange={(selected) => setSchedulerForm(prev => ({
+                              ...prev,
+                              timeSpan: selected?.value ?? null
+                            }))}
+                          />
+                        </div>
+                      )}
 
-                </div>
-                <div className="input-group">
-                  <Input
-                    type="text"
-                    className={`form-control`}
-                    placeholder="Add storage path"
-                    name="storagePath"
-                    value={schedulerForm.storagePath || ''}
-                    onChange={handleSchedulerChange}
-                    readOnly={false}
-                  />
 
-                  {/* <Button 
-                        color="primary" 
-                        onClick={handleFolderSelect}
-                        type="button"
-                      >
-                        <Folder size={16} className="me-1" /> Browse
-                      </Button> */}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-
-
-              <div className="col-12 mb-3">
-                <label className="form-label">Description</label>
-                <Input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter description"
-                  name="description"
-                  value={schedulerForm.description}
-                  onChange={handleSchedulerChange}
-                />
-              </div>
-
-              <div className="col-12 mb-3">
-                <div className="form-check">
-                  <label className="form-check-label" htmlFor="isActive">
-                    Active
-                  </label>
-                  <Input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="isActive"
-                    name="isActive"
-                    checked={schedulerForm.isActive === "Y"}
-                    onChange={(e) => setSchedulerForm(prev => ({
-                      ...prev,
-                      isActive: e.target.checked ? 'Y' : 'N'
-                    }))}
-                  />
-
-                </div>
-              </div>
             </div>
           </form>
         </ModalBody>
@@ -1086,9 +1239,15 @@ const ScheduleConfig = () => {
           </Button>
         </div>
       </Modal>
-      <Modal isOpen={modalData.isOpen} toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
-        <ModalHeader toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
-          {modalData.title}
+      <Modal size={modalData.title === 'Tag List' ? "lg" : "md"} isOpen={modalData.isOpen} toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
+        <ModalHeader
+          className="bg-primary text-white"
+          toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => setModalData(prev => ({ ...prev, isOpen: false }))} />
+          }
+        >
+          <span className="text-white">{modalData.title}</span>
         </ModalHeader>
         <ModalBody>
           {modalData.isPath ? (
@@ -1105,6 +1264,14 @@ const ScheduleConfig = () => {
               >
                 Copy
               </Button>
+            </div>
+          ) : modalData.title === 'Tag List' ? (
+            <div className="d-flex flex-wrap gap-2 p-2">
+              {modalData.content?.split(',').map((tag, index) => (
+                <span key={index} className="rounded bg-light p-2 text-dark text-base font-medium">
+                  {tag.trim()}
+                </span>
+              )) || 'No tags available'}
             </div>
           ) : (
             <div className="p-2" style={{ whiteSpace: 'pre-line' }}>

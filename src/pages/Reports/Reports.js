@@ -480,8 +480,14 @@ const Reports = () => {
 
             {/* History Report Modal */}
             <Modal isOpen={isHistoryModalOpen} toggle={toggleHistoryModal} size="lg" backdrop="static" keyboard={false}>
-                <ModalHeader toggle={toggleHistoryModal}>
-                    <i className="ri-file-chart-line me-2"></i>History Report
+                <ModalHeader
+                    className="bg-primary text-white"
+                    toggle={toggleHistoryModal}
+                    close={
+                        <button className="btn-close btn-close-white" onClick={toggleHistoryModal} />
+                    }
+                >
+                    <span className="text-white">History Report</span>
                 </ModalHeader>
                 <Form onSubmit={(e) => handleSubmit(e, 'history')}>
                     <ModalBody>
@@ -621,8 +627,14 @@ const Reports = () => {
                 </Form>
             </Modal>
             <Modal isOpen={isFlowModalOpen} toggle={toggleFlowModal} size="lg" backdrop="static" keyboard={false}>
-                <ModalHeader toggle={toggleFlowModal}>
-                    <i className="ri-pie-chart-2-line me-2"></i> Flow Totalizer Report
+                <ModalHeader
+                    className="bg-primary text-white"
+                    toggle={toggleFlowModal}
+                    close={
+                        <button className="btn-close btn-close-white" onClick={toggleFlowModal} />
+                    }
+                >
+                    <span className="text-white"> Flow Totalizer Report</span>
                 </ModalHeader>
                 <Form onSubmit={(e) => handleSubmit(e, 'flow')}>
                     <ModalBody>

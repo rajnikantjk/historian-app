@@ -1453,7 +1453,7 @@ const LiveTrend = () => {
                     <thead >
                       <tr>
                         <th>Tag Name</th>
-                        <th>Eng Unit</th>
+                        <th>Eng. Unit</th>
                         <th>Description</th>
                         <th>Current Value</th>
 

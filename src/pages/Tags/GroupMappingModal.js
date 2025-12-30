@@ -91,14 +91,14 @@ const GroupMappingModal = ({
           .filter(tag => tagNames.includes(tag.label));
 
         setInputValue({ ...inputValue, tagId: matchedIds.map(tag => tag.value), tagName: matchedIds })
-      }, 200)
+      }, 500)
 
     }
-  }, [values]);
+  }, [values, toolCategoryData]);
 
   useEffect(() => {
-    dispatch(getTagGroupList({limit:1000}))
-    dispatch(getTaglist({limit:1000}))
+    dispatch(getTagGroupList({ limit: 1000 }))
+    dispatch(getTaglist({ limit: 1000 }))
   }, [])
 
   const customComponents = {
@@ -207,13 +207,21 @@ const GroupMappingModal = ({
     <div>
       <Modal isOpen={addModal} id="exampleModal" size="lg" style={{ maxWidth: "1200px", width: "100%" }} >
         <ModalHeader
+          className="bg-primary text-white"
           toggle={() => {
             setAddModal(false);
             setValues({});
             setErrors({});
           }}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => {
+              setAddModal(false);
+              setValues({});
+              setErrors({});
+            }} />
+          }
         >
-          {rowId ? "Edit Group Mapping" : "Add New Group Mapping"}{" "}
+          <span className="text-white">{rowId ? "Edit Group Mapping" : "Add New Group Mapping"}</span>
         </ModalHeader>
         <ModalBody style={{ width: "100%" }}>
           <form>

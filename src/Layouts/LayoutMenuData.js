@@ -160,7 +160,7 @@ const Navdata = () => {
     },
     userRole == "ROLE_ADMIN" ? {
       id: "settings",
-      label: "General Setting (OPC Control)",
+      label: "OPC Control",
       icon: "ri-settings-3-line",
       link: "/settings",
     } : [],

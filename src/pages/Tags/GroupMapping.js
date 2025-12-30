@@ -16,6 +16,10 @@ import {
   DropdownToggle,
   DropdownMenu,
   DropdownItem,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Button,
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
 import DeleteModal from "../../Components/Common/DeleteModal";
@@ -58,6 +62,11 @@ const GroupMapping = () => {
   const [additionalstatus, setAdditionalstatus] = useState(categoriesData[0]);
   const [loader, setLoader] = useState(false);
   const [limit, setLimit] = useState(100);
+  const [modalData, setModalData] = useState({
+    isOpen: false,
+    content: '',
+    title: ''
+  });
   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
 
   const handleOnChangeLimit = (value) => {
@@ -65,6 +74,14 @@ const GroupMapping = () => {
     setLimit(value);
   }
   const nPages = Math.ceil(groupMappingCount / limit);
+
+  const handleViewClick = (content, title) => {
+    setModalData({
+      isOpen: true,
+      content,
+      title
+    });
+  };
 
   const onClickOpenAddModal = () => {
     setAddModal(true);
@@ -153,12 +170,12 @@ const GroupMapping = () => {
         return serialNumber;
       },
     },
-    {
-      Header: "Group Id",
-      accessor: (row, rowIndex) => row?.grpId ?? "-",
+    // {
+    //   Header: "Group Id",
+    //   accessor: (row, rowIndex) => row?.grpId ?? "-",
 
-      filterable: false,
-    },
+    //   filterable: false,
+    // },
     {
       Header: "Group Name",
       accessor: (row) => row?.grpName ?? "-",
@@ -167,7 +184,19 @@ const GroupMapping = () => {
     },
     {
       Header: "Tag Name",
-      accessor: (row) => row?.tagName ?? "-",
+      Cell: ({ row }) => {
+        return row.original?.tagName ? (
+          <span
+            className="text-primary"
+            style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+            onClick={() => handleViewClick(row.original?.tagName, 'Tag Name')}
+          >
+            View
+          </span>
+        ) : (
+          "-"
+        );
+      },
       filterable: false,
     },
 
@@ -278,6 +307,27 @@ const GroupMapping = () => {
           page={page}
         />
       )}
+
+      <Modal isOpen={modalData.isOpen} size="lg" toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}>
+        <ModalHeader
+          className="bg-primary text-white"
+          toggle={() => setModalData(prev => ({ ...prev, isOpen: false }))}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => setModalData(prev => ({ ...prev, isOpen: false }))} />
+          }
+        >
+          <span className="text-white">{modalData.title}</span>
+        </ModalHeader>
+        <ModalBody>
+          <div className="d-flex flex-wrap gap-2 p-2">
+            {modalData.content?.split(',').map((tag, index) => (
+              <span key={index} className="rounded bg-light p-2 text-dark text-base font-medium">
+                {tag.trim()}
+              </span>
+            )) || 'No tags available'}
+          </div>
+        </ModalBody>
+      </Modal>
 
       <div className="page-content">
         <DeleteModal

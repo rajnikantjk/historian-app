@@ -8,11 +8,12 @@ const Footer = () => {
                 <Container fluid>
                     <Row>
                         <Col sm={6}>
-                            {new Date().getFullYear()} © AlarmIQ - Historian/ PIMSnologies Pvt.Ltd
+                            © {new Date().getFullYear()} Augmation Technologies Pvt. Ltd. All rights reserved.
+
                         </Col>
                         <Col sm={6}>
                             <div className="text-sm-end d-none d-sm-block">
-                                Develop by <a href="https://augmation.co/" target='_blank'>www.augmation.co</a>
+                                Developed by Augmation Technologies | <a href="https://augmation.co/" target='_blank'>www.augmation.co</a>
                             </div>
                         </Col>
                     </Row>

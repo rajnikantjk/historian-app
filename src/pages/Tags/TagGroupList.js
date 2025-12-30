@@ -339,13 +339,21 @@ const TagGroupList = () => {
 
       <Modal isOpen={addModal} id="exampleModal">
         <ModalHeader
+          className="bg-primary text-white"
           toggle={() => {
             setAddModal(false);
             setValues({});
             setErrors({});
           }}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => {
+              setAddModal(false);
+              setValues({});
+              setErrors({});
+            }} />
+          }
         >
-          {rowId ? "Update Group" : "Add Group"}{" "}
+          <span className="text-white">{rowId ? "Update Group" : "Add Group"}</span>
         </ModalHeader>
         <ModalBody>
           <form>

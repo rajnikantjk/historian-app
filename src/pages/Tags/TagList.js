@@ -428,13 +428,21 @@ const TagList = () => {
     <>
       <Modal isOpen={addModal} id="exampleModal">
         <ModalHeader
+          className="bg-primary text-white"
           toggle={() => {
             setAddModal(false);
             setValues({});
             setErrors({});
           }}
+          close={
+            <button className="btn-close btn-close-white" onClick={() => {
+              setAddModal(false);
+              setValues({});
+              setErrors({});
+            }} />
+          }
         >
-          {rowId ? "Update Tag" : "Add New Tag"}{" "}
+          <span className="text-white">{rowId ? "Update Tag" : "Add New Tag"}</span>
         </ModalHeader>
         <ModalBody>
           <form>

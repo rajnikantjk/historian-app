@@ -6,26 +6,33 @@
     th {
         font-weight: $font-weight-semibold;
         padding: 12px 15px;
-        &:last-child{
+        background-color: rgba(10, 179, 156);
+        color: #fff;
+        font-weight: 500;
+
+        &:last-child {
             text-align: end;
-          
+
         }
-        
+
     }
-    td{
+
+    td {
         padding: 5px 15px;
-        &:last-child{
+
+        &:last-child {
             text-align: end;
-            
+
         }
     }
 
     >thead {
         border-color: $table-border-color;
     }
+
     >:not(:first-child) {
         border-top-width: $table-border-width;
-        
+
     }
 }
 
@@ -40,23 +47,23 @@
 
 // card table
 
-.table-card{
+.table-card {
     margin: (-$card-spacer-y) (-$card-spacer-x);
 
     th,
     td {
 
-        &:first-child{
+        &:first-child {
             padding-left: 16px;
         }
 
-        &:last-child{
+        &:last-child {
             padding-right: 16px;
-           
+
         }
     }
 
-    .table > :not(:first-child) {
+    .table> :not(:first-child) {
         border-top-width: $table-border-width;
     }
 }
@@ -65,15 +72,16 @@
 $value in $theme-colors {
     .border-#{$color} {
         &.table {
-            > thead {
+            >thead {
                 border-color: $value !important;
             }
         }
     }
+
     .table-#{$color} {
         &.table {
-            > thead {
-                border-bottom-color:lighten($value, 10%) !important;
+            >thead {
+                border-bottom-color: lighten($value, 10%) !important;
             }
         }
     }
@@ -83,6 +91,7 @@ $value in $theme-colors {
     .form-check {
         padding-left: 0px;
         margin-bottom: 0px;
+
         .form-check-input {
             margin-left: 0px;
             margin-top: 0px;
@@ -90,8 +99,10 @@ $value in $theme-colors {
             vertical-align: middle;
         }
     }
+
     .sort {
         position: relative;
+
         &::before {
             content: "\f035d";
             position: absolute;
@@ -100,8 +111,9 @@ $value in $theme-colors {
             font-size: 0.8rem;
             font-family: "Material Design Icons";
         }
+
         &::after {
-            position:absolute;
+            position: absolute;
             right: 0.5rem;
             content: "\f0360";
             font-family: "Material Design Icons";
@@ -115,7 +127,9 @@ $value in $theme-colors {
     .table-light {
         background-color: var(--#{$variable-prefix}light);
         color: var(--#{$variable-prefix}body-color);
-        th,td {
+
+        th,
+        td {
             background-color: rgba(10, 179, 156);
             color: $white;
         }
