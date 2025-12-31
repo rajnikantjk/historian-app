@@ -284,6 +284,11 @@ const HistoryTrend = () => {
                         const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
                         const color = colors[idx] || '#008FFB';
 
+                        // Access the original data point object to get quality
+                        const dataPoint = w.config.series[idx].data[dataPointIndex];
+                        const quality = dataPoint?.quality !== undefined ? dataPoint.quality : '';
+                        const qualityDisplay = quality ? `${quality}` : '';
+
                         if (value !== null && value !== undefined) {
                             itemCount++;
                             seriesItems += `
@@ -292,7 +297,7 @@ const HistoryTrend = () => {
                                      onmouseout="this.style.backgroundColor='transparent'">
                                     <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 10px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 0 3px ${color}20;"></span>
                                     <div style="flex: 1; min-width: 0;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} :- ${parseFloat(value)}</div>
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} | ${qualityDisplay} | ${parseFloat(value)}</div>
                                       
                                     </div>
                                 </div>
@@ -319,8 +324,8 @@ const HistoryTrend = () => {
                                     border-radius: 8px;
                                     padding: 0;
                                     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                                    width: ${itemCount > 6 ? '600px' : '320px'};
-                                    max-width: ${itemCount > 6 ? '600px' : '320px'};
+                                    width: ${itemCount > 6 ? '720px' : '400px'};
+                                    max-width: ${itemCount > 6 ? '720px' : '400px'};
                                     overflow: hidden;
                                 ">
 
@@ -783,7 +788,8 @@ const HistoryTrend = () => {
                         }
                         acc[item.itemId].push({
                             value: item.itemValue,
-                            timestamp: item.itemTimestamp
+                            timestamp: item.itemTimestamp,
+                            quality: item.itemQuality
                         });
                         return acc;
                     }, {});
@@ -795,19 +801,27 @@ const HistoryTrend = () => {
 
                     const formattedSeries = Object.keys(groupedData).map((key, index) => {
                         const dataMap = new Map(
-                            groupedData[key].map(item => [item.timestamp, item.value])
+                            groupedData[key].map(item => [item.timestamp, { value: item.value, quality: item.quality }])
                         );
 
                         let lastValue = null;
+                        let lastQuality = null;
 
                         const seriesData = uniqueTimestamps.map(ts => {
-                            const value = dataMap.get(ts);
-                            if (value !== undefined && value !== null) {
-                                lastValue = value.toFixed(2);
-                                return lastValue;
+                            const item = dataMap.get(ts);
+                            if (item && item.value !== undefined && item.value !== null) {
+                                lastValue = item.value.toFixed(2);
+                                lastQuality = item.quality;
                             }
-                            // If current timestamp missing, use last available value
-                            return lastValue;
+                            // Return object with x, y, and quality
+                            // Use the same formatting for x as used in categories to ensure alignment if needed,
+                            // or relies on index mapping if categories are present. 
+                            // Providing x explicitly is safe.
+                            return {
+                                x: moment.utc(ts).format("YYYY-MM-DD HH:mm:ss"),
+                                y: lastValue,
+                                quality: lastQuality
+                            };
                         });
 
                         return {

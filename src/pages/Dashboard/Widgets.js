@@ -144,6 +144,11 @@ const Widgets = () => {
             const seriesName = seriesNames[idx] || `Tag ${idx + 1}`;
             const color = colors[idx] || '#008FFB';
 
+            // Access the original data point object to get quality
+            const dataPoint = w.config.series[idx].data[dataPointIndex];
+            const quality = dataPoint?.quality !== undefined ? dataPoint.quality : '';
+            const qualityDisplay = quality ? `${quality}` : '';
+
             if (value !== null && value !== undefined) {
               itemCount++;
               seriesItems += `
@@ -152,7 +157,7 @@ const Widgets = () => {
                              onmouseout="this.style.backgroundColor='transparent'">
                             <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 10px; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 0 3px ${color}20;"></span>
                             <div style="flex: 1; min-width: 0;">
-                                <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} :- ${parseFloat(value)}</div>
+                                <div style="font-size: 11px; color: #666; margin-bottom: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${seriesName}">${seriesName} | ${qualityDisplay} | ${parseFloat(value)}</div>
                               
                             </div>
                         </div>
@@ -179,8 +184,8 @@ const Widgets = () => {
                             border-radius: 8px;
                             padding: 0;
                             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                            width: ${itemCount > 6 ? '600px' : '320px'};
-                            max-width: ${itemCount > 6 ? '600px' : '320px'};
+                            width: ${itemCount > 6 ? '720px' : '400px'};
+                            max-width: ${itemCount > 6 ? '720px' : '400px'};
                             overflow: hidden;
                         ">
 
@@ -515,7 +520,11 @@ const Widgets = () => {
               name: tagName,
               data: filledData.map(item => {
                 const tag = item.tagdata.find(t => t.name === tagName);
-                return tag?.value ?? null;
+                return {
+                  x: item.timestamp,
+                  y: tag?.value ?? null,
+                  quality: tag?.quality ?? ''
+                };
               })
             }));
 
