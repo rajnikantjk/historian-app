@@ -32,10 +32,12 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
+
 .useravatar {
   background-color: #d42cf4;
   color: white;
@@ -55,9 +57,10 @@
   max-height: 500px;
   overflow-y: auto;
 }
+
 .input-container {
   position: relative;
-  display:block;
+  display: block;
 }
 
 .input-container .form-control {
@@ -70,7 +73,7 @@
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
-  height: 60%; 
+  height: 60%;
   background-color: #c7c7c7;
 }
 
@@ -79,7 +82,8 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color:#c7c7c7;; 
+  color: #c7c7c7;
+  ;
   text-decoration: none;
 }
 
@@ -91,12 +95,13 @@
   max-height: 240px;
   overflow-y: auto;
 }
+
 @media (max-width: 320px) {
   .proseditor-container .ck-editor__editable {
     max-height: 150px;
     overflow-y: auto;
   }
- 
+
   .editor-container .ck-editor__editable {
     max-height: 100px;
     overflow-y: auto;
@@ -109,7 +114,7 @@
 
 ::-webkit-scrollbar-track {
   background: linear-gradient(180deg, #f5f5f5, #ddd);
-  background: #f1f1f1; 
+  background: #f1f1f1;
   border-radius: 10px;
 }
 
@@ -123,7 +128,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #31b3a1, #31b3a1);
 }
-.apexcharts-legend-group-vertical{
+
+.apexcharts-legend-group-vertical {
   display: flex;
   flex-direction: row !important;
   align-items: center;
@@ -131,12 +137,12 @@
   margin-left: 0px !important;
 }
 
-.apx-legend-position-bottom{
+.apx-legend-position-bottom {
   margin-top: 15px !important;
 }
 
-.togglebutton-design{
-  background-color: #f58164!important;
+.togglebutton-design {
+  background-color: #f58164 !important;
   color: white !important;
   border-radius: 5px !important;
   padding: 8px 10px !important;
@@ -148,10 +154,10 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap:12px !important;
+  gap: 12px !important;
 }
 
-.togglebutton-design-off{
+.togglebutton-design-off {
   background-color: #1ac21a !important;
   color: white !important;
   border-radius: 5px !important;
@@ -163,7 +169,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap:12px !important;
+  gap: 12px !important;
 }
 
 .toggle-switch {
@@ -174,41 +180,46 @@
 
 
 .custom-datepicker {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 8px 8px;
   width: 175px;
   max-width: 175px;
   /* min-width: 100%; */
-  height: 40px;
-  border-radius: 6px;
+  height: 34px;
+  border-radius: 4px;
   border: none;
+  color: #212529;
+  cursor: pointer;
 }
 
 .react-datepicker-wrapper {
-  width: 350px !important ;
-  max-width:350px !important ;
+  width: 350px !important;
+  max-width: 350px !important;
 }
-.react-datepicker__input-container{
-  width: 350px !important ;
-  max-width:350px !important ;
+
+.react-datepicker__input-container {
+  width: 350px !important;
+  max-width: 350px !important;
   display: flex;
 
 }
-.react-datepicker__current-month{
-  color:#000 !important;
+
+.react-datepicker__current-month {
+  color: #000 !important;
 }
-.react-datepicker__day--in-range,.react-datepicker__day--selected{
+
+.react-datepicker__day--in-range,
+.react-datepicker__day--selected {
   background-color: #0ab39c !important;
 }
 
-.rounded-16{
+.rounded-16 {
   border-radius: 16px;
 }
 
-.react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--in-range){
+.react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--in-range) {
   background-color: #0ab39c !important
-
 }
 
 @keyframes pulse {
@@ -216,20 +227,22 @@
     transform: scale(0.95);
     opacity: 0.7;
   }
+
   50% {
     transform: scale(1.3);
     opacity: 1;
   }
+
   100% {
     transform: scale(0.95);
     opacity: 0.7;
   }
 }
 
-.download-icon-align{
+.download-icon-align {
   margin-right: 100px;
 }
 
-.select-menu-align{
+.select-menu-align {
   min-width: 120px;
 }
