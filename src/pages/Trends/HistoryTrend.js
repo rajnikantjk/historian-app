@@ -615,7 +615,7 @@ const HistoryTrend = () => {
 
     useEffect(() => {
         Promise.all([
-            dispatch(getTagGroupList()),
+            dispatch(getTagGroupList({ isActive: "Y" })),
             dispatch(getIntervalList()),
             dispatch(getSlotsList()),
         ]).then(() => {

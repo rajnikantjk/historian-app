@@ -169,7 +169,7 @@ const ScheduleConfig = () => {
   const loadTags = async (inputValue) => {
     setIsLoadingTags(true);
     try {
-      const response = await dispatch(getTaglist({ search: inputValue || '', page: 1, limit: 1000 }));
+      const response = await dispatch(getTaglist({ search: inputValue || '', isActive: "Y", page: 1, limit: 1000 }));
 
       const options = response.payload?.content?.map(tag => ({
         value: tag.id,
@@ -518,7 +518,7 @@ const ScheduleConfig = () => {
     dispatch(getSlotsList())
     dispatch(getReportTypeList())
     dispatch(getIntervalList())
-    dispatch(getTagGroupList({ page: 1, limit: 1000 }))
+    dispatch(getTagGroupList({ page: 1, limit: 1000, isActive: "Y" }))
   }, [])
 
   useEffect(() => {
@@ -683,6 +683,12 @@ const ScheduleConfig = () => {
       filterable: false,
     },
     {
+      id: 'grpName',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Gorup</div>,
+      accessor: (row) => row?.grpName ?? "-",
+      filterable: false,
+    },
+    {
       id: 'tagList',
       Header: <div style={{ whiteSpace: 'nowrap' }}>Tag List</div>,
       Cell: ({ row }) => {
@@ -704,6 +710,12 @@ const ScheduleConfig = () => {
       id: 'slot',
       Header: <div style={{ whiteSpace: 'nowrap' }}>Slot</div>,
       accessor: (row) => row?.slot ?? "-",
+      filterable: false,
+    },
+    {
+      id: 'timeSpan',
+      Header: <div style={{ whiteSpace: 'nowrap' }}>Time Span</div>,
+      accessor: (row) => row?.timeSpan ?? "-",
       filterable: false,
     },
     {

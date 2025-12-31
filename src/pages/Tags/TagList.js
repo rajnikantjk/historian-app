@@ -34,6 +34,7 @@ import {
   getTaglist,
   tagDataDownload,
   tagBulkImport,
+  getTagTypeList,
 } from "../../slices/tools";
 import FileUploadModal from "../../Components/Common/FileUploadModal";
 import { EditGptsCategory } from "../../slices/gpts";
@@ -47,7 +48,7 @@ const TagList = () => {
   document.title = "Tag List | AlarmIQ - Historian/ PIMS";
 
   const dispatch = useDispatch();
-  const { toolCategoryCount, toolCategoryData, toolLoader } = useSelector(
+  const { toolCategoryCount, toolCategoryData, toolLoader, tagTypeData } = useSelector(
     (state) => state.Tool
   );
   const [customerStatus, setcustomerStatus] = useState(customerstatus[0]);
@@ -64,6 +65,13 @@ const TagList = () => {
   const [importLoading, setImportLoading] = useState(false);
   const [limit, setLimit] = useState(100);
   const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
+
+  const tagTypedata = tagTypeData.map((item) => {
+    return {
+      value: item,
+      label: item,
+    };
+  });
 
   const handleOnChangeLimit = (value) => {
     setPage(1);
@@ -83,6 +91,7 @@ const TagList = () => {
           toast.success(res?.payload?.message || 'Tags imported successfully');
           setImportModal(false);
           dispatch(getTaglist());
+          setPage(1);
         } else {
           toast.error(res?.payload?.message || 'Failed to import tags');
         }
@@ -125,11 +134,13 @@ const TagList = () => {
   const nPages = Math.ceil(toolCategoryCount / limit);
 
   const handleOnChange = (e) => {
-    setValues({ ...values, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value, type, checked } = e.target;
+    setValues({ ...values, [name]: type === 'checkbox' ? (checked ? 'Y' : 'N') : value });
+    setErrors({ ...errors, [name]: "" });
   };
   useEffect(() => {
     setPage(1);
+    dispatch(getTagTypeList());
   }, [searchValue, customerStatus]);
   useEffect(() => {
     setSearchValue("");
@@ -181,6 +192,12 @@ const TagList = () => {
     return date1;
   };
   const onClickOpenAddModal = () => {
+    setValues({
+      minValue: 0,
+      maxValue: 0,
+      type: "OTHER",
+      isActive: "Y",
+    });
     setAddModal(true);
     setRowId("");
   };
@@ -219,7 +236,8 @@ const TagList = () => {
       },
     },
     {
-      Header: "OPC Server Name",
+      id: "serverName",
+      Header: <div style={{ whiteSpace: 'nowrap' }}>OPC Server Name</div>,
       accessor: (row) => row?.serverName ?? "-",
       filterable: false,
     },
@@ -239,6 +257,23 @@ const TagList = () => {
       accessor: (row) => row?.unitName ?? "-",
       filterable: false,
     },
+    {
+      Header: "Type",
+      accessor: (row) => row?.type ?? "-",
+      filterable: false,
+    },
+    {
+      Header: "Min Value",
+      accessor: (row) => row?.minValue ?? "-",
+
+      filterable: false,
+    },
+    {
+      Header: "Max Value",
+      accessor: (row) => row?.maxValue ?? "-",
+
+      filterable: false,
+    },
 
 
     {
@@ -247,7 +282,12 @@ const TagList = () => {
       filterable: false,
     },
 
+    {
+      Header: "Status",
+      accessor: (row) => row?.isActive == "Y" ? "Active" : "Inactive" ?? "-",
 
+      filterable: false,
+    },
 
     ...(userRole == "ROLE_ADMIN" ? [{
       Header: "Action",
@@ -306,6 +346,7 @@ const TagList = () => {
           dispatch(
             getTaglist()
           );
+          setPage(1);
         } else {
           setDeleteModal(false);
           setLoader(false);
@@ -360,6 +401,10 @@ const TagList = () => {
       displayTagName: item?.displayTagName,
       unitName: item?.unitName,
       description: item?.description,
+      minValue: item?.minValue || 0,
+      maxValue: item?.maxValue || 0,
+      type: item?.type || "OTHER",
+      isActive: item?.isActive || "Y",
     });
     setAddModal(true);
   };
@@ -378,6 +423,7 @@ const TagList = () => {
           if (res?.payload?.status == 200) {
             setAddModal(false);
             dispatch(getTaglist());
+            setPage(1);
             setLoader(false);
             toast.success("Tag added successfully");
             setValues({});
@@ -400,7 +446,6 @@ const TagList = () => {
       dispatch(
         EditTagDetails({
           ...values,
-          isActive: "Y",
           id: rowId,
         })
       )
@@ -409,6 +454,7 @@ const TagList = () => {
             setAddModal(false);
             setLoader(false);
             dispatch(getTaglist());
+            setPage(1);
             toast.success("Tag Updated Successfully");
             setValues({});
           } else {
@@ -426,7 +472,7 @@ const TagList = () => {
 
   return (
     <>
-      <Modal isOpen={addModal} id="exampleModal">
+      <Modal isOpen={addModal} size="lg" id="exampleModal">
         <ModalHeader
           className="bg-primary text-white"
           toggle={() => {
@@ -446,98 +492,164 @@ const TagList = () => {
         </ModalHeader>
         <ModalBody>
           <form>
-            <div className="mb-3">
-              <label htmlFor="customer-name" className="col-form-label">
-                OPC Server Name: <span className="text-danger">*</span>
-                {errors.serverName && (
-                  <span className="text-danger">{errors.serverName}</span>
-                )}
-              </label>
-              <Input
-                type="text"
-                className="form-control"
-                id="customer-name"
-                name="serverName"
-                placeholder="Enter Server Name"
-                value={values.serverName}
-                onChange={handleOnChange}
-              />
-            </div>
-            <div className="mb-3">
+            <div className="row">
+              <div className="col-6 mb-3">
+                <label htmlFor="customer-name" className="col-form-label">
+                  OPC Server Name: <span className="text-danger">*</span>
+                  {errors.serverName && (
+                    <span className="text-danger">{errors.serverName}</span>
+                  )}
+                </label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  id="customer-name"
+                  name="serverName"
+                  placeholder="Enter Server Name"
+                  value={values.serverName}
+                  onChange={handleOnChange}
+                />
+              </div>
+              <div className="col-6 mb-3">
 
 
-              <label htmlFor="customer-name" className="col-form-label">
-                OPC Tag Name: <span className="text-danger">*</span>
-                {errors.tagName && (
-                  <span className="text-danger">{errors.tagName}</span>
-                )}
-              </label>
-              <Input
-                type="text"
-                className="form-control"
-                id="customer-name"
-                name="tagName"
-                placeholder="Enter Tag Name"
-                value={values.tagName}
-                onChange={handleOnChange}
-              />
-            </div>
+                <label htmlFor="customer-name" className="col-form-label">
+                  OPC Tag Name: <span className="text-danger">*</span>
+                  {errors.tagName && (
+                    <span className="text-danger">{errors.tagName}</span>
+                  )}
+                </label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  id="customer-name"
+                  name="tagName"
+                  placeholder="Enter Tag Name"
+                  value={values.tagName}
+                  onChange={handleOnChange}
+                />
+              </div>
 
-            <div className="mb-3">
+              <div className="col-6 mb-3">
 
-              <label htmlFor="customer-name" className="col-form-label">
-                Display TagName: <span className="text-danger">*</span>
-                {errors.displayTagName && (
-                  <span className="text-danger">{errors.displayTagName}</span>
-                )}
-              </label>
-              <Input
-                type="text"
-                className="form-control"
-                id="customer-name"
-                name="displayTagName"
-                placeholder="Enter Display Tag Name"
-                value={values.displayTagName}
-                onChange={handleOnChange}
-              />
-            </div>
-            <div className="mb-3">
+                <label htmlFor="customer-name" className="col-form-label">
+                  Display TagName: <span className="text-danger">*</span>
+                  {errors.displayTagName && (
+                    <span className="text-danger">{errors.displayTagName}</span>
+                  )}
+                </label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  id="customer-name"
+                  name="displayTagName"
+                  placeholder="Enter Display Tag Name"
+                  value={values.displayTagName}
+                  onChange={handleOnChange}
+                />
+              </div>
+              <div className="col-6 mb-3">
 
 
-              <label htmlFor="customer-name" className="col-form-label">
-                Eng. Unit: <span className="text-danger">*</span>
-                {errors.unitName && (
-                  <span className="text-danger">{errors.unitName}</span>
-                )}
-              </label>
-              <Input
-                type="text"
-                className="form-control"
-                id="customer-name"
-                name="unitName"
-                placeholder="Enter Tag Name"
-                value={values.unitName}
-                onChange={handleOnChange}
-              />
-            </div>
-            <div className="mb-3">
+                <label htmlFor="customer-name" className="col-form-label">
+                  Eng. Unit: <span className="text-danger">*</span>
+                  {errors.unitName && (
+                    <span className="text-danger">{errors.unitName}</span>
+                  )}
+                </label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  id="customer-name"
+                  name="unitName"
+                  placeholder="Enter Tag Name"
+                  value={values.unitName}
+                  onChange={handleOnChange}
+                />
+              </div>
+              <div className="col-6 mb-3">
+                <label htmlFor="minValue" className="col-form-label">
+                  Tag Min Value:
+                </label>
+                <Input
+                  type="number"
+                  className="form-control"
+                  id="minValue"
+                  name="minValue"
+                  placeholder="Enter Min Value"
+                  value={values.minValue}
+                  onChange={handleOnChange}
+                />
+              </div>
+              <div className="col-6 mb-3">
+                <label htmlFor="maxValue" className="col-form-label">
+                  Tag Max Value:
+                </label>
+                <Input
+                  type="number"
+                  className="form-control"
+                  id="maxValue"
+                  name="maxValue"
+                  placeholder="Enter Max Value"
+                  value={values.maxValue}
+                  onChange={handleOnChange}
+                />
+              </div>
+              <div className="col-6 mb-3">
+                <label htmlFor="type" className="col-form-label">
+                  Tag Type:
+                </label>
+                <Input
+                  type="select"
+                  className="form-control"
+                  id="type"
+                  name="type"
+                  value={values.type}
+                  onChange={handleOnChange}
+                >
 
-              <label htmlFor="customer-name" className="col-form-label">
-                Tag Description: <span className="text-danger">*</span>
-                {errors.description && (
-                  <span className="text-danger">{errors.description}</span>
-                )}
-              </label>
-              <Input
-                type="textarea"
-                className="form-control"
-                id="customer-name"
-                name="description"
-                placeholder="Enter Description"
-                value={values.description}
-                onChange={handleOnChange}
-              />
+                  {tagTypedata &&
+                    tagTypedata.map((item, index) => (
+                      <option key={index} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                </Input>
+              </div>
+              <div className="col-6 mb-3">
 
+                <label htmlFor="customer-name" className="col-form-label">
+                  Tag Description: <span className="text-danger">*</span>
+                  {errors.description && (
+                    <span className="text-danger">{errors.description}</span>
+                  )}
+                </label>
+                <Input
+                  type="textarea"
+                  className="form-control"
+                  id="customer-name"
+                  name="description"
+                  placeholder="Enter Description"
+                  value={values.description}
+                  onChange={handleOnChange}
+                />
+
+              </div>
+              <div className="col-6 mb-3">
+                <div className="form-check">
+                  <Input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="isActive"
+                    name="isActive"
+                    checked={values.isActive === "Y"}
+                    onChange={handleOnChange}
+                  />
+                  <label className="form-check-label" htmlFor="isActive">
+                    Active
+                  </label>
+                </div>
+              </div>
             </div>
 
           </form>

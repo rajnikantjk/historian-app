@@ -699,7 +699,7 @@ const LiveTrend = () => {
   }, [frequencyData]);
   useEffect(() => {
     Promise.all([
-      dispatch(getTagGroupList()),
+      dispatch(getTagGroupList({ isActive: "Y" })),
       dispatch(getIntervalList()),
       dispatch(getFrequencyList()),
       dispatch(getSlotsList())

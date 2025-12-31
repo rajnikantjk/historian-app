@@ -357,7 +357,7 @@ const Widgets = () => {
 
   useEffect(() => {
     Promise.all([
-      dispatch(getTagGroupList()),
+      dispatch(getTagGroupList({ isActive: "Y" })),
       dispatch(getIntervalList()),
       dispatch(getFrequencyList())
     ]);

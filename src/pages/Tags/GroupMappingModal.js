@@ -97,8 +97,8 @@ const GroupMappingModal = ({
   }, [values, toolCategoryData]);
 
   useEffect(() => {
-    dispatch(getTagGroupList({ limit: 1000 }))
-    dispatch(getTaglist({ limit: 1000 }))
+    dispatch(getTagGroupList({ limit: 1000, isActive: "Y" }))
+    dispatch(getTaglist({ isActive: "Y", limit: 1000 }))
   }, [])
 
   const customComponents = {

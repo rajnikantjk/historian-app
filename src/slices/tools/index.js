@@ -22,8 +22,9 @@ const initialState = {
   groupMappingCount: 0,
   intervalData: [],
   slotsData: [],
-  reportListData:[],
-  frequencyData:[],
+  reportListData: [],
+  tagTypeData: [],
+  frequencyData: [],
   tagDataByGroup: [],
   toolLoader: false,
 };
@@ -37,16 +38,16 @@ export const getTools = createAsyncThunk(
 export const getTaglist = createAsyncThunk(
   "user/tag-list",
   async (params = {}, thunkAPI) => {
-    const { page = 1, limit = 1000, search = '' } = params;
-    const queryString = `?page=${page - 1}&size=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
-    
+    const { page = 1, limit = 1000, search = '', isActive } = params;
+    const queryString = `?page=${page - 1}&size=${limit}${search ? `&search=${encodeURIComponent(search)}` : ''}${isActive !== undefined ? `&isActive=${isActive}` : ''}`;
+
     return await thunkHandler(
       get(`/tag${queryString}`, {}),
       thunkAPI
     );
   }
 );
-export const  AddNewTagDetails = createAsyncThunk(
+export const AddNewTagDetails = createAsyncThunk(
   "user/add-tag",
   async (data, thunkAPI) => {
     return await thunkHandler(
@@ -65,7 +66,7 @@ export const EditTagDetails = createAsyncThunk(
   }
 );
 
-export const  AddNewGroupDetails = createAsyncThunk(
+export const AddNewGroupDetails = createAsyncThunk(
   "user/add-group",
   async (data, thunkAPI) => {
     return await thunkHandler(
@@ -86,13 +87,14 @@ export const EditGroupDetails = createAsyncThunk(
 export const getTagGroupList = createAsyncThunk(
   "user/get-all-taggrouplist",
   async (params = {}, thunkAPI) => {
-    const { page = 1, limit = 1000, search = '' } = params;
+    const { page = 1, limit = 1000, search = '', isActive } = params;
     const queryParams = new URLSearchParams({
-      page:page-1,
-      size:limit,
-      ...(search && { search })
+      page: page - 1,
+      size: limit,
+      ...(search && { search }),
+      ...(isActive !== undefined && { isActive })
     });
-    
+
     return await thunkHandler(
       get(`grp?${queryParams.toString()}`),
       thunkAPI
@@ -105,11 +107,11 @@ export const getSchedulerList = createAsyncThunk(
   async (params = {}, thunkAPI) => {
     const { page = 1, limit = 1000, search = '' } = params;
     const queryParams = new URLSearchParams({
-      page:page-1,
-      size:limit,
+      page: page - 1,
+      size: limit,
       ...(search && { search })
     });
-    
+
     return await thunkHandler(
       get(`schedule-task?${queryParams.toString()}`),
       thunkAPI
@@ -123,11 +125,11 @@ export const getMappedGroupList = createAsyncThunk(
   async (params = {}, thunkAPI) => {
     const { page = 1, limit = 1000, search = '' } = params;
     const queryParams = new URLSearchParams({
-      page:page-1,
-      size:limit,
+      page: page - 1,
+      size: limit,
       ...(search && { search })
     });
-    
+
     return await thunkHandler(
       get(`tag-grp-mapping?${queryParams.toString()}`),
       thunkAPI
@@ -141,13 +143,13 @@ export const getHistoryDataList = createAsyncThunk(
   async (data, thunkAPI) => {
     const { startDate, endDate, defaultLoad, grpId, tagId, ...restParams } = data || {};
     const queryParams = new URLSearchParams({
-      startDateTime:startDate,
-      endDateTime:endDate,
+      startDateTime: startDate,
+      endDateTime: endDate,
       defaultLoad,
       ...(defaultLoad !== "Y" && { grpId, tagId }),
       ...restParams
     }).toString();
-    
+
     return await thunkHandler(
       get(`report/history-trend-tag-wise-details?${queryParams}`, { ...data, noLoader: true }),
       thunkAPI
@@ -158,11 +160,11 @@ export const getHistoryDataList = createAsyncThunk(
 export const downloadHistoryTrendReport = createAsyncThunk(
   "user/downloadHistoryTrendReport",
   async (data, thunkAPI) => {
-     const config = {
+    const config = {
       responseType: 'blob'             // Set the response type to 'blob' to handle binary data
     };
     return await thunkHandler(
-      post("report/history-trend-export-report", data,config),
+      post("report/history-trend-export-report", data, config),
       thunkAPI
     );
   }
@@ -175,7 +177,7 @@ export const downloadFlowTotalizerReport = createAsyncThunk(
       responseType: 'blob'             // Set the response type to 'blob' to handle binary data
     };
     return await thunkHandler(
-      post("report/flow-totalizer-report", data,config),
+      post("report/flow-totalizer-report", data, config),
       thunkAPI
     );
   }
@@ -240,9 +242,9 @@ export const HistorytrendReportDownloadData = createAsyncThunk(
     };
     return await thunkHandler(
       get(
-        data?.tagId != null?
-        `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`:
-        `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`,
+        data?.tagId != null ?
+          `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}` :
+          `opc/history-trend-excel/${data?.grpId}/${data?.interval}/${data?.startDate}/${data?.endDate}?tagId=${data?.tagId}`,
         config
       ),
       thunkAPI
@@ -253,18 +255,18 @@ export const HistorytrendReportDownloadData = createAsyncThunk(
 export const HistorytrendData = createAsyncThunk(
   "user/get-historytrendData",
   async (data, thunkAPI) => {
-    const { grpId, interval, startDate, endDate, tagId, defaultLoad,slot, ...restParams } = data || {};
+    const { grpId, interval, startDate, endDate, tagId, defaultLoad, slot, ...restParams } = data || {};
     const queryParams = new URLSearchParams({
       grpId,
       defaultLoad,
-      timeSpan:interval,
-      startDateTime:startDate,
-      endDateTime:endDate,
+      timeSpan: interval,
+      startDateTime: startDate,
+      endDateTime: endDate,
       slot,
       ...(tagId && { tagId }),
       ...restParams
     }).toString();
-    
+
     return await thunkHandler(
       get(`report/history-trend-chart-tag-wise?${queryParams}`),
       thunkAPI
@@ -272,7 +274,7 @@ export const HistorytrendData = createAsyncThunk(
   }
 );
 
-export const saveSchdule=createAsyncThunk(
+export const saveSchdule = createAsyncThunk(
   "user/saveSchdule",
   async (data, thunkAPI) => {
     return await thunkHandler(post("schedule-task", data), thunkAPI);
@@ -284,6 +286,17 @@ export const getReportTypeList = createAsyncThunk(
   async (data, thunkAPI) => {
     https: return await thunkHandler(
       get("dropdown/report-types"),
+      thunkAPI
+    );
+  }
+);
+
+
+export const getTagTypeList = createAsyncThunk(
+  "user/get-all-tagtypelist",
+  async (data, thunkAPI) => {
+    https: return await thunkHandler(
+      get("dropdown/tag-types"),
       thunkAPI
     );
   }
@@ -330,7 +343,7 @@ export const getTagsByGroupId = createAsyncThunk(
     );
   }
 );
-export const getCompanyLogo= createAsyncThunk(
+export const getCompanyLogo = createAsyncThunk(
   "user/get-getCompanyLogo",
   async (grpId, thunkAPI) => {
     https: return await thunkHandler(
@@ -372,7 +385,7 @@ export const DeleteTagData = createAsyncThunk(
 export const DeleteMappingData = createAsyncThunk(
   "user/delete-mappingdata",
   async (data, thunkAPI) => {
-  
+
     return await thunkHandler(
       del(`tag-grp-mapping/${data?.id}`),
       thunkAPI
@@ -418,7 +431,7 @@ export const tagDataDownload = createAsyncThunk(
       thunkAPI
     );
   }
-);  
+);
 
 export const groupDataDownload = createAsyncThunk(
   "user/get-groupDataDownload",
@@ -508,6 +521,17 @@ const ToolSlice = createSlice({
         state.tagDataByGroup = [];
         state.toolLoader = false;
       })
+      .addCase(getTagTypeList.pending, (state, action) => {
+        state.toolLoader = true;
+      })
+      .addCase(getTagTypeList.fulfilled, (state, action) => {
+        state.tagTypeData = action?.payload?.data;
+        state.toolLoader = false;
+      })
+      .addCase(getTagTypeList.rejected, (state, action) => {
+        state.tagTypeData = [];
+        state.toolLoader = false;
+      })
       .addCase(getReportTypeList.pending, (state, action) => {
         state.toolLoader = true;
       })
@@ -530,7 +554,7 @@ const ToolSlice = createSlice({
         state.slotsData = [];
         state.toolLoader = false;
       })
-       .addCase(getIntervalList.pending, (state, action) => {
+      .addCase(getIntervalList.pending, (state, action) => {
         state.toolLoader = true;
       })
       .addCase(getIntervalList.fulfilled, (state, action) => {
@@ -617,6 +641,6 @@ const ToolSlice = createSlice({
   },
 });
 
-export const {} = ToolSlice.actions;
+export const { } = ToolSlice.actions;
 
 export default ToolSlice.reducer;

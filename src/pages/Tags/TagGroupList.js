@@ -164,13 +164,14 @@ const TagGroupList = () => {
           id: "0",
           grpName: values?.grpName,
           defaultLoad: values?.defaultLoad || "N",
-          isActive: "Y"
+          isActive: values?.isActive || "Y"
         })
       )
         .then((res) => {
           if (res?.payload?.status == 200) {
             setAddModal(false);
             dispatch(getTagGroupList());
+            setPage(1);
             setLoader(false);
             toast.success("Group added successfully");
             setValues({});
@@ -201,7 +202,8 @@ const TagGroupList = () => {
     setValues({
       ...values,
       grpName: item?.grpName,
-      defaultLoad: item?.defaultLoad || "N"
+      defaultLoad: item?.defaultLoad || "N",
+      isActive: item?.isActive || "Y"
     });
     setAddModal(true);
   };
@@ -227,6 +229,12 @@ const TagGroupList = () => {
     {
       Header: "Default Group",
       accessor: (row) => row?.defaultLoad == "Y" ? "Yes" : "No" ?? "-",
+
+      filterable: false,
+    },
+    {
+      Header: "Status",
+      accessor: (row) => row?.isActive == "Y" ? "Active" : "Inactive" ?? "-",
 
       filterable: false,
     },
@@ -291,6 +299,7 @@ const TagGroupList = () => {
           dispatch(
             getTagGroupList()
           );
+          setPage(1);
         } else {
           setLoader(false)
           toast.error(res?.payload?.data?.message);
@@ -310,7 +319,7 @@ const TagGroupList = () => {
         EditGroupDetails({
           grpName: values?.grpName,
           defaultLoad: values?.defaultLoad || "N",
-          isActive: "Y",
+          isActive: values?.isActive || "Y",
           id: rowId,
         })
       )
@@ -319,6 +328,7 @@ const TagGroupList = () => {
             setAddModal(false);
             setLoader(false);
             dispatch(getTagGroupList());
+            setPage(1);
             toast.success("Group Updated Successfully");
             setValues({});
           } else {
@@ -358,7 +368,12 @@ const TagGroupList = () => {
         <ModalBody>
           <form>
             <div className="mb-3">
-
+              <label htmlFor="customer-name" className="col-form-label">
+                Group Name: <span className="text-danger">*</span>
+                {errors.grpName && (
+                  <span className="text-danger">{errors.grpName}</span>
+                )}
+              </label>
               <Input
                 type="text"
                 className="form-control"
@@ -367,11 +382,7 @@ const TagGroupList = () => {
                 value={values.grpName || ""}
                 onChange={handleOnChange}
               />
-              {errors.grpName && (
-                <div className="invalid-feedback d-block">
-                  {errors.grpName}
-                </div>
-              )}
+
             </div>
             <div className="mb-3">
               <div className="form-check">
@@ -388,6 +399,22 @@ const TagGroupList = () => {
                 </label>
               </div>
             </div>
+            <div className="mb-3">
+              <div className="form-check">
+                <Input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="isActive"
+                  name="isActive"
+                  checked={values.isActive === "Y"}
+                  onChange={handleOnChange}
+                />
+                <label className="form-check-label" htmlFor="isActive">
+                  Active
+                </label>
+              </div>
+            </div>
+
           </form>
         </ModalBody>
         <div className="modal-footer">

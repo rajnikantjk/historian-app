@@ -383,7 +383,7 @@ const Reports = () => {
     const loadTags = async (inputValue) => {
 
         try {
-            const response = await dispatch(getTaglist({ search: inputValue || '', page: 1, limit: 1000 }));
+            const response = await dispatch(getTaglist({ search: inputValue || '', isActive: "Y", page: 1, limit: 1000 }));
             const options = response.payload?.content?.map(tag => ({
                 value: tag.id,
                 label: tag.displayTagName,
@@ -406,7 +406,7 @@ const Reports = () => {
         loadTags()
         dispatch(getSlotsList())
         dispatch(getIntervalList())
-        dispatch(getTagGroupList({ page: 1, limit: 1000 }))
+        dispatch(getTagGroupList({ page: 1, limit: 1000, isActive: "Y" }))
     }, [])
 
     useEffect(() => {
