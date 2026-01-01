@@ -372,12 +372,6 @@ const Reports = () => {
     const navigate = useNavigate();
     const userRole = JSON.parse(localStorage.getItem("authUser"))?.role;
 
-    useEffect(() => {
-        if (userRole !== "ROLE_ADMIN") {
-            toast.error("You are not authorized to access this page");
-            navigate("/dashboard");
-        }
-    }, [userRole, navigate]);
 
     // Load tags for the dropdown
     const loadTags = async (inputValue) => {
