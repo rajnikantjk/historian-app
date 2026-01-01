@@ -638,7 +638,7 @@ const ScheduleConfig = () => {
         tagIds: selectedTagObjects.map(tag => tag.value).join(','),
         displayTagNames: selectedTagObjects.map(tag => tag.label || tag.displayTagName || tag.value).join(',')
       });
-
+      setRowId(item?.id);
       // Set the selected tags for the Select component
       setSelectedTags(selectedTagObjects.map(tag => ({
         value: tag.value,
@@ -951,6 +951,7 @@ const ScheduleConfig = () => {
                           className="react-select"
                           classNamePrefix="select"
                           options={reportTypeOptions}
+                          isDisabled={!!rowId}
                           value={reportTypeOptions.find(option => option.value === schedulerForm.reportType) || null}
                           onChange={(selected) => {
                             setSchedulerForm(prev => ({
